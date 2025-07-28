@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
@@ -11,8 +11,6 @@ import { useApp } from '@/components/layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { ChevronUp, ShoppingCart } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Card } from '@/components/ui/card';
 
 const mockMenuItems: MenuItem[] = [
   { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
@@ -59,43 +57,7 @@ function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
 
 }
 
-function LandscapeView() {
-    const {
-        orderItems,
-        addItemToOrder,
-        updateItemQuantity,
-        removeItemFromOrder,
-        customerName,
-        setCustomerName,
-        orderStatus,
-        resetOrder,
-    } = useApp();
-
-    return (
-        <div className="grid grid-cols-12 gap-4 md:gap-6 p-4 md:p-6 h-full">
-            <div className="col-span-7 h-full overflow-y-auto">
-                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
-            </div>
-            <div className="col-span-5 h-full">
-                <Card className="h-full">
-                     <CurrentOrder
-                        items={orderItems}
-                        customerName={customerName}
-                        orderStatus={orderStatus}
-                        onUpdateQuantity={updateItemQuantity}
-                        onRemoveItem={removeItemFromOrder}
-                        onCustomerNameChange={setCustomerName}
-                        onNewOrder={resetOrder}
-                        onClearOrder={resetOrder}
-                        onClose={() => {}}
-                    />
-                </Card>
-            </div>
-        </div>
-    )
-}
-
-function PortraitView() {
+export default function CashierPage() {
     const {
         orderItems,
         addItemToOrder,
@@ -108,71 +70,37 @@ function PortraitView() {
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
 
-    return (
-        <>
-            <div className="p-4 md:p-6 pb-24">
-                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
-            </div>
-            <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
-            <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-                <DialogContent className="max-w-2xl p-0 gap-0">
-                    <CurrentOrder
-                        items={orderItems}
-                        customerName={customerName}
-                        orderStatus={orderStatus}
-                        onUpdateQuantity={updateItemQuantity}
-                        onRemoveItem={removeItemFromOrder}
-                        onCustomerNameChange={setCustomerName}
-                        onNewOrder={() => {
-                            resetOrder();
-                            setIsOrderOpen(false);
-                        }}
-                        onClearOrder={() => {
-                            resetOrder();
-                            setIsOrderOpen(false);
-                        }}
-                        onClose={() => setIsOrderOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
-        </>
-    );
-}
-
-
-export default function CashierPage() {
-  const isMobile = useIsMobile();
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const handleResize = () => {
-        setOrientation(window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
-      };
-      window.addEventListener('resize', handleResize);
-      handleResize(); 
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
-
-
-  const renderContent = () => {
-     if (isMobile && orientation === 'landscape') {
-       return <LandscapeView />;
-     }
-     if(!isMobile) {
-        return <LandscapeView />;
-     }
-     return <PortraitView />;
-  }
-
   return (
     <AppLayout>
       <AppLayout.Header>
         <Header />
       </AppLayout.Header>
       <AppLayout.Content>
-       {renderContent()}
+       <div className="p-4 md:p-6 pb-24">
+            <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
+        </div>
+        <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
+        <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
+            <DialogContent className="max-w-2xl p-0 gap-0">
+                <CurrentOrder
+                    items={orderItems}
+                    customerName={customerName}
+                    orderStatus={orderStatus}
+                    onUpdateQuantity={updateItemQuantity}
+                    onRemoveItem={removeItemFromOrder}
+                    onCustomerNameChange={setCustomerName}
+                    onNewOrder={() => {
+                        resetOrder();
+                        setIsOrderOpen(false);
+                    }}
+                    onClearOrder={() => {
+                        resetOrder();
+                        setIsOrderOpen(false);
+                    }}
+                    onClose={() => setIsOrderOpen(false)}
+                />
+            </DialogContent>
+        </Dialog>
       </AppLayout.Content>
     </AppLayout>
   );

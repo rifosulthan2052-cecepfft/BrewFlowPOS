@@ -47,7 +47,7 @@ export default function CurrentOrder({
   onSaveOpenBill,
   onNewOrder
 }: CurrentOrderProps) {
-  const { currency } = useApp();
+  const { currency, taxRate } = useApp();
   const isOrderEmpty = items.length === 0;
   const [showPayment, setShowPayment] = useState(false);
 
@@ -162,7 +162,7 @@ export default function CurrentOrder({
                   <span>{formatCurrency(totalFees, currency)}</span>
               </div>
               <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax (11%)</span>
+                  <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
                   <span>{formatCurrency(tax, currency)}</span>
               </div>
               <Separator />

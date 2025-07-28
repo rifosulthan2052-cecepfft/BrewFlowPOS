@@ -7,6 +7,8 @@ type Currency = 'USD' | 'IDR';
 type AppContextType = {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
+  taxRate: number;
+  setTaxRate: (taxRate: number) => void;
   formatCurrency: (amount: number) => string;
 };
 
@@ -14,6 +16,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>('IDR');
+  const [taxRate, setTaxRate] = useState<number>(0); // Default tax rate is 0%
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US', {
@@ -27,8 +30,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({
     currency,
     setCurrency,
+    taxRate,
+    setTaxRate,
     formatCurrency
-  }), [currency]);
+  }), [currency, taxRate]);
 
   return (
     <AppContext.Provider value={value}>

@@ -31,7 +31,7 @@ export default function CashierPage() {
   const [fees, setFees] = useState<Fee[]>([]);
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
-  const { currency } = useApp();
+  const { currency, taxRate } = useApp();
 
   const handleAddItem = (item: MenuItem) => {
     setOrderItems((prevItems) => {
@@ -75,11 +75,10 @@ export default function CashierPage() {
   const { subtotal, totalFees, tax, total } = useMemo(() => {
     const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
-    // Assuming a 11% tax rate for IDR
-    const tax = subtotal * 0.11;
+    const tax = subtotal * taxRate;
     const total = subtotal + totalFees + tax;
     return { subtotal, totalFees, tax, total };
-  }, [orderItems, fees]);
+  }, [orderItems, fees, taxRate]);
 
   const totalItems = useMemo(() => {
     return orderItems.reduce((acc, item) => acc + item.quantity, 0);

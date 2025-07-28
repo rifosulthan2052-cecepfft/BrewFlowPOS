@@ -81,7 +81,7 @@ export default function CashierPage() {
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
-            <DialogContent className="max-w-2xl p-0 gap-0">
+            <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
                 <CurrentOrder
                     items={orderItems}
                     customerName={customerName}

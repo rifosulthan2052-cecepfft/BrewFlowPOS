@@ -87,7 +87,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <div className="h-full flex flex-col max-h-full">
+    <div className="h-full flex flex-col">
        <div className="p-6 pb-2">
          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
@@ -110,7 +110,7 @@ export default function CurrentOrder({
             />
         </div>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-6 pt-4 space-y-4">
             {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">

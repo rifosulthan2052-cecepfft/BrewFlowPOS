@@ -101,9 +101,9 @@ export default function CashierPage() {
         <Header />
       </AppLayout.Header>
       <AppLayout.Content>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+        <div className="p-4 md:p-6">
           <MenuList menuItems={mockMenuItems} onAddItem={handleAddItem} />
-        </main>
+        </div>
         {totalItems > 0 && (
           <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
             <SheetTrigger asChild>

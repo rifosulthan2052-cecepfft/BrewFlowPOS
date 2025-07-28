@@ -63,10 +63,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                     {/* Footer content if any */}
                 </SidebarFooter>
             </Sidebar>
-            <main className="flex-1">
+            <div className="flex flex-col flex-1 h-screen overflow-hidden">
                 {header}
-                {content}
-            </main>
+                <main className="flex-1 overflow-y-auto">
+                    {content}
+                </main>
+            </div>
         </SidebarProvider>
     )
 }

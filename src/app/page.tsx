@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -9,10 +8,6 @@ import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useApp } from '@/components/layout/AppProvider';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
 
 const mockMenuItems: MenuItem[] = [
   { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150' },
@@ -32,8 +27,7 @@ export default function CashierPage() {
   const [fees, setFees] = useState<Fee[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
-  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
-  const { taxRate, currency } = useApp();
+  const { taxRate } = useApp();
 
   const handleAddItem = (item: MenuItem) => {
     setOrderItems((prevItems) => {
@@ -72,7 +66,6 @@ export default function CashierPage() {
     setFees([]);
     setCustomerName('');
     setOrderStatus('pending');
-    setIsOrderSheetOpen(false);
   }
 
   const { subtotal, totalFees, tax, total } = useMemo(() => {
@@ -96,93 +89,35 @@ export default function CashierPage() {
     }, 1000)
   }
 
-  const isOrderEmpty = orderItems.length === 0;
-
   return (
     <AppLayout>
       <AppLayout.Header>
         <Header />
       </AppLayout.Header>
       <AppLayout.Content>
-        <div className="h-full relative">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] h-full">
             <div className="h-full overflow-y-auto p-4 md:p-6">
                 <MenuList menuItems={mockMenuItems} onAddItem={handleAddItem} />
             </div>
-
-            {!isOrderSheetOpen && !isOrderEmpty && (
-              <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
-                <SheetTrigger asChild>
-                  <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm z-10 lg:left-64">
-                    <Button className="w-full h-14 text-lg">
-                        <ShoppingCart className="mr-4" />
-                        <span>View Order ({orderItems.reduce((acc, item) => acc + item.quantity, 0)} items)</span>
-                        <span className="ml-auto font-bold">{formatCurrency(total, currency)}</span>
-                    </Button>
-                  </div>
-                </SheetTrigger>
-                <SheetContent className="w-full sm:w-[540px] flex flex-col p-0">
-                  <CurrentOrder
-                      items={orderItems}
-                      fees={fees}
-                      customerName={customerName}
-                      subtotal={subtotal}
-                      tax={tax}
-                      total={total}
-                      totalFees={totalFees}
-                      orderStatus={orderStatus}
-                      onUpdateQuantity={handleUpdateItemQuantity}
-                      onRemoveItem={handleRemoveItem}
-      
-                      onAddFee={handleAddFee}
-                      onCustomerNameChange={setCustomerName}
-                      onPaymentSuccess={handlePaymentSuccess}
-                      onSaveOpenBill={handleSaveOpenBill}
-                      onNewOrder={resetOrder}
-                    />
-                </SheetContent>
-              </Sheet>
-            )}
-             {isOrderEmpty && orderStatus === 'pending' && (
-                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm z-10 lg:left-64">
-                    <div className="flex items-center justify-center h-14 text-lg bg-muted text-muted-foreground rounded-lg">
-                        <ShoppingCart className="mr-4" />
-                        <span>No items in order. Add items to start.</span>
-                    </div>
-                </div>
-            )}
-            
-             <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
-                <SheetTrigger asChild>
-                    { !isOrderEmpty &&
-                        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm z-10 lg:left-[--sidebar-width] peer-data-[collapsible=icon]:lg:left-[--sidebar-width-icon]">
-                            <Button className="w-full h-14 text-lg">
-                                <ShoppingCart className="mr-4" />
-                                <span>View Order ({orderItems.reduce((acc, item) => acc + item.quantity, 0)} items)</span>
-                                <span className="ml-auto font-bold">{formatCurrency(total, currency)}</span>
-                            </Button>
-                        </div>
-                    }
-                </SheetTrigger>
-                <SheetContent className="w-full max-w-none sm:max-w-md flex flex-col p-0">
-                     <CurrentOrder
-                        items={orderItems}
-                        fees={fees}
-                        customerName={customerName}
-                        subtotal={subtotal}
-                        tax={tax}
-                        total={total}
-                        totalFees={totalFees}
-                        orderStatus={orderStatus}
-                        onUpdateQuantity={handleUpdateItemQuantity}
-                        onRemoveItem={handleRemoveItem}
-                        onAddFee={handleAddFee}
-                        onCustomerNameChange={setCustomerName}
-                        onPaymentSuccess={handlePaymentSuccess}
-                        onSaveOpenBill={handleSaveOpenBill}
-                        onNewOrder={resetOrder}
-                      />
-                </SheetContent>
-            </Sheet>
+            <div className="h-full bg-secondary/20 border-l">
+                 <CurrentOrder
+                    items={orderItems}
+                    fees={fees}
+                    customerName={customerName}
+                    subtotal={subtotal}
+                    tax={tax}
+                    total={total}
+                    totalFees={totalFees}
+                    orderStatus={orderStatus}
+                    onUpdateQuantity={handleUpdateItemQuantity}
+                    onRemoveItem={handleRemoveItem}
+                    onAddFee={handleAddFee}
+                    onCustomerNameChange={setCustomerName}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onSaveOpenBill={handleSaveOpenBill}
+                    onNewOrder={resetOrder}
+                  />
+            </div>
         </div>
       </AppLayout.Content>
     </AppLayout>

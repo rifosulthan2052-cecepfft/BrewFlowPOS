@@ -14,7 +14,6 @@ import { formatCurrency } from '@/lib/utils';
 import { PaymentDialog } from './PaymentDialog';
 import { Badge } from '../ui/badge';
 import Receipt from './Receipt';
-import { SheetHeader, SheetTitle } from '../ui/sheet';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -61,14 +60,14 @@ export default function CurrentOrder({
   if (orderStatus === 'paid') {
      return (
        <div className="h-full flex flex-col bg-background">
-         <SheetHeader className="p-6">
-            <SheetTitle className='flex justify-between items-center'>
+         <div className="p-6">
+            <div className='flex justify-between items-center'>
               <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
               <Badge variant="default" className="capitalize bg-green-600 text-white">
                 Paid
               </Badge>
-            </SheetTitle>
-         </SheetHeader>
+            </div>
+         </div>
         <div className="flex-1 flex flex-col p-6">
             <Receipt orderItems={items} subtotal={subtotal} tax={tax} feesAmount={totalFees} total={total} />
         </div>
@@ -83,16 +82,16 @@ export default function CurrentOrder({
 
   return (
     <div className="h-full flex flex-col">
-       <SheetHeader className="p-6 pb-2">
-         <SheetTitle className="flex justify-between items-center">
+       <div className="p-6 pb-2">
+         <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
              {orderStatus !== 'pending' && (
                 <Badge variant={orderStatus === 'paid' ? "default" : "secondary"} className="capitalize">
                 {orderStatus.replace('_', ' ')}
                 </Badge>
             )}
-        </SheetTitle>
-      </SheetHeader>
+        </div>
+      </div>
       <div className="p-6 pt-2">
          <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

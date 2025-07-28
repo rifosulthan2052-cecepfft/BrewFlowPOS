@@ -6,7 +6,7 @@ import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Minus, X, User, Wallet, PlusCircle } from 'lucide-react';
+import { Plus, Minus, X, User, Wallet, PlusCircle, CreditCard } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -14,6 +14,9 @@ import Receipt from './Receipt';
 import Link from 'next/link';
 import { Separator } from '../ui/separator';
 import { FeeDialog } from './FeeDialog';
+import { PaymentDialog } from './PaymentDialog';
+import { useRouter } from 'next/navigation';
+import { set } from 'zod';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -23,6 +26,7 @@ type CurrentOrderProps = {
   onRemoveItem: (menuItemId: string) => void;
   onCustomerNameChange: (name: string) => void;
   onNewOrder: () => void;
+  onClose: () => void;
 };
 
 export default function CurrentOrder({
@@ -32,10 +36,26 @@ export default function CurrentOrder({
   onUpdateQuantity,
   onRemoveItem,
   onCustomerNameChange,
-  onNewOrder
+  onNewOrder,
+  onClose
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate } = useApp();
+  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, resetOrder } = useApp();
   const isOrderEmpty = items.length === 0;
+  const router = useRouter();
+
+
+  const handlePaymentSuccess = () => {
+    setOrderStatus('paid');
+  }
+
+  const handleSaveOpenBill = () => {
+    setOrderStatus('open_bill');
+    // In a real app, this would save the order to a database
+    setTimeout(() => {
+        resetOrder();
+        onClose();
+    }, 1000)
+  }
 
   if (orderStatus === 'paid') {
      return (
@@ -59,7 +79,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col max-h-[80vh]">
        <div className="p-6 pb-2">
          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
@@ -68,6 +88,9 @@ export default function CurrentOrder({
                 {orderStatus.replace('_', ' ')}
                 </Badge>
             )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+                <X className="h-4 w-4" />
+            </Button>
         </div>
       </div>
       <div className="p-6 pt-2">
@@ -148,20 +171,29 @@ export default function CurrentOrder({
             </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-            <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
-                <Button variant="outline" className="w-full">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+        <div className='w-full space-y-2'>
+             <PaymentDialog 
+                totalAmount={total}
+                onPaymentSuccess={handlePaymentSuccess}
+                disabled={isOrderEmpty}
+              >
+                  <Button size="lg" className="w-full">
+                  <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                  </Button>
+              </PaymentDialog>
+            <div className="grid grid-cols-2 gap-2">
+                <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                    <Button variant="outline" className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                    </Button>
+                </FeeDialog>
+                <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                    Save as Open Bill
                 </Button>
-            </FeeDialog>
-            <Button asChild className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                <Link href="/checkout">
-                    <Wallet className="mr-2 h-4 w-4" /> 
-                    <span>Pay</span>
-                </Link>
-            </Button>
+            </div>
         </div>
       </footer>
     </div>
   );
 }
+

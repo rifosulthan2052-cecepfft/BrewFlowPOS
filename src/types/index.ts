@@ -3,6 +3,7 @@ export type MenuItem = {
   name: string;
   price: number;
   imageUrl?: string;
+  "data-ai-hint": string;
 };
 
 export type OrderItem = {

@@ -5,9 +5,11 @@ import type { MenuItem } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
+import { Badge } from '../ui/badge';
 
 type MenuItemCardProps = {
   item: MenuItem;
+  quantity: number;
   onAddItem: (item: MenuItem) => void;
 };
 
@@ -25,16 +27,25 @@ function getInitials(name: string): string {
 }
 
 
-export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
+export default function MenuItemCard({ item, quantity, onAddItem }: MenuItemCardProps) {
   const { currency } = useApp();
   const hint = getHintFromItemName(item.name);
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-accent/20 hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+      className="cursor-pointer hover:shadow-accent/20 hover:shadow-lg transition-shadow duration-300 overflow-hidden relative"
       onClick={() => onAddItem(item)}
       aria-label={`Add ${item.name} to order`}
     >
+      {quantity > 0 && (
+        <Badge 
+          variant="default" 
+          className="absolute top-2 right-2 z-10 rounded-full h-6 w-6 flex items-center justify-center bg-accent text-accent-foreground shadow-lg"
+          aria-label={`${quantity} in order`}
+        >
+          {quantity}
+        </Badge>
+      )}
       <CardContent className="p-0 flex flex-col items-center text-center">
         <div className="relative w-full aspect-square bg-secondary flex items-center justify-center">
           {item.imageUrl ? (

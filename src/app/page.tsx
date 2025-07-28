@@ -74,7 +74,7 @@ function LandscapeView() {
     return (
         <div className="grid grid-cols-12 gap-4 md:gap-6 p-4 md:p-6 h-full">
             <div className="col-span-7 h-full overflow-y-auto">
-                <MenuList menuItems={mockMenuItems} onAddItem={addItemToOrder} />
+                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
             </div>
             <div className="col-span-5 h-full">
                 <Card className="h-full">
@@ -111,7 +111,7 @@ function PortraitView() {
     return (
         <>
             <div className="p-4 md:p-6 pb-24">
-                <MenuList menuItems={mockMenuItems} onAddItem={addItemToOrder} />
+                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
             </div>
             <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
             <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>

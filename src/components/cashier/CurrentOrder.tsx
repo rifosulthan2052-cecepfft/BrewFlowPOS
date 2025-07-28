@@ -92,8 +92,8 @@ export default function CurrentOrder({
             )}
         </div>
       </header>
-      <ScrollArea className="flex-1">
-        <div className="px-6 pb-6 space-y-4">
+      <ScrollArea className="flex-1 px-6">
+        <div className="pb-6 space-y-4">
             <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -159,47 +159,47 @@ export default function CurrentOrder({
             )}
         </div>
       </ScrollArea>
-      <footer className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-6 bg-secondary/30 z-10 sticky bottom-0">
-          <div className="space-y-2 text-lg">
-              <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(subtotal, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fees</span>
-                  <span>{formatCurrency(totalFees, currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
-                  <span>{formatCurrency(tax, currency)}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between font-bold text-2xl text-primary pt-2">
-                  <span>Total</span>
-                  <span>{formatCurrency(total, currency)}</span>
-              </div>
-          </div>
-          <div className='w-full space-y-2 pt-4'>
-              <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                  <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                  </Button>
-              </FeeDialog>
-              <PaymentDialog 
-                totalAmount={total}
-                onPaymentSuccess={onPaymentSuccess}
-                disabled={isOrderEmpty || orderStatus !== 'pending'}
-              >
-                  <Button size="lg" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                    <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                  </Button>
-              </PaymentDialog>
+      <footer className="mt-auto flex-shrink-0 border-t bg-secondary/30">
+        <div className="p-6 space-y-2 text-lg">
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatCurrency(subtotal, currency)}</span>
+            </div>
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Fees</span>
+                <span>{formatCurrency(totalFees, currency)}</span>
+            </div>
+            <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
+                <span>{formatCurrency(tax, currency)}</span>
+            </div>
+            <Separator />
+            <div className="flex justify-between font-bold text-2xl text-primary pt-2">
+                <span>Total</span>
+                <span>{formatCurrency(total, currency)}</span>
+            </div>
+        </div>
+        <div className='w-full space-y-2 p-6 pt-0'>
+            <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                </Button>
+            </FeeDialog>
+            <PaymentDialog 
+              totalAmount={total}
+              onPaymentSuccess={onPaymentSuccess}
+              disabled={isOrderEmpty || orderStatus !== 'pending'}
+            >
+                <Button size="lg" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                  <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                </Button>
+            </PaymentDialog>
 
-              <Button size="lg" variant="secondary" className="w-full" onClick={onSaveOpenBill} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                  Save as Open Bill
-              </Button>
-          </div>
-        </footer>
+            <Button size="lg" variant="secondary" className="w-full" onClick={onSaveOpenBill} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                Save as Open Bill
+            </Button>
+        </div>
+      </footer>
     </div>
   );
 }

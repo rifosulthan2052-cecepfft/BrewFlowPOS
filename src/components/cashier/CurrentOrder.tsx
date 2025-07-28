@@ -85,7 +85,7 @@ export default function CurrentOrder({
 
   return (
     <div className="h-full flex flex-col">
-      <CardHeader>
+       <CardHeader>
         <div className="flex justify-between items-center">
             <CardTitle>Current Order</CardTitle>
              {orderStatus !== 'pending' && (
@@ -95,9 +95,8 @@ export default function CurrentOrder({
             )}
         </div>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <ScrollArea className="h-full">
-          <div className="px-6 pb-6">
+      <ScrollArea className="flex-1">
+        <CardContent className="px-6 pb-6">
             {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                 <p>No items in order.</p>
@@ -151,52 +150,51 @@ export default function CurrentOrder({
                 </div>
               </>
             )}
+        </CardContent>
+        <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4 bg-secondary/30 z-10 sticky bottom-0">
+          <div className="space-y-2 text-lg">
+              <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatCurrency(subtotal, currency)}</span>
+              </div>
+              <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fees</span>
+                  <span>{formatCurrency(totalFees, currency)}</span>
+              </div>
+              <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (11%)</span>
+                  <span>{formatCurrency(tax, currency)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold text-2xl text-primary pt-2">
+                  <span>Total</span>
+                  <span>{formatCurrency(total, currency)}</span>
+              </div>
           </div>
-        </ScrollArea>
-      </CardContent>
-       <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4 bg-secondary/30 z-10">
-        <div className="space-y-2 text-lg">
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(subtotal, currency)}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Fees</span>
-                <span>{formatCurrency(totalFees, currency)}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax (11%)</span>
-                <span>{formatCurrency(tax, currency)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-bold text-2xl text-primary pt-2">
-                <span>Total</span>
-                <span>{formatCurrency(total, currency)}</span>
-            </div>
-        </div>
-        
-        {showPayment ? (
-             <PaymentPanel
-                totalAmount={total}
-                onPaymentSuccess={onPaymentSuccess}
-                disabled={isOrderEmpty || orderStatus !== 'pending'}
-            />
-        ) : (
-            <div className='w-full space-y-2 mt-4'>
-                <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                    <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                    </Button>
-                </FeeDialog>
-                <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                   <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                </Button>
-                 <Button size="lg" variant="secondary" className="w-full" onClick={onSaveOpenBill} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                    Save as Open Bill
-                </Button>
-            </div>
-        )}
-      </CardFooter>
+          
+          {showPayment ? (
+              <PaymentPanel
+                  totalAmount={total}
+                  onPaymentSuccess={onPaymentSuccess}
+                  disabled={isOrderEmpty || orderStatus !== 'pending'}
+              />
+          ) : (
+              <div className='w-full space-y-2 mt-4'>
+                  <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                      <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                          <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                      </Button>
+                  </FeeDialog>
+                  <Button size="lg" className="w-full" onClick={handleProceedToPayment} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                    <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                  </Button>
+                  <Button size="lg" variant="secondary" className="w-full" onClick={onSaveOpenBill} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                      Save as Open Bill
+                  </Button>
+              </div>
+          )}
+        </CardFooter>
+      </ScrollArea>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useApp } from '@/components/layout/AppProvider';
@@ -105,8 +105,8 @@ export default function CashierPage() {
           <MenuList menuItems={mockMenuItems} onAddItem={handleAddItem} />
         </div>
         {totalItems > 0 && (
-          <Sheet open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
-            <SheetTrigger asChild>
+          <Dialog open={isOrderSheetOpen} onOpenChange={setIsOrderSheetOpen}>
+            <DialogTrigger asChild>
               <div className="fixed bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 z-20">
                 <Button className="w-full md:w-auto h-16 md:h-auto md:rounded-full shadow-lg text-lg flex items-center justify-between gap-4 px-6 py-4">
                     <div className='flex items-center gap-2'>
@@ -118,27 +118,27 @@ export default function CashierPage() {
                     <span>{formatCurrency(total, currency)}</span>
                 </Button>
               </div>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:w-[540px] flex flex-col p-0">
-              <SheetTitle className="sr-only">Current Order</SheetTitle>
-              <SheetDescription className="sr-only">Review, manage, and process the current order.</SheetDescription>
-              <CurrentOrder
-                  items={orderItems}
-                  fees={fees}
-                  subtotal={subtotal}
-                  tax={tax}
-                  total={total}
-                  totalFees={totalFees}
-                  orderStatus={orderStatus}
-                  onUpdateQuantity={handleUpdateItemQuantity}
-                  onRemoveItem={handleRemoveItem}
-                  onAddFee={handleAddFee}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  onSaveOpenBill={handleSaveOpenBill}
-                  onNewOrder={resetOrder}
-                />
-            </SheetContent>
-          </Sheet>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg w-full h-[90vh] flex flex-col p-0">
+                <DialogTitle className="sr-only">Current Order</DialogTitle>
+                <DialogDescription className="sr-only">Review, manage, and process the current order.</DialogDescription>
+                <CurrentOrder
+                    items={orderItems}
+                    fees={fees}
+                    subtotal={subtotal}
+                    tax={tax}
+                    total={total}
+                    totalFees={totalFees}
+                    orderStatus={orderStatus}
+                    onUpdateQuantity={handleUpdateItemQuantity}
+                    onRemoveItem={handleRemoveItem}
+                    onAddFee={handleAddFee}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onSaveOpenBill={handleSaveOpenBill}
+                    onNewOrder={resetOrder}
+                  />
+            </DialogContent>
+          </Dialog>
         )}
       </AppLayout.Content>
     </AppLayout>

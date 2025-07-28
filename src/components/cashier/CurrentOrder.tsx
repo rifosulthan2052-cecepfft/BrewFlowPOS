@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/utils';
 import { PaymentDialog } from './PaymentDialog';
 import { Badge } from '../ui/badge';
 import Receipt from './Receipt';
+import { SheetHeader, SheetTitle } from '../ui/sheet';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -59,19 +60,19 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col p-6 bg-background">
-        <header className="pb-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
-            <Badge variant="default" className="capitalize bg-green-600 text-white">
-              Paid
-            </Badge>
-          </div>
-        </header>
-        <div className="flex-1 flex flex-col">
+       <div className="h-full flex flex-col bg-background">
+         <SheetHeader className="p-6">
+            <SheetTitle className='flex justify-between items-center'>
+              <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
+              <Badge variant="default" className="capitalize bg-green-600 text-white">
+                Paid
+              </Badge>
+            </SheetTitle>
+         </SheetHeader>
+        <div className="flex-1 flex flex-col p-6">
             <Receipt orderItems={items} subtotal={subtotal} tax={tax} feesAmount={totalFees} total={total} />
         </div>
-        <footer className="pt-4 border-t mt-auto">
+        <footer className="p-6 pt-4 border-t mt-auto">
           <Button size="lg" className="w-full" onClick={handleNewOrder}>
               Start New Order
           </Button>
@@ -82,28 +83,30 @@ export default function CurrentOrder({
 
   return (
     <div className="h-full flex flex-col">
-      <header className="p-6">
-        <div className="flex justify-between items-center">
+       <SheetHeader className="p-6 pb-2">
+         <SheetTitle className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
              {orderStatus !== 'pending' && (
                 <Badge variant={orderStatus === 'paid' ? "default" : "secondary"} className="capitalize">
                 {orderStatus.replace('_', ' ')}
                 </Badge>
             )}
-        </div>
-      </header>
+        </SheetTitle>
+      </SheetHeader>
+      <div className="p-6 pt-2">
+         <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                  placeholder="Customer Name" 
+                  value={customerName}
+                  onChange={(e) => onCustomerNameChange(e.target.value)}
+                  className="pl-9"
+                  disabled={orderStatus !== 'pending'}
+              />
+          </div>
+      </div>
       <ScrollArea className="flex-1 px-6">
         <div className="pb-6 space-y-4">
-            <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Customer Name" 
-                    value={customerName}
-                    onChange={(e) => onCustomerNameChange(e.target.value)}
-                    className="pl-9"
-                    disabled={orderStatus !== 'pending'}
-                />
-            </div>
             {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                 <p>No items in order.</p>

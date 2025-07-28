@@ -102,7 +102,7 @@ export default function CashierPage() {
         <Header />
       </AppLayout.Header>
       <AppLayout.Content>
-        <div className="p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <MenuList menuItems={mockMenuItems} onAddItem={handleAddItem} />
         </div>
         {totalItems > 0 && (

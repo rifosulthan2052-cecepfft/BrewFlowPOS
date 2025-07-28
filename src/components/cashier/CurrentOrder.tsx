@@ -168,6 +168,7 @@ export default function CurrentOrder({
       <footer className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-6 bg-secondary/30 z-10 sticky bottom-0">
           <ScrollArea className='max-h-96'>
             <div className="p-1 space-y-4">
+              {/* Order Summary - Always Visible */}
               <div className="space-y-2 text-lg">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
@@ -188,6 +189,7 @@ export default function CurrentOrder({
                   </div>
               </div>
               
+              {/* Conditional Rendering for Payment Panel or Buttons */}
               {showPayment ? (
                   <PaymentPanel
                       totalAmount={total}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -26,7 +27,6 @@ export default function CashierPage() {
   const [fees, setFees] = useState<Fee[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
-  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
   const { taxRate } = useApp();
 
   const handleAddItem = (item: MenuItem) => {
@@ -66,7 +66,6 @@ export default function CashierPage() {
     setFees([]);
     setCustomerName('');
     setOrderStatus('pending');
-    setIsOrderSheetOpen(false);
   }
 
   const { subtotal, totalFees, tax, total } = useMemo(() => {

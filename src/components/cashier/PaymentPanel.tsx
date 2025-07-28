@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ export default function PaymentPanel({
 }: PaymentPanelProps) {
 
   return (
-    <div className='w-full space-y-4 pt-4 animate-in fade-in'>
+    <div className='w-full space-y-4 pt-4'>
         <ChangeCalculator 
             totalAmount={totalAmount} 
             onPaymentSuccess={onPaymentSuccess} 

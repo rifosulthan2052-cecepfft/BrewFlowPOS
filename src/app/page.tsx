@@ -36,23 +36,22 @@ function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
 
     return (
         <div 
-            className="fixed bottom-0 left-0 right-0 bg-background border-t z-20 cursor-pointer"
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full shadow-lg z-20 cursor-pointer animate-in fade-in slide-in-from-bottom-5"
             onClick={onOpen}
         >
-            <div className="container mx-auto p-4 flex justify-between items-center">
+            <div className="px-6 py-3 flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
                      <div className="relative">
-                        <ShoppingCart className="h-6 w-6 text-primary" />
+                        <ShoppingCart className="h-6 w-6" />
                         <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
                             {itemCount}
                         </span>
                     </div>
                     <div>
-                        <p className="font-semibold">View Current Order</p>
-                        <p className="text-sm text-muted-foreground">{formatCurrency(total, currency)}</p>
+                        <p className="font-semibold">View Order ({formatCurrency(total, currency)})</p>
                     </div>
                 </div>
-                <ChevronUp className="h-5 w-5 text-primary" />
+                <ChevronUp className="h-5 w-5" />
             </div>
         </div>
     )
@@ -69,7 +68,6 @@ export default function CashierPage() {
     setCustomerName,
     orderStatus,
     resetOrder,
-    total,
   } = useApp();
 
   const [isOrderOpen, setIsOrderOpen] = useState(false);

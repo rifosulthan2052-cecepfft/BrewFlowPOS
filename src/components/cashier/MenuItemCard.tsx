@@ -20,6 +20,14 @@ function getHintFromItemName(name: string): string {
     return words.slice(0, 2).join(' ');
 }
 
+function getInitials(name: string): string {
+  const words = name.split(' ');
+  if (words.length > 1) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 
 export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
   const { currency } = useApp();
@@ -32,8 +40,8 @@ export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
       aria-label={`Add ${item.name} to order`}
     >
       <CardContent className="p-0 flex flex-col items-center text-center">
-        <div className="relative w-full aspect-square">
-          {item.imageUrl && (
+        <div className="relative w-full aspect-square bg-secondary flex items-center justify-center">
+          {item.imageUrl ? (
             <Image
               src={item.imageUrl}
               alt={item.name}
@@ -42,6 +50,8 @@ export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
               className="object-cover"
               data-ai-hint={hint}
             />
+          ) : (
+             <span className="text-4xl font-bold text-secondary-foreground">{getInitials(item.name)}</span>
           )}
         </div>
         <div className="p-2 w-full">

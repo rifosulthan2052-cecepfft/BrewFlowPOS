@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import type { OrderItem, Fee } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,42 +65,42 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col">
-        <CardHeader>
+       <div className="h-full flex flex-col p-6">
+        <header className="pb-4">
           <div className="flex justify-between items-center">
-            <CardTitle>Order Paid</CardTitle>
+            <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
             <Badge variant="default" className="capitalize bg-green-600 text-white">
               Paid
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-6">
+        </header>
+        <div className="flex-1 flex flex-col">
             <Receipt orderItems={items} subtotal={subtotal} tax={tax} feesAmount={totalFees} total={total} />
-        </CardContent>
-        <CardFooter className="p-4 border-t">
+        </div>
+        <footer className="pt-4 border-t mt-auto">
           <Button size="lg" className="w-full" onClick={handleNewOrder}>
               Start New Order
           </Button>
-        </CardFooter>
+        </footer>
       </div>
      )
   }
 
   return (
     <div className="h-full flex flex-col">
-       <CardHeader>
+      <header className="p-6">
         <div className="flex justify-between items-center">
-            <CardTitle>Current Order</CardTitle>
+            <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
              {orderStatus !== 'pending' && (
                 <Badge variant={orderStatus === 'paid' ? "default" : "secondary"} className="capitalize">
                 {orderStatus.replace('_', ' ')}
                 </Badge>
             )}
         </div>
-      </CardHeader>
+      </header>
       <ScrollArea className="flex-1">
-        <CardContent className="px-6 pb-6">
-            <div className="relative mb-4">
+        <div className="px-6 pb-6 space-y-4">
+            <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                     placeholder="Customer Name" 
@@ -164,11 +163,11 @@ export default function CurrentOrder({
                 </div>
               </>
             )}
-        </CardContent>
-        </ScrollArea>
-        <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4 bg-secondary/30 z-10 sticky bottom-0">
+        </div>
+      </ScrollArea>
+      <footer className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-6 bg-secondary/30 z-10 sticky bottom-0">
           <ScrollArea className='max-h-96'>
-            <div className="p-1">
+            <div className="p-1 space-y-4">
               <div className="space-y-2 text-lg">
                   <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal</span>
@@ -196,7 +195,7 @@ export default function CurrentOrder({
                       disabled={isOrderEmpty || orderStatus !== 'pending'}
                   />
               ) : (
-                  <div className='w-full space-y-2 mt-4'>
+                  <div className='w-full space-y-2'>
                       <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
                           <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
                               <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
@@ -212,7 +211,7 @@ export default function CurrentOrder({
               )}
             </div>
           </ScrollArea>
-        </CardFooter>
+        </footer>
     </div>
   );
 }

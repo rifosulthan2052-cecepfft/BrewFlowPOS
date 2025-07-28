@@ -92,7 +92,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <div className="h-full flex flex-col max-h-[80vh]">
+    <div className="h-full flex flex-col max-h-full">
        <div className="p-6 pb-2">
          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
@@ -103,20 +103,20 @@ export default function CurrentOrder({
             )}
         </div>
       </div>
-      <ScrollArea className="flex-1 px-6">
-        <div className="p-6 pt-2">
-            <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Customer Name" 
-                    value={customerName}
-                    onChange={(e) => onCustomerNameChange(e.target.value)}
-                    className="pl-9"
-                    disabled={orderStatus !== 'pending'}
-                />
-            </div>
+      <div className='px-6 pt-2'>
+        <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+                placeholder="Customer Name" 
+                value={customerName}
+                onChange={(e) => onCustomerNameChange(e.target.value)}
+                className="pl-9"
+                disabled={orderStatus !== 'pending'}
+            />
         </div>
-        <div className="pb-6 space-y-4 px-6">
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-6 space-y-4">
             {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                 <p>No items in order.</p>
@@ -157,7 +157,9 @@ export default function CurrentOrder({
               </ul>
             )}
         </div>
-        <div className="space-y-2 text-sm pt-4 border-t px-6 pb-6">
+      </ScrollArea>
+      <div className="mt-auto flex-shrink-0 bg-card p-6 border-t">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
@@ -178,9 +180,7 @@ export default function CurrentOrder({
               <span className='font-mono'>{formatCurrency(total, currency)}</span>
           </div>
         </div>
-      </ScrollArea>
-      <footer className="mt-auto flex-shrink-0 border-t bg-card p-6">
-        <div className='w-full space-y-2'>
+         <div className='w-full space-y-2 mt-4'>
              <PaymentDialog 
                 totalAmount={total}
                 onPaymentSuccess={handlePaymentSuccess}
@@ -222,7 +222,7 @@ export default function CurrentOrder({
                 </AlertDialog>
             </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

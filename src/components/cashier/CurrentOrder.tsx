@@ -147,30 +147,29 @@ export default function CurrentOrder({
               </ul>
             )}
         </div>
-      </ScrollArea>
-      <footer className="mt-auto flex-shrink-0 border-t bg-card p-6 space-y-4">
-         <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
-            </div>
-             {fees.length > 0 && (
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fees</span>
-                    <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
-                </div>
-             )}
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
-                <span className='font-mono'>{formatCurrency(tax, currency)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-bold text-lg text-primary">
-                <span>Total</span>
-                <span className='font-mono'>{formatCurrency(total, currency)}</span>
-            </div>
+        <div className="space-y-2 text-sm pt-4 border-t">
+          <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
+          </div>
+            {fees.length > 0 && (
+              <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fees</span>
+                  <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
+              </div>
+            )}
+          <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
+              <span className='font-mono'>{formatCurrency(tax, currency)}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between font-bold text-lg text-primary">
+              <span>Total</span>
+              <span className='font-mono'>{formatCurrency(total, currency)}</span>
+          </div>
         </div>
-
+      </ScrollArea>
+      <footer className="mt-auto flex-shrink-0 border-t bg-card p-6">
         <div className='w-full space-y-2'>
              <PaymentDialog 
                 totalAmount={total}

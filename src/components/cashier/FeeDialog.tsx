@@ -30,9 +30,10 @@ const feeSchema = z.object({
 type FeeDialogProps = {
   children: React.ReactNode;
   onAddFee: (fee: Fee) => void;
+  disabled?: boolean;
 };
 
-export function FeeDialog({ children, onAddFee }: FeeDialogProps) {
+export function FeeDialog({ children, onAddFee, disabled = false }: FeeDialogProps) {
   const { currency } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<z.infer<typeof feeSchema>>({
@@ -52,7 +53,7 @@ export function FeeDialog({ children, onAddFee }: FeeDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild disabled={disabled}>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Fee</DialogTitle>

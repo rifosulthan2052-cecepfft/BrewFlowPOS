@@ -10,22 +10,45 @@ import { Plus, Minus, X, PlusCircle } from 'lucide-react';
 import { FeeDialog } from './FeeDialog';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
+import PaymentPanel from './PaymentPanel';
 
 type CurrentOrderProps = {
   items: OrderItem[];
   fees: Fee[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  totalFees: number;
+  orderStatus: 'pending' | 'paid' | 'open_bill';
   onUpdateQuantity: (menuItemId: string, quantity: number) => void;
   onRemoveItem: (menuItemId: string) => void;
   onAddFee: (fee: Fee) => void;
+  onPaymentSuccess: () => void;
+  onSaveOpenBill: () => void;
+  onNewOrder: () => void;
 };
 
-export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveItem, onAddFee }: CurrentOrderProps) {
+export default function CurrentOrder({
+  items,
+  fees,
+  subtotal,
+  tax,
+  total,
+  totalFees,
+  orderStatus,
+  onUpdateQuantity,
+  onRemoveItem,
+  onAddFee,
+  onPaymentSuccess,
+  onSaveOpenBill,
+  onNewOrder
+}: CurrentOrderProps) {
   const { currency } = useApp();
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const isOrderEmpty = items.length === 0;
 
   return (
-    <Card className="h-full flex flex-col shadow-none border-0 rounded-none">
-      <CardHeader className="flex-shrink-0">
+    <div className="h-full flex flex-col">
+      <CardHeader>
         <CardTitle>Current Order</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0">
@@ -69,31 +92,43 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
                 ))}
               </ul>
             )}
+             {fees.length > 0 && (
+              <>
+                <Separator className='my-4'/>
+                <div className="text-sm space-y-1">
+                    <h4 className="font-semibold mb-2">Additional Fees</h4>
+                    {fees.map((fee, index) => (
+                        <div key={index} className="flex justify-between text-muted-foreground">
+                            <span>{fee.name} {fee.notes && <span className="text-xs">({fee.notes})</span>}</span>
+                            <span>{formatCurrency(fee.amount, currency)}</span>
+                        </div>
+                    ))}
+                </div>
+              </>
+            )}
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4 bg-background z-10">
-        <div className="flex justify-between font-semibold text-lg">
-          <span>Subtotal</span>
-          <span>{formatCurrency(subtotal, currency)}</span>
+       <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-0 bg-background z-10">
+        <div className='p-4'>
+            <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                </Button>
+            </FeeDialog>
         </div>
-        <Separator />
-        <FeeDialog onAddFee={onAddFee}>
-            <Button variant="outline" className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-            </Button>
-        </FeeDialog>
-        {fees.length > 0 && (
-            <div className="text-sm space-y-1 mt-2">
-                {fees.map((fee, index) => (
-                    <div key={index} className="flex justify-between text-muted-foreground">
-                        <span>{fee.name} <span className="text-xs">({fee.notes})</span></span>
-                        <span>{formatCurrency(fee.amount, currency)}</span>
-                    </div>
-                ))}
-            </div>
-        )}
+        <PaymentPanel
+            subtotal={subtotal}
+            feesAmount={totalFees}
+            tax={tax}
+            total={total}
+            orderStatus={orderStatus}
+            onPaymentSuccess={onPaymentSuccess}
+            onSaveOpenBill={onSaveOpenBill}
+            onNewOrder={onNewOrder}
+            orderItems={items}
+        />
       </CardFooter>
-    </Card>
+    </div>
   );
 }

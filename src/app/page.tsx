@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import type { MenuItem, OrderItem, Fee } from '@/types';
+import { useMemo } from 'react';
+import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
@@ -23,71 +23,17 @@ const mockMenuItems: MenuItem[] = [
 ];
 
 export default function CashierPage() {
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [fees, setFees] = useState<Fee[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
-  const { taxRate } = useApp();
-
-  const handleAddItem = (item: MenuItem) => {
-    setOrderItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.menuItemId === item.id);
-      if (existingItem) {
-        return prevItems.map((i) =>
-          i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prevItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
-    });
-  };
-
-  const handleUpdateItemQuantity = (menuItemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
-    } else {
-      setOrderItems((prevItems) =>
-        prevItems.map((i) =>
-          i.menuItemId === menuItemId ? { ...i, quantity } : i
-        )
-      );
-    }
-  };
-  
-  const handleRemoveItem = (menuItemId: string) => {
-    setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
-  };
-
-  const handleAddFee = (fee: Fee) => {
-    setFees((prevFees) => [...prevFees, fee]);
-  };
-
-  const resetOrder = () => {
-    setOrderItems([]);
-    setFees([]);
-    setCustomerName('');
-    setOrderStatus('pending');
-  }
-
-  const { subtotal, totalFees, tax, total } = useMemo(() => {
-    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
-    const tax = subtotal * taxRate;
-    const total = subtotal + totalFees + tax;
-    return { subtotal, totalFees, tax, total };
-  }, [orderItems, fees, taxRate]);
-
-  const handlePaymentSuccess = () => {
-    setOrderStatus('paid');
-  }
-
-  const handleSaveOpenBill = () => {
-    setOrderStatus('open_bill');
-    // In a real app, this would save the order to a database
-    // For now, we just reset it
-    setTimeout(() => {
-      resetOrder();
-    }, 1000)
-  }
+  const {
+    orderItems,
+    addItemToOrder,
+    updateItemQuantity,
+    removeItemFromOrder,
+    customerName,
+    setCustomerName,
+    orderStatus,
+    resetOrder,
+    total,
+  } = useApp();
 
   return (
     <AppLayout>
@@ -96,28 +42,21 @@ export default function CashierPage() {
       </AppLayout.Header>
       <AppLayout.Content>
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] h-full">
-            <div className="h-full overflow-y-auto p-4 md:p-6">
-                <MenuList menuItems={mockMenuItems} onAddItem={handleAddItem} />
-            </div>
-            <div className="h-full bg-secondary/20 border-l">
-                 <CurrentOrder
-                    items={orderItems}
-                    fees={fees}
-                    customerName={customerName}
-                    subtotal={subtotal}
-                    tax={tax}
-                    total={total}
-                    totalFees={totalFees}
-                    orderStatus={orderStatus}
-                    onUpdateQuantity={handleUpdateItemQuantity}
-                    onRemoveItem={handleRemoveItem}
-                    onAddFee={handleAddFee}
-                    onCustomerNameChange={setCustomerName}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    onSaveOpenBill={handleSaveOpenBill}
-                    onNewOrder={resetOrder}
-                  />
-            </div>
+          <div className="h-full overflow-y-auto p-4 md:p-6">
+            <MenuList menuItems={mockMenuItems} onAddItem={addItemToOrder} />
+          </div>
+          <div className="h-full bg-secondary/20 border-l">
+            <CurrentOrder
+              items={orderItems}
+              customerName={customerName}
+              orderStatus={orderStatus}
+              total={total}
+              onUpdateQuantity={updateItemQuantity}
+              onRemoveItem={removeItemFromOrder}
+              onCustomerNameChange={setCustomerName}
+              onNewOrder={resetOrder}
+            />
+          </div>
         </div>
       </AppLayout.Content>
     </AppLayout>

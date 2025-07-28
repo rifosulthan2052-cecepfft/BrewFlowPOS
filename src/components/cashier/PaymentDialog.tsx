@@ -32,7 +32,6 @@ export function PaymentDialog({ children, totalAmount, onPaymentSuccess, disable
         <PaymentPanel
           totalAmount={totalAmount}
           onPaymentSuccess={onPaymentSuccess}
-          disabled={disabled}
         />
       </DialogContent>
     </Dialog>

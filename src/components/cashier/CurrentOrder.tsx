@@ -2,81 +2,59 @@
 
 'use client';
 
-import type { OrderItem, Fee } from '@/types';
+import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Minus, X, PlusCircle, Wallet, User } from 'lucide-react';
-import { FeeDialog } from './FeeDialog';
+import { Plus, Minus, X, User, Wallet } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
-import { PaymentDialog } from './PaymentDialog';
 import { Badge } from '../ui/badge';
 import Receipt from './Receipt';
+import Link from 'next/link';
 
 type CurrentOrderProps = {
   items: OrderItem[];
-  fees: Fee[];
   customerName: string;
-  subtotal: number;
-  tax: number;
-  total: number;
-  totalFees: number;
   orderStatus: 'pending' | 'paid' | 'open_bill';
+  total: number;
   onUpdateQuantity: (menuItemId: string, quantity: number) => void;
   onRemoveItem: (menuItemId: string) => void;
-  onAddFee: (fee: Fee) => void;
   onCustomerNameChange: (name: string) => void;
-  onPaymentSuccess: () => void;
-  onSaveOpenBill: () => void;
   onNewOrder: () => void;
 };
 
 export default function CurrentOrder({
   items,
-  fees,
   customerName,
-  subtotal,
-  tax,
-  total,
-  totalFees,
   orderStatus,
+  total,
   onUpdateQuantity,
   onRemoveItem,
-  onAddFee,
   onCustomerNameChange,
-  onPaymentSuccess,
-  onSaveOpenBill,
   onNewOrder
 }: CurrentOrderProps) {
-  const { currency, taxRate } = useApp();
+  const { currency, subtotal, tax, totalFees } = useApp();
   const isOrderEmpty = items.length === 0;
-
-  const handleNewOrder = () => {
-    onNewOrder();
-  }
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col bg-background">
-         <div className="p-6">
-            <div className='flex justify-between items-center'>
-              <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
-              <Badge variant="default" className="capitalize bg-green-600 text-white">
-                Paid
-              </Badge>
-            </div>
+       <div className="h-full flex flex-col bg-background p-6">
+         <div className='flex justify-between items-center mb-4'>
+           <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
+           <Badge variant="default" className="capitalize bg-green-600 text-white">
+             Paid
+           </Badge>
          </div>
-        <div className="flex-1 flex flex-col p-6">
-            <Receipt orderItems={items} subtotal={subtotal} tax={tax} feesAmount={totalFees} total={total} />
-        </div>
-        <footer className="p-6 pt-4 border-t mt-auto">
-          <Button size="lg" className="w-full" onClick={handleNewOrder}>
-              Start New Order
-          </Button>
-        </footer>
-      </div>
+         <div className="flex-1 flex flex-col">
+           <Receipt orderItems={items} subtotal={subtotal} tax={tax} feesAmount={totalFees} total={total} />
+         </div>
+         <footer className="pt-4 border-t mt-auto">
+           <Button size="lg" className="w-full" onClick={onNewOrder}>
+               Start New Order
+           </Button>
+         </footer>
+       </div>
      )
   }
 
@@ -145,62 +123,16 @@ export default function CurrentOrder({
                 ))}
               </ul>
             )}
-             {fees.length > 0 && (
-              <>
-                <Separator className='my-4'/>
-                <div className="text-sm space-y-1">
-                    <h4 className="font-semibold mb-2">Additional Fees</h4>
-                    {fees.map((fee, index) => (
-                        <div key={index} className="flex justify-between text-muted-foreground">
-                            <span>{fee.name} {fee.notes && <span className="text-xs">({fee.notes})</span>}</span>
-                            <span>{formatCurrency(fee.amount, currency)}</span>
-                        </div>
-                    ))}
-                </div>
-              </>
-            )}
         </div>
       </ScrollArea>
-      <footer className="mt-auto flex-shrink-0 border-t bg-secondary/30">
-        <div className="p-6 space-y-2 text-lg">
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(subtotal, currency)}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Fees</span>
-                <span>{formatCurrency(totalFees, currency)}</span>
-            </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
-                <span>{formatCurrency(tax, currency)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-bold text-2xl text-primary pt-2">
-                <span>Total</span>
-                <span>{formatCurrency(total, currency)}</span>
-            </div>
-        </div>
-        <div className='w-full space-y-2 p-6 pt-0'>
-            <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                </Button>
-            </FeeDialog>
-            <PaymentDialog 
-              totalAmount={total}
-              onPaymentSuccess={onPaymentSuccess}
-              disabled={isOrderEmpty || orderStatus !== 'pending'}
-            >
-                <Button size="lg" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                  <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                </Button>
-            </PaymentDialog>
-
-            <Button size="lg" variant="secondary" className="w-full" onClick={onSaveOpenBill} disabled={isOrderEmpty || orderStatus !== 'pending'}>
-                Save as Open Bill
-            </Button>
-        </div>
+      <footer className="mt-auto flex-shrink-0 border-t bg-secondary/30 p-6">
+        <Button asChild size="lg" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+            <Link href="/checkout">
+                <Wallet className="mr-2 h-4 w-4" /> 
+                <span>Pay </span>
+                <span className="font-bold ml-2">{formatCurrency(total, currency)}</span>
+            </Link>
+        </Button>
       </footer>
     </div>
   );

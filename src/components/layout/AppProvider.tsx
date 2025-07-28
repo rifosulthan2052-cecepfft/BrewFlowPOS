@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo } from 'react';
+import type { OrderItem, Fee, MenuItem } from '@/types';
 
 type Currency = 'USD' | 'IDR';
 
@@ -10,13 +12,87 @@ type AppContextType = {
   taxRate: number;
   setTaxRate: (taxRate: number) => void;
   formatCurrency: (amount: number) => string;
+
+  orderItems: OrderItem[];
+  fees: Fee[];
+  customerName: string;
+  orderStatus: 'pending' | 'paid' | 'open_bill';
+
+  setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
+  setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
+  setCustomerName: React.Dispatch<React.SetStateAction<string>>;
+  setOrderStatus: React.Dispatch<React.SetStateAction<'pending' | 'paid' | 'open_bill'>>;
+  
+  addItemToOrder: (item: MenuItem) => void;
+  updateItemQuantity: (menuItemId: string, quantity: number) => void;
+  removeItemFromOrder: (menuItemId: string) => void;
+  addFeeToOrder: (fee: Fee) => void;
+  resetOrder: () => void;
+
+  subtotal: number;
+  totalFees: number;
+  tax: number;
+  total: number;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>('IDR');
-  const [taxRate, setTaxRate] = useState<number>(0); // Default tax rate is 0%
+  const [taxRate, setTaxRate] = useState<number>(0);
+
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [fees, setFees] = useState<Fee[]>([]);
+  const [customerName, setCustomerName] = useState('');
+  const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
+
+  const addItemToOrder = (item: MenuItem) => {
+    setOrderItems((prevItems) => {
+      const existingItem = prevItems.find((i) => i.menuItemId === item.id);
+      if (existingItem) {
+        return prevItems.map((i) =>
+          i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prevItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
+    });
+  };
+
+  const updateItemQuantity = (menuItemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
+    } else {
+      setOrderItems((prevItems) =>
+        prevItems.map((i) =>
+          i.menuItemId === menuItemId ? { ...i, quantity } : i
+        )
+      );
+    }
+  };
+  
+  const removeItemFromOrder = (menuItemId: string) => {
+    setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
+  };
+
+  const addFeeToOrder = (fee: Fee) => {
+    setFees((prevFees) => [...prevFees, fee]);
+  };
+
+  const resetOrder = () => {
+    setOrderItems([]);
+    setFees([]);
+    setCustomerName('');
+    setOrderStatus('pending');
+  }
+
+  const { subtotal, totalFees, tax, total } = useMemo(() => {
+    const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
+    const tax = subtotal * taxRate;
+    const total = subtotal + totalFees + tax;
+    return { subtotal, totalFees, tax, total };
+  }, [orderItems, fees, taxRate]);
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US', {
@@ -32,8 +108,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCurrency,
     taxRate,
     setTaxRate,
-    formatCurrency
-  }), [currency, taxRate]);
+    formatCurrency,
+    orderItems,
+    fees,
+    customerName,
+    orderStatus,
+    setOrderItems,
+    setFees,
+    setCustomerName,
+    setOrderStatus,
+    addItemToOrder,
+    updateItemQuantity,
+    removeItemFromOrder,
+    addFeeToOrder,
+    resetOrder,
+    subtotal,
+    totalFees,
+    tax,
+    total
+  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, subtotal, totalFees, tax, total]);
 
   return (
     <AppContext.Provider value={value}>

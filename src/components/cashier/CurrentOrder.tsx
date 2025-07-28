@@ -65,7 +65,7 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col p-6">
+       <div className="h-full flex flex-col p-6 bg-background">
         <header className="pb-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
@@ -197,7 +197,7 @@ export default function CurrentOrder({
                       disabled={isOrderEmpty || orderStatus !== 'pending'}
                   />
               ) : (
-                  <div className='w-full space-y-2'>
+                  <div className='w-full space-y-2 pt-4'>
                       <FeeDialog onAddFee={onAddFee} disabled={isOrderEmpty || orderStatus !== 'pending'}>
                           <Button variant="outline" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
                               <PlusCircle className="mr-2 h-4 w-4" /> Add Fee

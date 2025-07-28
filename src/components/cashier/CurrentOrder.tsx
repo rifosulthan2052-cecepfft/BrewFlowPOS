@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Minus, X, PlusCircle } from 'lucide-react';
 import { FeeDialog } from './FeeDialog';
+import { useApp } from '../layout/AppProvider';
+import { formatCurrency } from '@/lib/utils';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -18,6 +20,7 @@ type CurrentOrderProps = {
 };
 
 export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveItem, onAddFee }: CurrentOrderProps) {
+  const { currency } = useApp();
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
@@ -39,7 +42,7 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
                   <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
                     <div className="flex-1">
                       <p className="font-semibold">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
@@ -56,8 +59,8 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="w-16 text-right font-medium">
-                      ${(item.price * item.quantity).toFixed(2)}
+                    <p className="w-24 text-right font-medium">
+                      {formatCurrency(item.price * item.quantity, currency)}
                     </p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
                       <X className="h-4 w-4" />
@@ -72,7 +75,7 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
       <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4">
         <div className="flex justify-between font-semibold text-lg">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>{formatCurrency(subtotal, currency)}</span>
         </div>
         <Separator />
         <FeeDialog onAddFee={onAddFee}>
@@ -85,7 +88,7 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
                 {fees.map((fee, index) => (
                     <div key={index} className="flex justify-between text-muted-foreground">
                         <span>{fee.name} <span className="text-xs">({fee.notes})</span></span>
-                        <span>${fee.amount.toFixed(2)}</span>
+                        <span>{formatCurrency(fee.amount, currency)}</span>
                     </div>
                 ))}
             </div>

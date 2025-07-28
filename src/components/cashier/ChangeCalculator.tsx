@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { useApp } from '../layout/AppProvider';
+import { formatCurrency } from '@/lib/utils';
 
 const formSchema = z.object({
   amountPaid: z.coerce.number().min(0, 'Amount must be positive.'),
@@ -26,6 +28,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CalculateChangeOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { currency } = useApp();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,8 +77,8 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
                   <FormLabel>Amount Paid</FormLabel>
                   <FormControl>
                     <div className="relative">
-                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                       <Input type="number" step="0.01" {...field} className="pl-6" disabled={disabled}/>
+                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currency === 'IDR' ? 'Rp' : '$'}</span>
+                       <Input type="number" step="0.01" {...field} className="pl-8" disabled={disabled}/>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -95,7 +98,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
           <div className="mt-4 space-y-4 p-4 bg-background rounded-lg animate-in fade-in">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Change Due</p>
-                <p className="text-3xl font-bold text-green-600">${result.changeDue.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-green-600">{formatCurrency(result.changeDue, currency)}</p>
             </div>
 
             <div>

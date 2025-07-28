@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { ChangeCalculator } from './ChangeCalculator';
 import Receipt from './Receipt';
 import { Badge } from '../ui/badge';
+import { useApp } from '../layout/AppProvider';
+import { formatCurrency } from '@/lib/utils';
 
 type PaymentPanelProps = {
   subtotal: number;
@@ -32,6 +34,7 @@ export default function PaymentPanel({
   orderItems,
 }: PaymentPanelProps) {
 
+  const { currency } = useApp();
   const isOrderEmpty = orderItems.length === 0;
 
   return (
@@ -56,20 +59,20 @@ export default function PaymentPanel({
           <div className="space-y-2 text-lg">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{formatCurrency(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Fees</span>
-              <span>${feesAmount.toFixed(2)}</span>
+              <span>{formatCurrency(feesAmount, currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax (8%)</span>
-              <span>${tax.toFixed(2)}</span>
+              <span className="text-muted-foreground">Tax (11%)</span>
+              <span>{formatCurrency(tax, currency)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-2xl text-primary pt-2">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatCurrency(total, currency)}</span>
             </div>
           </div>
           <ChangeCalculator totalAmount={total} onPaymentSuccess={onPaymentSuccess} disabled={isOrderEmpty} />

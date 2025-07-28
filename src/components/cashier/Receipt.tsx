@@ -7,6 +7,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { CoffeeIcon } from '../icons';
 import { Printer } from 'lucide-react';
 import React from 'react';
+import { useApp } from '../layout/AppProvider';
+import { formatCurrency } from '@/lib/utils';
 
 type ReceiptProps = {
   orderItems: OrderItem[];
@@ -18,6 +20,7 @@ type ReceiptProps = {
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
     const { orderItems, subtotal, tax, feesAmount, total } = props;
+    const { currency } = useApp();
     return (
         <div ref={ref} className="p-4 text-sm bg-background text-foreground font-mono">
             <div className="text-center mb-4">
@@ -35,7 +38,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, re
                 {orderItems.map(item => (
                     <div key={item.menuItemId} className="flex justify-between">
                         <span>{item.quantity}x {item.name}</span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        <span>{formatCurrency(item.price * item.quantity, currency)}</span>
                     </div>
                 ))}
             </div>
@@ -43,21 +46,21 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, re
             <div className="space-y-1">
                 <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(subtotal, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span>Fees</span>
-                    <span>${feesAmount.toFixed(2)}</span>
+                    <span>{formatCurrency(feesAmount, currency)}</span>
                 </div>
                  <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{formatCurrency(tax, currency)}</span>
                 </div>
             </div>
             <Separator className="my-2" />
              <div className="flex justify-between font-bold text-base">
                 <span>TOTAL</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatCurrency(total, currency)}</span>
             </div>
             <div className="text-center mt-4">
                 <p>Thank you for your visit!</p>

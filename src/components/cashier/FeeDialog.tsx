@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useApp } from '../layout/AppProvider';
 
 const feeSchema = z.object({
   name: z.string().min(1, 'Fee name is required.'),
@@ -32,6 +33,7 @@ type FeeDialogProps = {
 };
 
 export function FeeDialog({ children, onAddFee }: FeeDialogProps) {
+  const { currency } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<z.infer<typeof feeSchema>>({
     resolver: zodResolver(feeSchema),
@@ -79,8 +81,8 @@ export function FeeDialog({ children, onAddFee }: FeeDialogProps) {
                   <FormLabel>Amount</FormLabel>
                    <FormControl>
                     <div className="relative">
-                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                       <Input type="number" step="0.01" {...field} className="pl-6"/>
+                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currency === 'IDR' ? 'Rp' : '$'}</span>
+                       <Input type="number" step="0.01" {...field} className="pl-8"/>
                     </div>
                   </FormControl>
                   <FormMessage />

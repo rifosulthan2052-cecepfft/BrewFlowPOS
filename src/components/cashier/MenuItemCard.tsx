@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import type { MenuItem } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { useApp } from '../layout/AppProvider';
+import { formatCurrency } from '@/lib/utils';
 
 type MenuItemCardProps = {
   item: MenuItem;
@@ -20,6 +22,7 @@ function getHintFromItemName(name: string): string {
 
 
 export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
+  const { currency } = useApp();
   const hint = getHintFromItemName(item.name);
 
   return (
@@ -43,7 +46,7 @@ export default function MenuItemCard({ item, onAddItem }: MenuItemCardProps) {
         </div>
         <div className="p-2 w-full">
           <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-          <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+          <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
         </div>
       </CardContent>
     </Card>

@@ -7,7 +7,7 @@ import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import PaymentPanel from '@/components/cashier/PaymentPanel';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useApp } from '@/components/layout/AppProvider';
@@ -134,6 +134,8 @@ export default function CashierPage() {
             </div>
           </SheetTrigger>
           <SheetContent className="w-full sm:w-[540px] flex flex-col p-0">
+             <SheetTitle className="sr-only">Current Order</SheetTitle>
+             <SheetDescription className="sr-only">Review and manage the items in the current order.</SheetDescription>
              <CurrentOrder
                 items={orderItems}
                 onUpdateQuantity={handleUpdateItemQuantity}

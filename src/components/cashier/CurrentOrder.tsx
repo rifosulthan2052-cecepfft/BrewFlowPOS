@@ -24,7 +24,7 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
-    <Card className="h-full flex flex-col shadow-lg">
+    <Card className="h-full flex flex-col shadow-none border-0 rounded-none">
       <CardHeader className="flex-shrink-0">
         <CardTitle>Current Order</CardTitle>
       </CardHeader>
@@ -72,7 +72,7 @@ export default function CurrentOrder({ items, fees, onUpdateQuantity, onRemoveIt
           </div>
         </ScrollArea>
       </CardContent>
-      <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4">
+      <CardFooter className="flex-shrink-0 flex-col items-stretch gap-2 border-t p-4 bg-background z-10">
         <div className="flex justify-between font-semibold text-lg">
           <span>Subtotal</span>
           <span>{formatCurrency(subtotal, currency)}</span>

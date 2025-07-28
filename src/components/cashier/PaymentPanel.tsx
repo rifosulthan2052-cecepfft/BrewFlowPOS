@@ -75,7 +75,7 @@ export default function PaymentPanel({
               <span>{formatCurrency(total, currency)}</span>
             </div>
           </div>
-          <ChangeCalculator totalAmount={total} onPaymentSuccess={onPaymentSuccess} disabled={isOrderEmpty} />
+          <ChangeCalculator totalAmount={total} onPaymentSuccess={onPaymentSuccess} disabled={isOrderEmpty || orderStatus !== 'pending'} />
         </CardContent>
       )}
 

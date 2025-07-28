@@ -15,16 +15,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 
 const mockMenuItems: MenuItem[] = [
-  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "espresso coffee" },
-  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "latte coffee" },
+  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
+  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "latte coffee" },
   { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee" },
-  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "americano coffee" },
-  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "mocha coffee" },
-  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "macchiato coffee" },
-  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "drip coffee" },
-  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "croissant pastry" },
-  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "muffin pastry" },
-  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "scone pastry" },
+  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "americano coffee" },
+  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "mocha coffee" },
+  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "macchiato coffee" },
+  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "drip coffee" },
+  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "croissant pastry" },
+  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "muffin pastry" },
+  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry" },
 ];
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {

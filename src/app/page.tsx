@@ -29,6 +29,7 @@ const mockMenuItems: MenuItem[] = [
 export default function CashierPage() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
+  const [customerName, setCustomerName] = useState('');
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
   const { currency, taxRate } = useApp();
@@ -68,6 +69,7 @@ export default function CashierPage() {
   const resetOrder = () => {
     setOrderItems([]);
     setFees([]);
+    setCustomerName('');
     setOrderStatus('pending');
     setIsOrderSheetOpen(false);
   }
@@ -124,6 +126,7 @@ export default function CashierPage() {
                 <CurrentOrder
                     items={orderItems}
                     fees={fees}
+                    customerName={customerName}
                     subtotal={subtotal}
                     tax={tax}
                     total={total}
@@ -132,6 +135,7 @@ export default function CashierPage() {
                     onUpdateQuantity={handleUpdateItemQuantity}
                     onRemoveItem={handleRemoveItem}
                     onAddFee={handleAddFee}
+                    onCustomerNameChange={setCustomerName}
                     onPaymentSuccess={handlePaymentSuccess}
                     onSaveOpenBill={handleSaveOpenBill}
                     onNewOrder={resetOrder}

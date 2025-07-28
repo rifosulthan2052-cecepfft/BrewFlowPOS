@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
@@ -17,7 +17,7 @@ import { Card } from '@/components/ui/card';
 const mockMenuItems: MenuItem[] = [
   { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "espresso coffee" },
   { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "latte coffee" },
-  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "cappuccino coffee" },
+  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee" },
   { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "americano coffee" },
   { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "mocha coffee" },
   { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150', "data-ai-hint": "macchiato coffee" },
@@ -144,7 +144,7 @@ export default function CashierPage() {
   const isMobile = useIsMobile();
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleResize = () => {
         setOrientation(window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
@@ -153,7 +153,7 @@ export default function CashierPage() {
       handleResize(); 
       return () => window.removeEventListener('resize', handleResize);
     }
-  });
+  }, []);
 
 
   const renderContent = () => {

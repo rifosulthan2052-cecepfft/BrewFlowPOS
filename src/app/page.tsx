@@ -1,14 +1,13 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useApp } from '@/components/layout/AppProvider';
-import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { ChevronUp, ShoppingCart } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -93,6 +92,10 @@ export default function CashierPage() {
                     onRemoveItem={removeItemFromOrder}
                     onCustomerNameChange={setCustomerName}
                     onNewOrder={() => {
+                        resetOrder();
+                        setIsOrderOpen(false);
+                    }}
+                    onClearOrder={() => {
                         resetOrder();
                         setIsOrderOpen(false);
                     }}

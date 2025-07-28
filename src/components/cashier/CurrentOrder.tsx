@@ -6,7 +6,7 @@ import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Minus, X, User, Wallet, PlusCircle, CreditCard } from 'lucide-react';
+import { Plus, Minus, X, User, Wallet, PlusCircle, CreditCard, Trash2 } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -17,6 +17,17 @@ import { FeeDialog } from './FeeDialog';
 import { PaymentDialog } from './PaymentDialog';
 import { useRouter } from 'next/navigation';
 import { set } from 'zod';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -26,6 +37,7 @@ type CurrentOrderProps = {
   onRemoveItem: (menuItemId: string) => void;
   onCustomerNameChange: (name: string) => void;
   onNewOrder: () => void;
+  onClearOrder: () => void;
   onClose: () => void;
 };
 
@@ -37,6 +49,7 @@ export default function CurrentOrder({
   onRemoveItem,
   onCustomerNameChange,
   onNewOrder,
+  onClearOrder,
   onClose
 }: CurrentOrderProps) {
   const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, resetOrder } = useApp();
@@ -93,20 +106,20 @@ export default function CurrentOrder({
             </Button>
         </div>
       </div>
-      <div className="p-6 pt-2">
-         <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                  placeholder="Customer Name" 
-                  value={customerName}
-                  onChange={(e) => onCustomerNameChange(e.target.value)}
-                  className="pl-9"
-                  disabled={orderStatus !== 'pending'}
-              />
-          </div>
-      </div>
       <ScrollArea className="flex-1 px-6">
-        <div className="pb-6 space-y-4">
+        <div className="p-6 pt-2">
+            <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    placeholder="Customer Name" 
+                    value={customerName}
+                    onChange={(e) => onCustomerNameChange(e.target.value)}
+                    className="pl-9"
+                    disabled={orderStatus !== 'pending'}
+                />
+            </div>
+        </div>
+        <div className="pb-6 space-y-4 px-6">
             {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                 <p>No items in order.</p>
@@ -147,7 +160,7 @@ export default function CurrentOrder({
               </ul>
             )}
         </div>
-        <div className="space-y-2 text-sm pt-4 border-t">
+        <div className="space-y-2 text-sm pt-4 border-t px-6 pb-6">
           <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
               <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
@@ -180,7 +193,7 @@ export default function CurrentOrder({
                   <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                   </Button>
               </PaymentDialog>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
                 <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
                     <Button variant="outline" className="w-full">
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
@@ -189,10 +202,30 @@ export default function CurrentOrder({
                 <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
                     Save as Open Bill
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Clear Order
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will clear all items from the current order. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onClearOrder}>
+                        Clear Order
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
       </footer>
     </div>
   );
 }
-

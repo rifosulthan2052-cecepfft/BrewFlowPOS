@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
-import { FeeDialog } from '@/components/cashier/FeeDialog';
-import { PlusCircle, Wallet, ArrowLeft } from 'lucide-react';
+import { Wallet, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PaymentDialog } from '@/components/cashier/PaymentDialog';
@@ -18,7 +17,6 @@ export default function CheckoutPage() {
   const {
     orderItems,
     fees,
-    addFeeToOrder,
     subtotal,
     tax,
     total,
@@ -136,11 +134,6 @@ export default function CheckoutPage() {
                 <Separator className="my-6"/>
 
                 <div className='w-full space-y-2'>
-                    <FeeDialog onAddFee={addFeeToOrder}>
-                        <Button variant="outline" className="w-full">
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                        </Button>
-                    </FeeDialog>
                     <PaymentDialog 
                     totalAmount={total}
                     onPaymentSuccess={handlePaymentSuccess}

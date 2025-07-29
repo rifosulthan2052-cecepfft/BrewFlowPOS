@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -40,7 +40,55 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
   
   useEffect(() => {
     form.setValue('amountPaid', totalAmount > 0 ? totalAmount : 0)
+    setResult(null);
   }, [totalAmount, form]);
+  
+  const suggestedDenominations = useMemo(() => {
+    if (currency !== 'IDR' || totalAmount <= 0) return [];
+    
+    const denominations = [10000, 20000, 50000, 100000, 150000, 200000];
+    const suggestions = new Set<number>();
+    
+    // Suggest the exact amount if it's a common denomination
+    if (denominations.includes(totalAmount)) {
+      suggestions.add(totalAmount);
+    }
+    
+    // Find the next highest denomination
+    const nextDenom = denominations.find(d => d > totalAmount);
+    if (nextDenom) {
+      suggestions.add(nextDenom);
+    }
+    
+    // Add a higher denomination
+    if (totalAmount < 50000) {
+      suggestions.add(50000);
+      suggestions.add(100000);
+    } else if (totalAmount < 100000) {
+      suggestions.add(100000);
+    }
+
+    if (totalAmount > 100000) {
+        const nextHundred = Math.ceil(totalAmount / 100000) * 100000;
+        if(nextHundred > totalAmount) suggestions.add(nextHundred);
+        if(nextHundred + 50000 > totalAmount) suggestions.add(nextHundred + 50000);
+    }
+
+
+    // Round up to nearest 50k or 100k
+    const roundedUp50k = Math.ceil(totalAmount / 50000) * 50000;
+    if (roundedUp50k > totalAmount) {
+      suggestions.add(roundedUp50k);
+    }
+
+    const finalSuggestions = Array.from(suggestions)
+      .filter(s => s > 0)
+      .sort((a, b) => a - b)
+      .slice(0, 4);
+
+    return finalSuggestions;
+
+  }, [totalAmount, currency]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.amountPaid < totalAmount) {
@@ -76,6 +124,10 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     }
   }
 
+  const handleSuggestionClick = (amount: number) => {
+    form.setValue('amountPaid', amount, { shouldValidate: true });
+  }
+
   return (
     <Card className="bg-secondary/50 border-dashed mt-4">
       <CardHeader>
@@ -100,6 +152,22 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
                 </FormItem>
               )}
             />
+             {suggestedDenominations.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {suggestedDenominations.map(denom => (
+                  <Button 
+                    key={denom} 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => handleSuggestionClick(denom)}
+                    className="text-xs"
+                    disabled={disabled}
+                  >
+                    {formatCurrency(denom, currency)}
+                  </Button>
+                ))}
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={isLoading || disabled}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {totalAmount > 0 && form.getValues('amountPaid') > totalAmount ? 'Calculate Change & Pay' : 'Pay with Exact Change'}

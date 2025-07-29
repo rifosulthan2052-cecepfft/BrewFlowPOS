@@ -19,8 +19,16 @@ export type CalculateChangeInput = z.infer<typeof CalculateChangeInputSchema>;
 
 const CalculateChangeOutputSchema = z.object({
   changeDue: z.number().describe('The total change amount due to the customer.'),
-  optimalChange: z.record(z.number()).describe('The optimal denominations of change to return to the customer.'),
-  calculationRationale: z.string().describe('Explanation of how change was calculated and why the suggested denominations are optimal.')
+  optimalChange: z
+    .record(z.number())
+    .describe(
+      'The optimal denominations of change to return to the customer. The key should be the denomination (as a string) and the value should be the count.'
+    ),
+  calculationRationale: z
+    .string()
+    .describe(
+      'Explanation of how change was calculated and why the suggested denominations are optimal.'
+    ),
 });
 export type CalculateChangeOutput = z.infer<typeof CalculateChangeOutputSchema>;
 
@@ -32,14 +40,22 @@ const prompt = ai.definePrompt({
   name: 'calculateChangePrompt',
   input: {schema: CalculateChangeInputSchema},
   output: {schema: CalculateChangeOutputSchema},
-  prompt: `You are a helpful cashier assistant. Your goal is to calculate the optimal change to return to the customer, minimizing the number of bills and coins.
+  prompt: `You are a helpful cashier assistant for a coffee shop in Indonesia. Your goal is to calculate the optimal change to return to the customer using Indonesian Rupiah (IDR) denominations, minimizing the number of bills and coins.
 
-  Total Amount: {{{totalAmount}}}
-  Amount Paid: {{{amountPaid}}}
+Available IDR Denominations:
+Coins: 100, 200, 500, 1000
+Bills: 2000, 5000, 10000, 20000, 50000, 100000
 
-  Calculate the change due and provide the optimal denominations of bills and coins to return. Provide a rationale for why this is the optimal configuration.
-  Ensure the outputted JSON is valid and can be parsed by a machine.
-  `,
+Transaction Details:
+Total Amount: {{{totalAmount}}}
+Amount Paid: {{{amountPaid}}}
+
+Instructions:
+1. Calculate the total change due.
+2. Determine the optimal combination of IDR bills and coins to give as change.
+3. Provide a brief rationale for why your suggested combination is optimal (e.g., "uses the fewest bills/coins").
+4. Format the output as a valid JSON object matching the provided schema. Keys in optimalChange should be strings representing the denomination (e.g., "100000").
+`,
 });
 
 const calculateChangeFlow = ai.defineFlow(

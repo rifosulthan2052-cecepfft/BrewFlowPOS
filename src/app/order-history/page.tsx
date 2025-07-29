@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react';
-import type { CompletedOrder, OrderItem, Fee } from '@/types';
+import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -11,9 +11,9 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Receipt from '@/components/cashier/Receipt';
-import { CreditCard, Wallet } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid } from 'lucide-react';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency } = useApp();
@@ -72,9 +72,33 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
     )
 }
 
+function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
+    const { currency } = useApp();
+    return (
+        <Card>
+            <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex-1">
+                    <p className="font-semibold">{order.customerName}</p>
+                    <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 w-24 justify-center">
+                        {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
+                        {order.paymentMethod}
+                    </Badge>
+                    <p className="w-32 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
+                    <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+
 export default function OrderHistoryPage() {
     const { completedOrders } = useApp();
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
+    const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
 
     const handleSelectOrder = (order: CompletedOrder) => {
         setSelectedOrder(order);
@@ -93,8 +117,20 @@ export default function OrderHistoryPage() {
                 <div className="p-4 md:p-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Order History</CardTitle>
-                            <CardDescription>Review past transactions.</CardDescription>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle>Order History</CardTitle>
+                                    <CardDescription>Review past transactions.</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <Button variant={viewMode === 'card' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('card')}>
+                                        <Grid className="h-4 w-4" />
+                                     </Button>
+                                     <Button variant={viewMode === 'compact' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('compact')}>
+                                        <List className="h-4 w-4" />
+                                     </Button>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                            {completedOrders.length === 0 ? (
@@ -103,10 +139,14 @@ export default function OrderHistoryPage() {
                                     <p className="text-sm">Paid orders will appear here.</p>
                                 </div>
                             ) : (
-                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {completedOrders.map(order => (
-                                        <OrderHistoryCard key={order.id} order={order} onSelect={handleSelectOrder}/>
-                                    ))}
+                                 <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                                    {completedOrders.map(order => 
+                                        viewMode === 'card' ? (
+                                            <OrderHistoryCard key={order.id} order={order} onSelect={handleSelectOrder}/>
+                                        ) : (
+                                            <OrderHistoryCompactCard key={order.id} order={order} onSelect={handleSelectOrder}/>
+                                        )
+                                    )}
                                  </div>
                            )}
                         </CardContent>

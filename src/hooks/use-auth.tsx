@@ -28,8 +28,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(user);
       if (user) {
         const token = await user.getIdToken(true);
-        Cookies.set('firebaseIdToken', token, { expires: 1 });
-        // If user is logged in and on the login page, redirect them.
+        // Set cookie to be compatible with iframes
+        Cookies.set('firebaseIdToken', token, { expires: 1, sameSite: 'Lax', secure: true }); 
+        
         if (pathname === '/login') {
             router.push('/');
         }
@@ -52,8 +53,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
-    // Redirecting via window.location.href to ensure a full refresh
-    // which helps the middleware to catch the unauthenticated state.
     window.location.href = '/login';
   };
 
@@ -65,9 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
   };
 
-  // Prevent rendering children until the auth state is determined
   if (loading) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

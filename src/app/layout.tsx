@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AppProvider } from '@/components/layout/AppProvider';
 
 export const metadata: Metadata = {
-  title: 'Brew Flow',
+  title: 'BrewFlow',
   description: 'Coffee Shop POS by Firebase Studio',
 };
 

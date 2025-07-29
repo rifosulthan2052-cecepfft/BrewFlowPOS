@@ -12,7 +12,10 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="flex justify-center items-center gap-2 mb-4">
             <CoffeeIcon className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">Brew Flow</span>
+            <div className="flex flex-col items-start -space-y-1">
+                <span className="text-2xl font-bold text-primary">BrewFlow</span>
+                <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
+            </div>
           </div>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>Enter your email below to login to your account</CardDescription>

@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from "next/link";
@@ -32,8 +33,11 @@ export default function Header() {
           <Menu />
         </Button>
         <Link href="/" className="flex items-center gap-2">
-          <CoffeeIcon className="h-6 w-6 text-primary" />
-          <span className="text-lg font-bold text-primary">Brew Flow</span>
+          <CoffeeIcon className="h-8 w-8 text-primary" />
+          <div className="flex flex-col -space-y-1">
+            <span className="text-2xl font-bold text-primary">BrewFlow</span>
+            <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
+          </div>
         </Link>
       </div>
       <DropdownMenu>

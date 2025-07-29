@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,7 +38,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     },
   });
   
-  React.useEffect(() => {
+  useEffect(() => {
     form.setValue('amountPaid', totalAmount > 0 ? totalAmount : 0)
   }, [totalAmount, form]);
 

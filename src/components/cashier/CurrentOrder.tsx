@@ -84,9 +84,8 @@ export default function CurrentOrder({
 
   return (
     <div className="h-full flex flex-col">
-       <div className="p-6 pb-2 flex-shrink-0">
+       <div className="px-6 pb-2 flex-shrink-0">
          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
              {orderStatus !== 'pending' && (
                 <Badge variant={orderStatus === 'paid' ? "default" : "secondary"} className="capitalize">
                 {orderStatus.replace('_', ' ')}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +11,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useApp } from '@/components/layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { ChevronUp, ShoppingCart } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const mockMenuItems: MenuItem[] = [
   { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
@@ -82,6 +83,9 @@ export default function CashierPage() {
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
             <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
+                <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+                    <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Current Order</DialogTitle>
+                </DialogHeader>
                 <CurrentOrder
                     items={orderItems}
                     customerName={customerName}

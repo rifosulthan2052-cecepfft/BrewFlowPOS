@@ -175,15 +175,8 @@ export default function OpenBillsPage() {
                             onNewOrder={handleNewOrder}
                             onClearOrder={handleCloseDialog}
                             onClose={handleCloseDialog}
+                            onAddToBill={handleAddToBill}
                         />
-                         <DialogFooter className="p-4 border-t bg-background">
-                            <Button variant="outline" onClick={handleAddToBill}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add to Bill
-                            </Button>
-                            <DialogClose asChild>
-                                <Button>Done</Button>
-                            </DialogClose>
-                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
 

@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DialogClose } from '../ui/dialog';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -36,6 +37,7 @@ type CurrentOrderProps = {
   onNewOrder: () => void;
   onClearOrder: () => void;
   onClose: () => void;
+  onAddToBill?: () => void;
 };
 
 export default function CurrentOrder({
@@ -47,7 +49,8 @@ export default function CurrentOrder({
   onCustomerNameChange,
   onNewOrder,
   onClearOrder,
-  onClose
+  onClose,
+  onAddToBill,
 }: CurrentOrderProps) {
   const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, saveAsOpenBill } = useApp();
   const isOrderEmpty = items.length === 0;
@@ -177,37 +180,48 @@ export default function CurrentOrder({
                         <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                         </Button>
                     </PaymentDialog>
-                    <div className="grid grid-cols-3 gap-2">
-                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
-                            <Button variant="outline" className="w-full">
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                     {onAddToBill ? (
+                       <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" onClick={onAddToBill}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add to Bill
                             </Button>
-                        </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
-                            Save as Open Bill
-                        </Button>
-                        <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Clear Order
+                             <DialogClose asChild>
+                                <Button>Done</Button>
+                            </DialogClose>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                            <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                                <Button variant="outline" className="w-full">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                </Button>
+                            </FeeDialog>
+                            <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                                Save as Open Bill
                             </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will clear all items from the current order. This action cannot be undone.
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={onClearOrder}>
-                                Clear Order
-                            </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
+                            <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Clear Order
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will clear all items from the current order. This action cannot be undone.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={onClearOrder}>
+                                    Clear Order
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

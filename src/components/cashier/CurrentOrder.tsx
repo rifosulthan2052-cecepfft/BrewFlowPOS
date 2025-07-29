@@ -52,7 +52,7 @@ export default function CurrentOrder({
   onClose,
   onAddToBill,
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, saveAsOpenBill } = useApp();
+  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, saveAsOpenBill, editingBillId } = useApp();
   const isOrderEmpty = items.length === 0;
 
   const handlePaymentSuccess = () => {
@@ -180,15 +180,10 @@ export default function CurrentOrder({
                         <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                         </Button>
                     </PaymentDialog>
-                     {onAddToBill ? (
-                       <div className="grid grid-cols-2 gap-2">
-                            <Button variant="outline" onClick={onAddToBill}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add to Bill
-                            </Button>
-                             <DialogClose asChild>
-                                <Button>Done</Button>
-                            </DialogClose>
-                        </div>
+                     {editingBillId ? (
+                       <DialogClose asChild>
+                         <Button variant="outline" className="w-full">Done</Button>
+                       </DialogClose>
                     ) : (
                         <div className="grid grid-cols-3 gap-2">
                             <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>

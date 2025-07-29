@@ -101,7 +101,6 @@ export default function CurrentOrder({
                 value={customerName}
                 onChange={(e) => onCustomerNameChange(e.target.value)}
                 className="pl-9"
-                disabled={orderStatus !== 'pending'}
             />
         </div>
       </div>
@@ -121,7 +120,7 @@ export default function CurrentOrder({
                       <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)} disabled={orderStatus !== 'pending'}>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
                         <Minus className="h-4 w-4" />
                       </Button>
                       <Input
@@ -130,16 +129,15 @@ export default function CurrentOrder({
                         value={item.quantity}
                         onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
                         aria-label={`${item.name} quantity`}
-                        disabled={orderStatus !== 'pending'}
                       />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)} disabled={orderStatus !== 'pending'}>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <p className="w-24 text-right font-medium">
                       {formatCurrency(item.price * item.quantity, currency)}
                     </p>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)} disabled={orderStatus !== 'pending'}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </li>
@@ -175,22 +173,22 @@ export default function CurrentOrder({
                         onPaymentSuccess={handlePaymentSuccess}
                         disabled={isOrderEmpty}
                     >
-                        <Button size="lg" className="w-full">
+                        <Button size="lg" className="w-full" disabled={isOrderEmpty}>
                         <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                         </Button>
                     </PaymentDialog>
                     <div className="grid grid-cols-3 gap-2">
-                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
                             <Button variant="outline" className="w-full">
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                             </Button>
                         </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'} onClick={handleSaveOpenBill}>
+                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
                             Save as Open Bill
                         </Button>
                         <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
+                            <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
                             <Trash2 className="mr-2 h-4 w-4" /> Clear Order
                             </Button>
                         </AlertDialogTrigger>

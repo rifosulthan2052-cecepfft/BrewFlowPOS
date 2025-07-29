@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react';
-import type { OpenBill } from '@/types';
+import type { OpenBill, MenuItem, OrderItem } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -11,12 +11,28 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
+import MenuList from '@/components/cashier/MenuList';
+import { PlusCircle } from 'lucide-react';
+
+
+const mockMenuItems: MenuItem[] = [
+  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
+  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "latte coffee" },
+  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee" },
+  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "americano coffee" },
+  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "mocha coffee" },
+  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "macchiato coffee" },
+  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "drip coffee" },
+  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "croissant pastry" },
+  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "muffin pastry" },
+  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry" },
+];
 
 
 export default function OpenBillsPage() {
-    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill } = useApp();
+    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, addItemToOrder } = useApp();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
     const [selectedBill, setSelectedBill] = useState<OpenBill | null>(null);
 
@@ -115,21 +131,33 @@ export default function OpenBillsPage() {
                     </Card>
                 </div>
                  <Dialog open={isSettleDialogOpen} onOpenChange={setIsSettleDialogOpen}>
-                    <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
-                        <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
-                        </DialogHeader>
-                        <CurrentOrder
-                            items={orderItems}
-                            customerName={customerName}
-                            orderStatus={orderStatus}
-                            onUpdateQuantity={updateItemQuantity}
-                            onRemoveItem={removeItemFromOrder}
-                            onCustomerNameChange={setCustomerName}
-                            onNewOrder={handleNewOrder}
-                            onClearOrder={handleCloseDialog}
-                            onClose={handleCloseDialog}
-                        />
+                    <DialogContent className="max-w-7xl p-0 gap-0 h-[90vh] flex flex-row">
+                        <div className='w-1/2 flex flex-col'>
+                            <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+                                <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Add to Bill</DialogTitle>
+                                <DialogDescription>Select items to add to the current open bill.</DialogDescription>
+                            </DialogHeader>
+                            <div className="flex-1 overflow-y-auto px-6">
+                                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
+                            </div>
+                        </div>
+                         <Separator orientation="vertical" className='h-full' />
+                        <div className='w-1/2 flex flex-col'>
+                            <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+                                <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
+                            </DialogHeader>
+                            <CurrentOrder
+                                items={orderItems}
+                                customerName={customerName}
+                                orderStatus={orderStatus}
+                                onUpdateQuantity={updateItemQuantity}
+                                onRemoveItem={removeItemFromOrder}
+                                onCustomerNameChange={setCustomerName}
+                                onNewOrder={handleNewOrder}
+                                onClearOrder={handleCloseDialog}
+                                onClose={handleCloseDialog}
+                            />
+                        </div>
                     </DialogContent>
                 </Dialog>
             </AppLayout.Content>

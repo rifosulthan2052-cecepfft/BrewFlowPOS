@@ -36,10 +36,18 @@ export default function OpenBillsPage() {
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
-        loadOrderFromBill(bill);
-        setEditingBillId(bill.id);
-        setIsSettleDialogOpen(true);
+        // We don't load the order here anymore, we do it when the user decides to proceed.
     };
+    
+    const handleSettleDialogOpen = (open: boolean) => {
+        if(open && selectedBill) {
+            loadOrderFromBill(selectedBill);
+            setEditingBillId(selectedBill.id);
+        } else {
+            handleCloseDialog();
+        }
+        setIsSettleDialogOpen(open);
+    }
     
     const handleCloseDialog = () => {
         setIsSettleDialogOpen(false);
@@ -65,15 +73,16 @@ export default function OpenBillsPage() {
 
     const proceedToAddToBill = () => {
         if (selectedBill) {
-            setEditingBillId(selectedBill.id);
-            loadOrderFromBill(selectedBill);
+            // The bill is already loaded in the AppProvider state
+            // so we just need to navigate.
             router.push('/');
         }
     };
 
 
     const handleConfirmWarning = () => {
-        resetOrder(); // Discard the current unsaved order
+        // Discarding the current unsaved order happens by simply proceeding,
+        // as the AppProvider state is already reflecting the selected bill's data.
         proceedToAddToBill();
         setIsWarningDialogOpen(false);
     };
@@ -151,7 +160,9 @@ export default function OpenBillsPage() {
                                                 </div>
                                             </CardContent>
                                             <CardFooter>
-                                                <Button className="w-full" onClick={() => handleSettleClick(bill)}>Settle Bill</Button>
+                                                <DialogTrigger asChild>
+                                                    <Button className="w-full" onClick={() => handleSettleClick(bill)}>Settle Bill</Button>
+                                                </DialogTrigger>
                                             </CardFooter>
                                         </Card>
                                     ))}
@@ -160,7 +171,7 @@ export default function OpenBillsPage() {
                         </CardContent>
                     </Card>
                 </div>
-                 <Dialog open={isSettleDialogOpen} onOpenChange={handleOpenChange}>
+                 <Dialog open={isSettleDialogOpen} onOpenChange={handleSettleDialogOpen}>
                     <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
                         <DialogHeader className='p-6 pb-2 flex-shrink-0'>
                             <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>

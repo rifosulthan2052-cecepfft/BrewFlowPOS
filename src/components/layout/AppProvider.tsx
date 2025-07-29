@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import type { OrderItem, Fee, MenuItem, OpenBill } from '@/types';
 
 type Currency = 'USD' | 'IDR';
@@ -36,6 +36,17 @@ type AppContextType = {
   removeOpenBill: (billId: string) => void;
   setEditingBillId: (billId: string | null) => void;
   activeOrderExists: boolean;
+  
+  unsavedOrder: {
+    items: OrderItem[];
+    customerName: string;
+    fees: Fee[];
+  },
+  setUnsavedOrder: React.Dispatch<React.SetStateAction<{
+    items: OrderItem[];
+    customerName: string;
+    fees: Fee[];
+  }>>
 
 
   subtotal: number;
@@ -56,6 +67,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
+
+  // Separate state for a potentially unsaved order
+  const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[] });
+
+  useEffect(() => {
+    // If there's no bill being edited, we update the unsaved order state
+    if (!editingBillId) {
+        setUnsavedOrder({ items: orderItems, customerName, fees });
+    }
+  }, [orderItems, customerName, fees, editingBillId]);
 
 
   const addItemToOrder = (item: MenuItem) => {
@@ -145,8 +166,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const activeOrderExists = useMemo(() => {
-    return orderItems.length > 0 && !editingBillId;
-  }, [orderItems, editingBillId]);
+    return unsavedOrder.items.length > 0;
+  }, [unsavedOrder]);
 
 
   const formatCurrency = (amount: number) => {
@@ -184,11 +205,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removeOpenBill,
     setEditingBillId,
     activeOrderExists,
+    unsavedOrder,
+    setUnsavedOrder,
     subtotal,
     totalFees,
     tax,
     total
-  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, openBills, editingBillId, subtotal, totalFees, tax, total, activeOrderExists]);
+  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, openBills, editingBillId, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

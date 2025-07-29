@@ -25,34 +25,32 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
-      // Force a reload to ensure middleware catches the new auth state
-      window.location.href = '/';
+      // Redirection is now handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: error.message || 'An unexpected error occurred.',
       });
-    } finally {
       setIsLoading(false);
     }
+    // Don't set loading to false on success, as the page will redirect
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // Force a reload to ensure middleware catches the new auth state
-      window.location.href = '/';
+      // Redirection is now handled by the AuthProvider
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Google Login Failed',
         description: error.message || 'An unexpected error occurred.',
       });
-    } finally {
       setIsGoogleLoading(false);
     }
+    // Don't set loading to false on success, as the page will redirect
   };
 
   return (

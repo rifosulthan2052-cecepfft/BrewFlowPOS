@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { onAuthStateChanged, User, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import Cookies from 'js-cookie';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -19,20 +20,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const token = await user.getIdToken(true); // Force refresh
-        Cookies.set('firebaseIdToken', token, { expires: 1 }); // Expires in 1 day
+        const token = await user.getIdToken(true);
+        Cookies.set('firebaseIdToken', token, { expires: 1 });
+        // If user is logged in and on the login page, redirect them.
+        if (pathname === '/login') {
+            router.push('/');
+        }
       } else {
         Cookies.remove('firebaseIdToken');
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [pathname, router]);
 
   const signInWithEmail = async (email: string, pass: string) => {
     return signInWithEmailAndPassword(auth, email, pass);
@@ -45,7 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
-    Cookies.remove('firebaseIdToken');
+    // Redirecting via window.location.href to ensure a full refresh
+    // which helps the middleware to catch the unauthenticated state.
     window.location.href = '/login';
   };
 

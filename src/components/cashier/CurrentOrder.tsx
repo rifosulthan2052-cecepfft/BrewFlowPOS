@@ -147,80 +147,84 @@ export default function CurrentOrder({
                 ))}
               </ul>
             )}
-        
-            <div className="mt-auto flex-shrink-0 bg-card p-6 border-t -mx-6 -mb-6 rounded-b-lg">
-                <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
-                </div>
-                    {fees.length > 0 && (
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Fees</span>
-                        <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
-                    </div>
-                    )}
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
-                    <span className='font-mono'>{formatCurrency(tax, currency)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold text-lg text-primary">
-                    <span>Total</span>
-                    <span className='font-mono'>{formatCurrency(total, currency)}</span>
-                </div>
-                </div>
-                <div className='w-full space-y-2 mt-4'>
-                    <PaymentDialog 
-                        totalAmount={total}
-                        onPaymentSuccess={handlePaymentSuccess}
-                        disabled={isOrderEmpty}
-                    >
-                        <Button size="lg" className="w-full" disabled={isOrderEmpty}>
-                        <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                        </Button>
-                    </PaymentDialog>
-                     {editingBillId ? (
-                       <DialogClose asChild>
-                         <Button variant="outline" className="w-full">Done</Button>
-                       </DialogClose>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                            <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
-                                <Button variant="outline" className="w-full">
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                                </Button>
-                            </FeeDialog>
-                            <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
-                                Save as Open Bill
-                            </Button>
-                            <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
-                                <Trash2 className="mr-2 h-4 w-4" /> Clear Order
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This will clear all items from the current order. This action cannot be undone.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={onClearOrder}>
-                                    Clear Order
-                                </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
       </ScrollArea>
+      <div className="mt-auto flex-shrink-0 bg-card p-6 border-t">
+          <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
+          </div>
+              {fees.length > 0 && (
+              <div className="flex justify-between">
+                  <span className="text-muted-foreground">Fees</span>
+                  <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
+              </div>
+              )}
+          <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
+              <span className='font-mono'>{formatCurrency(tax, currency)}</span>
+          </div>
+          <Separator />
+          <div className="flex justify-between font-bold text-lg text-primary">
+              <span>Total</span>
+              <span className='font-mono'>{formatCurrency(total, currency)}</span>
+          </div>
+          </div>
+          <div className='w-full space-y-2 mt-4'>
+              <PaymentDialog 
+                  totalAmount={total}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  disabled={isOrderEmpty}
+              >
+                  <Button size="lg" className="w-full" disabled={isOrderEmpty}>
+                  <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                  </Button>
+              </PaymentDialog>
+              {editingBillId && onAddToBill ? (
+                <div className='grid grid-cols-2 gap-2'>
+                    <Button variant="outline" className="w-full" onClick={onAddToBill}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Items
+                    </Button>
+                    <DialogClose asChild>
+                      <Button variant="secondary" className="w-full">Done</Button>
+                    </DialogClose>
+                </div>
+              ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                          <Button variant="outline" className="w-full">
+                              <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                          </Button>
+                      </FeeDialog>
+                      <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                          Save as Open Bill
+                      </Button>
+                      <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Clear Order
+                          </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                              This will clear all items from the current order. This action cannot be undone.
+                          </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={onClearOrder}>
+                              Clear Order
+                          </AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                      </AlertDialog>
+                  </div>
+              )}
+          </div>
+      </div>
     </div>
   );
 }

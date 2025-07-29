@@ -4,7 +4,6 @@
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Minus, User, Wallet, PlusCircle, Trash2 } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
@@ -83,21 +82,19 @@ export default function CurrentOrder({
   }
 
   return (
-    <ScrollArea className="h-full">
-        <div className="flex flex-col h-full p-6 pt-2">
-            <div className="flex-shrink-0">
-                <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Customer Name" 
-                        value={customerName}
-                        onChange={(e) => onCustomerNameChange(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
+    <div className="flex-1 overflow-y-auto">
+        <div className="p-6 pt-2">
+            <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    placeholder="Customer Name" 
+                    value={customerName}
+                    onChange={(e) => onCustomerNameChange(e.target.value)}
+                    className="pl-9"
+                />
             </div>
 
-            <div className="flex-1 py-4">
+            <div className="py-4">
                 {items.length === 0 ? (
                 <div className="text-center text-muted-foreground py-16">
                     <p>No items in order.</p>
@@ -138,7 +135,7 @@ export default function CurrentOrder({
                 )}
             </div>
 
-            <div className="mt-auto flex-shrink-0 bg-background pt-4 border-t -mx-6 px-6 pb-2">
+            <div className="bg-background pt-4 border-t -mx-6 px-6 pb-2">
                 <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
@@ -213,6 +210,6 @@ export default function CurrentOrder({
                 </div>
             </div>
         </div>
-    </ScrollArea>
+    </div>
   );
 }

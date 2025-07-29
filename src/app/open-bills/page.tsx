@@ -11,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import MenuList from '@/components/cashier/MenuList';
 import { PlusCircle } from 'lucide-react';
@@ -131,33 +131,21 @@ export default function OpenBillsPage() {
                     </Card>
                 </div>
                  <Dialog open={isSettleDialogOpen} onOpenChange={setIsSettleDialogOpen}>
-                    <DialogContent className="max-w-7xl p-0 gap-0 h-[90vh] flex flex-row">
-                        <div className='w-1/2 flex flex-col'>
-                            <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                                <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Add to Bill</DialogTitle>
-                                <DialogDescription>Select items to add to the current open bill.</DialogDescription>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto px-6">
-                                <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
-                            </div>
-                        </div>
-                         <Separator orientation="vertical" className='h-full' />
-                        <div className='w-1/2 flex flex-col'>
-                            <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                                <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
-                            </DialogHeader>
-                            <CurrentOrder
-                                items={orderItems}
-                                customerName={customerName}
-                                orderStatus={orderStatus}
-                                onUpdateQuantity={updateItemQuantity}
-                                onRemoveItem={removeItemFromOrder}
-                                onCustomerNameChange={setCustomerName}
-                                onNewOrder={handleNewOrder}
-                                onClearOrder={handleCloseDialog}
-                                onClose={handleCloseDialog}
-                            />
-                        </div>
+                    <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
+                        <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+                            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
+                        </DialogHeader>
+                        <CurrentOrder
+                            items={orderItems}
+                            customerName={customerName}
+                            orderStatus={orderStatus}
+                            onUpdateQuantity={updateItemQuantity}
+                            onRemoveItem={removeItemFromOrder}
+                            onCustomerNameChange={setCustomerName}
+                            onNewOrder={handleNewOrder}
+                            onClearOrder={handleCloseDialog}
+                            onClose={handleCloseDialog}
+                        />
                     </DialogContent>
                 </Dialog>
             </AppLayout.Content>

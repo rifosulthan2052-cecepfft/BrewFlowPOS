@@ -46,6 +46,7 @@ import { PlusCircle, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { Separator } from '@/components/ui/separator';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -134,48 +135,86 @@ export default function MenuPage() {
                                 Add Item
                             </Button>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="px-6">Name</TableHead>
-                                            <TableHead className="px-6">Category</TableHead>
-                                            <TableHead className="text-right px-6">Price</TableHead>
-                                            <TableHead className="w-[50px] text-right px-6">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {menuItems.map((item) => (
-                                            <TableRow key={item.id}>
-                                                <TableCell className="font-medium px-6">{item.name}</TableCell>
-                                                <TableCell className="px-6">
-                                                    {item.category ? <Badge variant="secondary">{item.category}</Badge> : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-right font-mono px-6">{formatCurrency(item.price, currency)}</TableCell>
-                                                <TableCell className="text-right px-6">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleOpenDialog(item)}>
-                                                                <Edit className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => openDeleteConfirm(item)} className="text-destructive">
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
+                        <CardContent>
+                            {/* Mobile View */}
+                            <div className="md:hidden">
+                                <div className="space-y-4">
+                                    {menuItems.map((item, index) => (
+                                        <div key={item.id}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="font-medium">{item.name}</div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleOpenDialog(item)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => openDeleteConfirm(item)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {item.category && <Badge variant="secondary" className="mr-2">{item.category}</Badge>}
+                                                <span className="font-mono">{formatCurrency(item.price, currency)}</span>
+                                            </div>
+                                            {index < menuItems.length - 1 && <Separator className="mt-4" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Desktop View */}
+                            <div className="hidden md:block">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="px-6">Name</TableHead>
+                                                <TableHead className="px-6">Category</TableHead>
+                                                <TableHead className="text-right px-6">Price</TableHead>
+                                                <TableHead className="w-[50px] text-right px-6">Actions</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {menuItems.map((item) => (
+                                                <TableRow key={item.id}>
+                                                    <TableCell className="font-medium px-6">{item.name}</TableCell>
+                                                    <TableCell className="px-6">
+                                                        {item.category ? <Badge variant="secondary">{item.category}</Badge> : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-mono px-6">{formatCurrency(item.price, currency)}</TableCell>
+                                                    <TableCell className="text-right px-6">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon">
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => handleOpenDialog(item)}>
+                                                                    <Edit className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => openDeleteConfirm(item)} className="text-destructive">
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

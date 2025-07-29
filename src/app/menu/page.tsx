@@ -33,6 +33,7 @@ const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   price: z.coerce.number().positive('Price must be a positive number'),
   category: z.string().optional(),
+  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
 type MenuItemFormValues = z.infer<typeof menuItemSchema>;
@@ -48,6 +49,7 @@ export default function MenuPage() {
             name: '',
             price: 0,
             category: '',
+            imageUrl: '',
         },
     });
 
@@ -56,7 +58,7 @@ export default function MenuPage() {
         if (item) {
             form.reset(item);
         } else {
-            form.reset({ name: '', price: 0, category: '' });
+            form.reset({ name: '', price: 0, category: '', imageUrl: '' });
         }
         setIsDialogOpen(true);
     };
@@ -185,6 +187,19 @@ export default function MenuPage() {
                                             <FormLabel>Category (Optional)</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="e.g., Coffee, Pastry" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="imageUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Image URL (Optional)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="https://example.com/image.png" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

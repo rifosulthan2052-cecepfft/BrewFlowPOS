@@ -4,7 +4,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 interface AuthContextType {
@@ -20,14 +19,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const token = await user.getIdToken();
-        Cookies.set('firebaseIdToken', token, { expires: 7 }); // Set cookie for 7 days
+        const token = await user.getIdToken(true); // Force refresh
+        Cookies.set('firebaseIdToken', token, { expires: 1 }); // Expires in 1 day
       } else {
         Cookies.remove('firebaseIdToken');
       }
@@ -48,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await firebaseSignOut(auth);
     Cookies.remove('firebaseIdToken');
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   const value = {
@@ -59,7 +57,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  // Prevent rendering children until the auth state is determined
+  if (loading) {
+    return null; // or a loading spinner
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

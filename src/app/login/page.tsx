@@ -2,9 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +18,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -27,7 +25,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
-      router.push('/');
+      // Force a reload to ensure middleware catches the new auth state
+      window.location.href = '/';
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -43,7 +42,8 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/');
+      // Force a reload to ensure middleware catches the new auth state
+      window.location.href = '/';
     } catch (error: any) {
       toast({
         variant: 'destructive',

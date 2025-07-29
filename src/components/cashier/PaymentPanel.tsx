@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { CreditCard } from 'lucide-react';
 
 type PaymentPanelProps = {
   totalAmount: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (paymentMethod: 'cash' | 'card') => void;
 };
 
 export default function PaymentPanel({
@@ -20,13 +19,13 @@ export default function PaymentPanel({
     <div className='w-full space-y-4 pt-4'>
         <ChangeCalculator 
             totalAmount={totalAmount} 
-            onPaymentSuccess={onPaymentSuccess} 
+            onPaymentSuccess={() => onPaymentSuccess('cash')}
         />
         <Button 
             size="lg" 
             variant="outline" 
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground" 
-            onClick={onPaymentSuccess} 
+            onClick={() => onPaymentSuccess('card')}
         >
            <CreditCard className="mr-2 h-4 w-4" /> Pay with Card
         </Button>

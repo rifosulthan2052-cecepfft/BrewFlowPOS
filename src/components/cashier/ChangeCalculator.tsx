@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -33,9 +34,13 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amountPaid: 0,
+      amountPaid: totalAmount > 0 ? totalAmount : 0,
     },
   });
+  
+  React.useEffect(() => {
+    form.setValue('amountPaid', totalAmount > 0 ? totalAmount : 0)
+  }, [totalAmount, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.amountPaid < totalAmount) {
@@ -47,6 +52,13 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     setError(null);
     setResult(null);
 
+    // Don't call the AI if exact change is given
+    if (values.amountPaid === totalAmount) {
+      setIsLoading(false);
+      onPaymentSuccess();
+      return;
+    }
+
     const response = await getChangeCalculation({
       totalAmount,
       amountPaid: values.amountPaid,
@@ -55,7 +67,10 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     setIsLoading(false);
     if (response.success) {
       setResult(response.data);
-      onPaymentSuccess();
+      // Wait a moment for user to see change, then finalize.
+      setTimeout(() => {
+        onPaymentSuccess();
+      }, 3000);
     } else {
       setError(response.error);
     }
@@ -87,7 +102,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
             />
             <Button type="submit" className="w-full" disabled={isLoading || disabled}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Calculate Change & Pay
+              {totalAmount > 0 && form.getValues('amountPaid') > totalAmount ? 'Calculate Change & Pay' : 'Pay with Exact Change'}
             </Button>
           </form>
         </Form>

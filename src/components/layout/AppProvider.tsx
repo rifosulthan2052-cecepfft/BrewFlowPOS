@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Bill } from '@/types';
 
 type Currency = 'USD' | 'IDR';
 
@@ -38,6 +38,8 @@ type AppContextType = {
   openBills: OpenBill[];
   editingBillId: string | null;
 
+  completedOrders: CompletedOrder[];
+
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
   setCustomerName: React.Dispatch<React.SetStateAction<string>>;
@@ -65,6 +67,8 @@ type AppContextType = {
     fees: Fee[];
   }>>
 
+  addOrderToHistory: (paymentMethod: 'cash' | 'card') => void;
+
 
   subtotal: number;
   totalFees: number;
@@ -85,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
+  const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
 
   // Separate state for a potentially unsaved order
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[] });
@@ -156,6 +161,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { subtotal, totalFees, tax, total };
   }, [orderItems, fees, taxRate]);
 
+  const addOrderToHistory = (paymentMethod: 'cash' | 'card') => {
+    const newCompletedOrder: CompletedOrder = {
+      id: `order-${Date.now()}`,
+      customerName: customerName || 'Walk-in Customer',
+      items: orderItems,
+      subtotal,
+      tax,
+      totalFees,
+      fees,
+      total,
+      date: new Date().toISOString(),
+      paymentMethod,
+    };
+    setCompletedOrders(prev => [newCompletedOrder, ...prev]);
+    setOrderStatus('paid');
+  }
+
   const saveAsOpenBill = () => {
     const billId = editingBillId || `bill-${Date.now()}`;
     const newOpenBill: OpenBill = {
@@ -195,7 +217,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const activeOrderExists = useMemo(() => {
-    return unsavedOrder.items.length > 0;
+    // An active order exists if there are items, a customer name, or fees,
+    // AND it's not associated with a bill being edited.
+    return (unsavedOrder.items.length > 0 || unsavedOrder.customerName !== '' || unsavedOrder.fees.length > 0);
   }, [unsavedOrder]);
 
 
@@ -224,6 +248,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     orderStatus,
     openBills,
     editingBillId,
+    completedOrders,
     setOrderItems,
     setFees,
     setCustomerName,
@@ -240,11 +265,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     activeOrderExists,
     unsavedOrder,
     setUnsavedOrder,
+    addOrderToHistory,
     subtotal,
     totalFees,
     tax,
     total
-  }), [currency, taxRate, menuItems, orderItems, fees, customerName, orderStatus, openBills, editingBillId, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [currency, taxRate, menuItems, orderItems, fees, customerName, orderStatus, openBills, editingBillId, completedOrders, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

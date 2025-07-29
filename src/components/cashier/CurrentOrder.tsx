@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { OrderItem } from '@/types';
@@ -37,7 +36,6 @@ type CurrentOrderProps = {
   onNewOrder: () => void;
   onClearOrder: () => void;
   onClose: () => void;
-  onAddToBill?: () => void;
 };
 
 export default function CurrentOrder({
@@ -50,13 +48,12 @@ export default function CurrentOrder({
   onNewOrder,
   onClearOrder,
   onClose,
-  onAddToBill,
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, saveAsOpenBill, editingBillId } = useApp();
+  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, editingBillId } = useApp();
   const isOrderEmpty = items.length === 0;
 
-  const handlePaymentSuccess = () => {
-    setOrderStatus('paid');
+  const handlePaymentSuccess = (paymentMethod: 'cash' | 'card') => {
+    addOrderToHistory(paymentMethod);
   }
 
   const handleSaveOpenBill = () => {
@@ -181,13 +178,11 @@ export default function CurrentOrder({
                   <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                   </Button>
               </PaymentDialog>
-              {editingBillId && onAddToBill ? (
+              {editingBillId ? (
                 <div className='grid grid-cols-2 gap-2'>
-                    <Button variant="outline" className="w-full" onClick={onAddToBill}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Items
-                    </Button>
+                    <Button variant="secondary" className="w-full" onClick={handleSaveOpenBill}>Done</Button>
                     <DialogClose asChild>
-                      <Button variant="secondary" className="w-full">Done</Button>
+                       <Button variant="outline" className="w-full">Cancel</Button>
                     </DialogClose>
                 </div>
               ) : (

@@ -14,7 +14,7 @@ import PaymentPanel from './PaymentPanel';
 type PaymentDialogProps = {
   children: React.ReactNode;
   totalAmount: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (paymentMethod: 'cash' | 'card') => void;
   disabled?: boolean;
 };
 

@@ -21,7 +21,7 @@ export type Fee = {
   notes: string;
 };
 
-export type OpenBill = {
+export type Bill = {
   id: string;
   customerName: string;
   items: OrderItem[];
@@ -31,4 +31,12 @@ export type OpenBill = {
   fees: Fee[];
   total: number;
   date: string;
+}
+
+export type OpenBill = Bill & {
+  // OpenBill specific fields if any in future
+};
+
+export type CompletedOrder = Bill & {
+  paymentMethod: 'cash' | 'card';
 };

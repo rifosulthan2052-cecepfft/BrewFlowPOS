@@ -8,12 +8,12 @@ import { z } from 'zod';
 import { getChangeCalculation } from '@/lib/actions';
 import type { CalculateChangeOutput } from '@/ai/flows/calculate-change';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
+import { CurrencyInput } from '../ui/currency-input';
 
 const formSchema = z.object({
   amountPaid: z.coerce.number().min(0, 'Amount must be positive.'),
@@ -93,7 +93,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
                   <FormControl>
                     <div className="relative">
                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currency === 'IDR' ? 'Rp' : '$'}</span>
-                       <Input type="number" step="0.01" {...field} className="pl-8" disabled={disabled}/>
+                       <CurrencyInput value={field.value} onValueChange={field.onChange} className="pl-8 text-right" disabled={disabled}/>
                     </div>
                   </FormControl>
                   <FormMessage />

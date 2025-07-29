@@ -38,6 +38,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { CurrencyInput } from '@/components/ui/currency-input';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -203,7 +204,7 @@ export default function MenuPage() {
                                             <FormControl>
                                                  <div className="relative">
                                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currency === 'IDR' ? 'Rp' : '$'}</span>
-                                                    <Input type="number" step="0.01" {...field} className="pl-8"/>
+                                                    <CurrencyInput value={field.value} onValueChange={field.onChange} className="pl-8 text-right" />
                                                 </div>
                                             </FormControl>
                                             <FormMessage />

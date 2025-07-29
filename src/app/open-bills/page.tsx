@@ -28,7 +28,7 @@ import { PlusCircle } from 'lucide-react';
 
 
 export default function OpenBillsPage() {
-    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, setEditingBillId, activeOrderExists } = useApp();
+    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder } = useApp();
     const router = useRouter();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
     const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
@@ -36,16 +36,14 @@ export default function OpenBillsPage() {
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
+        loadOrderFromBill(bill); // Load the bill data immediately
+        setEditingBillId(bill.id);
         setIsSettleDialogOpen(true);
-        // We don't load the order here anymore, we do it when the user decides to proceed.
     };
     
     const handleSettleDialogOpen = (open: boolean) => {
-        if(open && selectedBill) {
-            loadOrderFromBill(selectedBill);
-            setEditingBillId(selectedBill.id);
-        } else {
-            handleCloseDialog();
+        if (!open) {
+          handleCloseDialog();
         }
         setIsSettleDialogOpen(open);
     }
@@ -53,8 +51,18 @@ export default function OpenBillsPage() {
     const handleCloseDialog = () => {
         setIsSettleDialogOpen(false);
         setSelectedBill(null);
-        setEditingBillId(null);
-        resetOrder();
+        // If there was an unsaved order before opening the dialog, restore it.
+        if (activeOrderExists) {
+             loadOrderFromBill({
+                id: '',
+                customerName: unsavedOrder.customerName,
+                items: unsavedOrder.items,
+                fees: unsavedOrder.fees,
+                subtotal: 0, tax: 0, total: 0, totalFees: 0, date: ''
+             });
+        } else {
+            resetOrder();
+        }
     }
 
     const handleNewOrder = () => {
@@ -87,13 +95,6 @@ export default function OpenBillsPage() {
         proceedToAddToBill();
         setIsWarningDialogOpen(false);
     };
-
-    const handleOpenChange = (open: boolean) => {
-        if (!open) {
-            handleCloseDialog();
-        }
-        setIsSettleDialogOpen(open);
-    }
 
     return (
         <AppLayout>

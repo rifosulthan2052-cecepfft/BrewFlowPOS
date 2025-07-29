@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
@@ -15,6 +16,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+
+// Explicitly setting the auth domain can help with popup issues in proxied environments.
+const auth = getAuth(app, {
+  authDomain: "6000-firebase-studio-1753700681526.cluster-ejd22kqny5htuv5dfowoyipt52.cloudworkstations.dev",
+});
+
 
 export { app, auth };

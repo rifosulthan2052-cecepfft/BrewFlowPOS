@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
@@ -12,19 +11,8 @@ import { useApp } from '@/components/layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { ChevronUp, ShoppingCart } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const mockMenuItems: MenuItem[] = [
-  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
-  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "latte coffee" },
-  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee" },
-  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "americano coffee" },
-  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "mocha coffee" },
-  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "macchiato coffee" },
-  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "drip coffee" },
-  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "croissant pastry" },
-  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "muffin pastry" },
-  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry" },
-];
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
     const { total, orderItems, currency } = useApp();
@@ -60,6 +48,7 @@ function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
 
 export default function CashierPage() {
     const {
+        menuItems,
         orderItems,
         addItemToOrder,
         updateItemQuantity,
@@ -72,6 +61,16 @@ export default function CashierPage() {
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
 
+    const categories = useMemo(() => {
+        const cats = new Set<string>();
+        menuItems.forEach(item => {
+            if (item.category) {
+                cats.add(item.category);
+            }
+        });
+        return ['All', ...Array.from(cats)];
+    }, [menuItems]);
+
   return (
     <AppLayout>
       <AppLayout.Header>
@@ -79,7 +78,22 @@ export default function CashierPage() {
       </AppLayout.Header>
       <AppLayout.Content>
        <div className="p-4 md:p-6 pb-24">
-            <MenuList menuItems={mockMenuItems} orderItems={orderItems} onAddItem={addItemToOrder} />
+            <Tabs defaultValue="All" className="space-y-4">
+              <TabsList>
+                {categories.map(category => (
+                  <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                ))}
+              </TabsList>
+                {categories.map(category => (
+                    <TabsContent key={category} value={category}>
+                       <MenuList 
+                            menuItems={category === 'All' ? menuItems : menuItems.filter(item => item.category === category)} 
+                            orderItems={orderItems} 
+                            onAddItem={addItemToOrder} 
+                        />
+                    </TabsContent>
+                ))}
+            </Tabs>
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>

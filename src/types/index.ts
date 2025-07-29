@@ -1,7 +1,9 @@
+
 export type MenuItem = {
   id: string;
   name: string;
   price: number;
+  category?: string;
   imageUrl?: string;
   "data-ai-hint": string;
 };

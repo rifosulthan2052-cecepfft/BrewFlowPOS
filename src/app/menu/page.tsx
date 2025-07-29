@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState } from 'react';
@@ -13,6 +14,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +42,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -54,6 +61,8 @@ export default function MenuPage() {
     const { menuItems, addMenuItem, updateMenuItem, removeMenuItem, currency } = useApp();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
 
     const form = useForm<MenuItemFormValues>({
         resolver: zodResolver(menuItemSchema),
@@ -94,8 +103,17 @@ export default function MenuPage() {
         handleCloseDialog();
     };
     
-    const handleDelete = (id: string) => {
-        removeMenuItem(id);
+    const handleDelete = () => {
+        if (itemToDelete) {
+            removeMenuItem(itemToDelete.id);
+            setIsAlertOpen(false);
+            setItemToDelete(null);
+        }
+    }
+    
+    const openDeleteConfirm = (item: MenuItem) => {
+        setItemToDelete(item);
+        setIsAlertOpen(true);
     }
 
     return (
@@ -124,7 +142,7 @@ export default function MenuPage() {
                                             <TableHead className="px-6">Name</TableHead>
                                             <TableHead className="px-6">Category</TableHead>
                                             <TableHead className="text-right px-6">Price</TableHead>
-                                            <TableHead className="w-[100px] text-right px-6">Actions</TableHead>
+                                            <TableHead className="w-[50px] text-right px-6">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -136,32 +154,23 @@ export default function MenuPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right font-mono px-6">{formatCurrency(item.price, currency)}</TableCell>
                                                 <TableCell className="text-right px-6">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        This will permanently delete the "{item.name}" menu item. This action cannot be undone.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                                                                        Delete
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </div>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleOpenDialog(item)}>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => openDeleteConfirm(item)} className="text-destructive">
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -249,6 +258,23 @@ export default function MenuPage() {
                         </Form>
                     </DialogContent>
                 </Dialog>
+                
+                 <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete the "{itemToDelete?.name}" menu item. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete}>
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </AppLayout.Content>
         </AppLayout>
     )

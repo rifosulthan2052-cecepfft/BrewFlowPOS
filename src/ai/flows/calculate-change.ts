@@ -20,7 +20,7 @@ export type CalculateChangeInput = z.infer<typeof CalculateChangeInputSchema>;
 const CalculateChangeOutputSchema = z.object({
   changeDue: z.number().describe('The total change amount due to the customer.'),
   optimalChange: z
-    .record(z.number())
+    .record(z.string(), z.number())
     .describe(
       'The optimal denominations of change to return to the customer. The key should be the denomination (as a string) and the value should be the count.'
     ),
@@ -40,21 +40,21 @@ const prompt = ai.definePrompt({
   name: 'calculateChangePrompt',
   input: {schema: CalculateChangeInputSchema},
   output: {schema: CalculateChangeOutputSchema},
-  prompt: `You are a helpful cashier assistant for a coffee shop in Indonesia. Your goal is to calculate the optimal change to return to the customer using Indonesian Rupiah (IDR) denominations, minimizing the number of bills and coins.
+  prompt: `You are a helpful cashier assistant for a coffee shop in Indonesia. Calculate the optimal change for a customer using Indonesian Rupiah (IDR).
 
-Available IDR Denominations:
-Coins: 100, 200, 500, 1000
-Bills: 2000, 5000, 10000, 20000, 50000, 100000
+Available Denominations:
+Bills: 100000, 50000, 20000, 10000, 5000, 2000
+Coins: 1000, 500, 200, 100
 
-Transaction Details:
-Total Amount: {{{totalAmount}}}
-Amount Paid: {{{amountPaid}}}
+Transaction:
+Total: {{{totalAmount}}}
+Paid: {{{amountPaid}}}
 
-Instructions:
-1. Calculate the total change due.
-2. Determine the optimal combination of IDR bills and coins to give as change.
-3. Provide a brief rationale for why your suggested combination is optimal (e.g., "uses the fewest bills/coins").
-4. Format the output as a valid JSON object matching the provided schema. Keys in optimalChange should be strings representing the denomination (e.g., "100000").
+Your task:
+1.  Calculate the exact change due (Paid - Total).
+2.  Determine the combination of bills and coins that gives this change using the fewest possible items.
+3.  Provide a short, one-sentence rationale for the calculation.
+4.  Return the result as a valid JSON object matching the output schema.
 `,
 });
 

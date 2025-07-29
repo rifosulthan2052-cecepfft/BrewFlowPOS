@@ -30,6 +30,8 @@ type AppContextType = {
   addFeeToOrder: (fee: Fee) => void;
   resetOrder: () => void;
   saveAsOpenBill: () => void;
+  loadOrderFromBill: (bill: OpenBill) => void;
+  removeOpenBill: (billId: string) => void;
 
   subtotal: number;
   totalFees: number;
@@ -100,7 +102,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const billId = `bill-${Date.now()}`;
     const newOpenBill: OpenBill = {
       id: billId,
-      customerName: customerName || billId,
+      customerName: customerName || `Bill ${billId}`,
       items: orderItems,
       subtotal,
       tax,
@@ -111,6 +113,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setOpenBills(prev => [...prev, newOpenBill]);
     resetOrder();
+  };
+
+  const loadOrderFromBill = (bill: OpenBill) => {
+    setOrderItems(bill.items);
+    setFees(bill.fees);
+    setCustomerName(bill.customerName);
+    setOrderStatus('open_bill');
+  };
+
+  const removeOpenBill = (billId: string) => {
+    setOpenBills(prev => prev.filter(b => b.id !== billId));
   };
 
 
@@ -144,6 +157,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addFeeToOrder,
     resetOrder,
     saveAsOpenBill,
+    loadOrderFromBill,
+    removeOpenBill,
     subtotal,
     totalFees,
     tax,

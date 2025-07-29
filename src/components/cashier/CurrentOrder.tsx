@@ -140,7 +140,7 @@ export default function CurrentOrder({
                       {formatCurrency(item.price * item.quantity, currency)}
                     </p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)} disabled={orderStatus !== 'pending'}>
-                      <Minus className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </li>
                 ))}
@@ -180,17 +180,17 @@ export default function CurrentOrder({
                         </Button>
                     </PaymentDialog>
                     <div className="grid grid-cols-3 gap-2">
-                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty || orderStatus !== 'pending'}>
                             <Button variant="outline" className="w-full">
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                             </Button>
                         </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'} onClick={handleSaveOpenBill}>
                             Save as Open Bill
                         </Button>
                         <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
+                            <Button variant="destructive" className="w-full" disabled={isOrderEmpty || orderStatus !== 'pending'}>
                             <Trash2 className="mr-2 h-4 w-4" /> Clear Order
                             </Button>
                         </AlertDialogTrigger>

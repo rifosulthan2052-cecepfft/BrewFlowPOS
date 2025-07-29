@@ -49,7 +49,7 @@ export default function CurrentOrder({
   onClearOrder,
   onClose
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, resetOrder } = useApp();
+  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, setOrderStatus, saveAsOpenBill } = useApp();
   const isOrderEmpty = items.length === 0;
 
   const handlePaymentSuccess = () => {
@@ -57,12 +57,8 @@ export default function CurrentOrder({
   }
 
   const handleSaveOpenBill = () => {
-    setOrderStatus('open_bill');
-    // In a real app, this would save the order to a database
-    setTimeout(() => {
-        resetOrder();
-        onClose();
-    }, 1000)
+    saveAsOpenBill();
+    onClose();
   }
 
   if (orderStatus === 'paid') {
@@ -88,7 +84,7 @@ export default function CurrentOrder({
 
   return (
     <div className="h-full flex flex-col">
-       <div className="p-6 pb-2">
+       <div className="p-6 pb-2 flex-shrink-0">
          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold leading-none tracking-tight">Current Order</h2>
              {orderStatus !== 'pending' && (
@@ -98,7 +94,7 @@ export default function CurrentOrder({
             )}
         </div>
       </div>
-      <div className='px-6 pt-2'>
+      <div className='px-6 pt-2 flex-shrink-0'>
         <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
@@ -190,7 +186,7 @@ export default function CurrentOrder({
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                             </Button>
                         </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty || !customerName} onClick={handleSaveOpenBill}>
                             Save as Open Bill
                         </Button>
                         <AlertDialog>

@@ -18,3 +18,15 @@ export type Fee = {
   amount: number;
   notes: string;
 };
+
+export type OpenBill = {
+  id: string;
+  customerName: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  totalFees: number;
+  fees: Fee[];
+  total: number;
+  date: string;
+};

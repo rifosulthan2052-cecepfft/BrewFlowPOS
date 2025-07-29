@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import type { OrderItem, Fee, MenuItem } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill } from '@/types';
 
 type Currency = 'USD' | 'IDR';
 
@@ -17,6 +17,7 @@ type AppContextType = {
   fees: Fee[];
   customerName: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
+  openBills: OpenBill[];
 
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
@@ -28,6 +29,7 @@ type AppContextType = {
   removeItemFromOrder: (menuItemId: string) => void;
   addFeeToOrder: (fee: Fee) => void;
   resetOrder: () => void;
+  saveAsOpenBill: () => void;
 
   subtotal: number;
   totalFees: number;
@@ -45,6 +47,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [fees, setFees] = useState<Fee[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
+  const [openBills, setOpenBills] = useState<OpenBill[]>([]);
 
   const addItemToOrder = (item: MenuItem) => {
     setOrderItems((prevItems) => {
@@ -93,12 +96,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { subtotal, totalFees, tax, total };
   }, [orderItems, fees, taxRate]);
 
+  const saveAsOpenBill = () => {
+    const newOpenBill: OpenBill = {
+      id: `bill-${Date.now()}`,
+      customerName,
+      items: orderItems,
+      subtotal,
+      tax,
+      totalFees,
+      fees,
+      total,
+      date: new Date().toISOString(),
+    };
+    setOpenBills(prev => [...prev, newOpenBill]);
+    resetOrder();
+  };
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US', {
       style: 'currency',
       currency: currency,
-      minimumFractionDigits: 0,
+      minimumFractionDigits: currency === 'IDR' ? 0 : 2,
       maximumFractionDigits: currency === 'IDR' ? 0 : 2,
     }).format(amount);
   };
@@ -113,6 +132,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fees,
     customerName,
     orderStatus,
+    openBills,
     setOrderItems,
     setFees,
     setCustomerName,
@@ -122,11 +142,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removeItemFromOrder,
     addFeeToOrder,
     resetOrder,
+    saveAsOpenBill,
     subtotal,
     totalFees,
     tax,
     total
-  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, subtotal, totalFees, tax, total]);
+  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, openBills, subtotal, totalFees, tax, total]);
 
   return (
     <AppContext.Provider value={value}>

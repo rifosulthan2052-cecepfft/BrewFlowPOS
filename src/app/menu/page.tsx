@@ -116,26 +116,26 @@ export default function MenuPage() {
                                 Add Item
                             </Button>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead className="text-right">Price</TableHead>
-                                            <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                            <TableHead className="px-6">Name</TableHead>
+                                            <TableHead className="px-6">Category</TableHead>
+                                            <TableHead className="text-right px-6">Price</TableHead>
+                                            <TableHead className="w-[100px] text-right px-6">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {menuItems.map((item) => (
                                             <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.name}</TableCell>
-                                                <TableCell>
+                                                <TableCell className="font-medium px-6">{item.name}</TableCell>
+                                                <TableCell className="px-6">
                                                     {item.category ? <Badge variant="secondary">{item.category}</Badge> : '-'}
                                                 </TableCell>
-                                                <TableCell className="text-right font-mono">{formatCurrency(item.price, currency)}</TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-right font-mono px-6">{formatCurrency(item.price, currency)}</TableCell>
+                                                <TableCell className="text-right px-6">
                                                     <div className="flex justify-end gap-2">
                                                         <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
                                                             <Edit className="h-4 w-4" />

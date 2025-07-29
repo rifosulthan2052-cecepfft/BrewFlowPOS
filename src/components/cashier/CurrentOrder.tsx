@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { DialogClose } from '../ui/dialog';
+import { DialogClose, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 
 type CurrentOrderProps = {
@@ -63,17 +63,17 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col bg-background p-6">
-         <div className='flex justify-between items-center mb-4'>
-           <h2 className="text-2xl font-semibold leading-none tracking-tight">Order Paid</h2>
-           <Badge variant="default" className="capitalize bg-green-600 text-white">
-             Paid
-           </Badge>
-         </div>
-         <div className="flex-1 flex flex-col min-h-0">
+       <div className="h-full flex flex-col bg-background">
+         <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Order Paid</DialogTitle>
+            <Badge variant="default" className="capitalize bg-green-600 text-white">
+                Paid
+            </Badge>
+         </DialogHeader>
+         <div className="flex-1 flex flex-col min-h-0 p-6">
            <Receipt orderItems={items} subtotal={subtotal} tax={tax} fees={fees} total={total} />
          </div>
-         <footer className="pt-4 border-t mt-auto flex-shrink-0">
+         <footer className="p-6 pt-4 border-t mt-auto flex-shrink-0">
            <Button size="lg" className="w-full" onClick={onNewOrder}>
                Start New Order
            </Button>

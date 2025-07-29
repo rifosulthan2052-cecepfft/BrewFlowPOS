@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (user) {
         const token = await user.getIdToken(true);
         // Set cookie to be compatible with iframes
-        Cookies.set('firebaseIdToken', token, { expires: 1, sameSite: 'Lax', secure: true }); 
+        Cookies.set('firebaseIdToken', token, { expires: 1, sameSite: 'None', secure: true }); 
         
         if (pathname === '/login') {
             router.push('/');

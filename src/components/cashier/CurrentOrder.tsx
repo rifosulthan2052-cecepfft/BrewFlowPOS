@@ -6,7 +6,7 @@ import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Minus, X, User, Wallet, PlusCircle, Trash2 } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2 } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -140,7 +140,7 @@ export default function CurrentOrder({
                       {formatCurrency(item.price * item.quantity, currency)}
                     </p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)} disabled={orderStatus !== 'pending'}>
-                      <X className="h-4 w-4" />
+                      <Minus className="h-4 w-4" />
                     </Button>
                   </li>
                 ))}
@@ -185,7 +185,7 @@ export default function CurrentOrder({
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                             </Button>
                         </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty || !customerName} onClick={handleSaveOpenBill}>
+                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
                             Save as Open Bill
                         </Button>
                         <AlertDialog>

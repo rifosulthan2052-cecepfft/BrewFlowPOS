@@ -97,9 +97,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const saveAsOpenBill = () => {
+    const billId = `bill-${Date.now()}`;
     const newOpenBill: OpenBill = {
-      id: `bill-${Date.now()}`,
-      customerName,
+      id: billId,
+      customerName: customerName || billId,
       items: orderItems,
       subtotal,
       tax,

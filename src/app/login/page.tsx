@@ -1,11 +1,60 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CoffeeIcon } from "@/components/icons";
+
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CoffeeIcon } from '@/components/icons';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      await signInWithEmail(email, password);
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'An unexpected error occurred.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Login Failed',
+        description: error.message || 'An unexpected error occurred.',
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-sm mx-auto shadow-2xl">
@@ -13,18 +62,26 @@ export default function LoginPage() {
           <div className="flex justify-center items-center gap-2 mb-4">
             <CoffeeIcon className="h-8 w-8 text-primary" />
             <div className="flex flex-col items-start -space-y-1">
-                <span className="text-2xl font-bold text-primary">BrewFlow</span>
-                <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
+              <span className="text-2xl font-bold text-primary">BrewFlow</span>
+              <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
             </div>
           </div>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>Enter your email below to login to your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
+          <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading || isGoogleLoading}
+              />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
@@ -33,15 +90,24 @@ export default function LoginPage() {
                   Forgot your password?
                 </Link>
               </div>
-              <Input id="password" type="password" required />
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading || isGoogleLoading}
+              />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
+              {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login with Google
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

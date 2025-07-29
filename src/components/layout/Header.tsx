@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuGroup,
@@ -21,10 +20,12 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { useApp } from "./AppProvider";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
   const { currency, setCurrency, taxRate, setTaxRate } = useApp();
+  const { user, signOut } = useAuth();
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -44,9 +45,9 @@ export default function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src="https://placehold.co/100x100" alt="User Avatar" />
+              <AvatarImage src={user?.photoURL || "https://placehold.co/100x100"} alt="User Avatar" />
               <AvatarFallback>
-                <UserCircle className="h-8 w-8" />
+                {user?.email?.charAt(0).toUpperCase() || <UserCircle className="h-8 w-8" />}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -54,9 +55,9 @@ export default function Header() {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">Cashier</p>
+              <p className="text-sm font-medium leading-none">{user?.displayName || 'Cashier'}</p>
               <p className="text-xs leading-none text-muted-foreground">
-                cashier@brewflow.com
+                {user?.email || 'cashier@brewflow.com'}
               </p>
             </div>
           </DropdownMenuLabel>
@@ -88,7 +89,7 @@ export default function Header() {
             <DropdownMenuRadioItem value="USD">USD ($)</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>

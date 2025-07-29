@@ -137,7 +137,7 @@ export default function CurrentOrder({
             </div>
         </div>
 
-        <div className="bg-background pt-4 border-t -mx-6 px-6 pb-4 mt-auto">
+        <div className="bg-background p-6 pt-4 border-t mt-auto">
             <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>

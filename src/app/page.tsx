@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { MenuItem } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
@@ -68,8 +68,16 @@ export default function CashierPage() {
         setCustomerName,
         orderStatus,
         resetOrder,
+        editingBillId
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
+
+    useEffect(() => {
+        if (editingBillId) {
+            setIsOrderOpen(true);
+        }
+    }, [editingBillId]);
+
 
   return (
     <AppLayout>
@@ -84,7 +92,9 @@ export default function CashierPage() {
         <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
             <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
                 <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                    <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Current Order</DialogTitle>
+                    <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
+                        { editingBillId ? 'Editing Bill' : 'Current Order' }
+                    </DialogTitle>
                 </DialogHeader>
                 <CurrentOrder
                     items={orderItems}
@@ -99,7 +109,9 @@ export default function CashierPage() {
                     }}
                     onClearOrder={() => {
                         resetOrder();
-                        setIsOrderOpen(false);
+                         if (!editingBillId) {
+                            setIsOrderOpen(false);
+                        }
                     }}
                     onClose={() => setIsOrderOpen(false)}
                 />

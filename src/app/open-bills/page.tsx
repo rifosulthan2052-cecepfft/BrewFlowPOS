@@ -2,7 +2,8 @@
 'use client'
 
 import { useState } from 'react';
-import type { OpenBill, MenuItem, OrderItem } from '@/types';
+import { useRouter } from 'next/navigation';
+import type { OpenBill } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -11,40 +12,39 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import CurrentOrder from '@/components/cashier/CurrentOrder';
-import MenuList from '@/components/cashier/MenuList';
 import { PlusCircle } from 'lucide-react';
 
 
-const mockMenuItems: MenuItem[] = [
-  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee" },
-  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "latte coffee" },
-  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee" },
-  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "americano coffee" },
-  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "mocha coffee" },
-  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "macchiato coffee" },
-  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "drip coffee" },
-  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "croissant pastry" },
-  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "muffin pastry" },
-  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry" },
-];
-
-
 export default function OpenBillsPage() {
-    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, addItemToOrder } = useApp();
+    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, setEditingBillId, activeOrderExists } = useApp();
+    const router = useRouter();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
+    const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
     const [selectedBill, setSelectedBill] = useState<OpenBill | null>(null);
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
         loadOrderFromBill(bill);
+        setEditingBillId(bill.id);
         setIsSettleDialogOpen(true);
     };
     
     const handleCloseDialog = () => {
         setIsSettleDialogOpen(false);
         setSelectedBill(null);
+        setEditingBillId(null);
         resetOrder();
     }
 
@@ -53,6 +53,36 @@ export default function OpenBillsPage() {
             removeOpenBill(selectedBill.id);
         }
         handleCloseDialog();
+    }
+    
+    const handleAddToBill = () => {
+        if (activeOrderExists) {
+            setIsWarningDialogOpen(true);
+        } else {
+            proceedToAddToBill();
+        }
+    };
+
+    const proceedToAddToBill = () => {
+        if (selectedBill) {
+            setEditingBillId(selectedBill.id);
+            loadOrderFromBill(selectedBill);
+            router.push('/');
+        }
+    };
+
+
+    const handleConfirmWarning = () => {
+        resetOrder(); // Discard the current unsaved order
+        proceedToAddToBill();
+        setIsWarningDialogOpen(false);
+    };
+
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            handleCloseDialog();
+        }
+        setIsSettleDialogOpen(open);
     }
 
     return (
@@ -130,7 +160,7 @@ export default function OpenBillsPage() {
                         </CardContent>
                     </Card>
                 </div>
-                 <Dialog open={isSettleDialogOpen} onOpenChange={setIsSettleDialogOpen}>
+                 <Dialog open={isSettleDialogOpen} onOpenChange={handleOpenChange}>
                     <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
                         <DialogHeader className='p-6 pb-2 flex-shrink-0'>
                             <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
@@ -146,8 +176,31 @@ export default function OpenBillsPage() {
                             onClearOrder={handleCloseDialog}
                             onClose={handleCloseDialog}
                         />
+                         <DialogFooter className="p-4 border-t bg-background">
+                            <Button variant="outline" onClick={handleAddToBill}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add to Bill
+                            </Button>
+                            <DialogClose asChild>
+                                <Button>Done</Button>
+                            </DialogClose>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Unsaved Order Warning</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You have an unsaved order in progress. Adding items to this bill will discard your current order. Do you want to proceed?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleConfirmWarning}>Discard and Proceed</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </AppLayout.Content>
         </AppLayout>
     )

@@ -18,6 +18,8 @@ type AppContextType = {
   customerName: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
   openBills: OpenBill[];
+  editingBillId: string | null;
+
 
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
@@ -32,6 +34,9 @@ type AppContextType = {
   saveAsOpenBill: () => void;
   loadOrderFromBill: (bill: OpenBill) => void;
   removeOpenBill: (billId: string) => void;
+  setEditingBillId: (billId: string | null) => void;
+  activeOrderExists: boolean;
+
 
   subtotal: number;
   totalFees: number;
@@ -50,6 +55,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [customerName, setCustomerName] = useState('');
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
+
 
   const addItemToOrder = (item: MenuItem) => {
     setOrderItems((prevItems) => {
@@ -88,6 +95,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFees([]);
     setCustomerName('');
     setOrderStatus('pending');
+    setEditingBillId(null);
   }
 
   const { subtotal, totalFees, tax, total } = useMemo(() => {
@@ -99,7 +107,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const saveAsOpenBill = () => {
-    const billId = `bill-${Date.now()}`;
+    const billId = editingBillId || `bill-${Date.now()}`;
     const newOpenBill: OpenBill = {
       id: billId,
       customerName: customerName || `Bill ${billId}`,
@@ -111,7 +119,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       total,
       date: new Date().toISOString(),
     };
-    setOpenBills(prev => [...prev, newOpenBill]);
+    
+    setOpenBills(prev => {
+        const existingBillIndex = prev.findIndex(b => b.id === billId);
+        if (existingBillIndex > -1) {
+            const newBills = [...prev];
+            newBills[existingBillIndex] = newOpenBill;
+            return newBills;
+        }
+        return [...prev, newOpenBill]
+    });
     resetOrder();
   };
 
@@ -120,11 +137,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setFees(bill.fees);
     setCustomerName(bill.customerName);
     setOrderStatus('open_bill');
+    setEditingBillId(bill.id);
   };
 
   const removeOpenBill = (billId: string) => {
     setOpenBills(prev => prev.filter(b => b.id !== billId));
   };
+
+  const activeOrderExists = useMemo(() => {
+    return orderItems.length > 0 && !editingBillId;
+  }, [orderItems, editingBillId]);
 
 
   const formatCurrency = (amount: number) => {
@@ -147,6 +169,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     customerName,
     orderStatus,
     openBills,
+    editingBillId,
     setOrderItems,
     setFees,
     setCustomerName,
@@ -159,11 +182,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveAsOpenBill,
     loadOrderFromBill,
     removeOpenBill,
+    setEditingBillId,
+    activeOrderExists,
     subtotal,
     totalFees,
     tax,
     total
-  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, openBills, subtotal, totalFees, tax, total]);
+  }), [currency, taxRate, orderItems, fees, customerName, orderStatus, openBills, editingBillId, subtotal, totalFees, tax, total, activeOrderExists]);
 
   return (
     <AppContext.Provider value={value}>

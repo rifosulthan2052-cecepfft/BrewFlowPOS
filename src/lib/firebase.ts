@@ -17,10 +17,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Explicitly setting the auth domain can help with popup issues in proxied environments.
-const auth = getAuth(app, {
-  authDomain: "6000-firebase-studio-1753700681526.cluster-ejd22kqny5htuv5dfowoyipt52.cloudworkstations.dev",
-});
+const auth = getAuth(app);
 
 
 export { app, auth };

@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,7 @@ export default function OpenBillsPage() {
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
+        setIsSettleDialogOpen(true);
         // We don't load the order here anymore, we do it when the user decides to proceed.
     };
     
@@ -160,9 +161,7 @@ export default function OpenBillsPage() {
                                                 </div>
                                             </CardContent>
                                             <CardFooter>
-                                                <DialogTrigger asChild>
-                                                    <Button className="w-full" onClick={() => handleSettleClick(bill)}>Settle Bill</Button>
-                                                </DialogTrigger>
+                                                <Button className="w-full" onClick={() => handleSettleClick(bill)}>Settle Bill</Button>
                                             </CardFooter>
                                         </Card>
                                     ))}

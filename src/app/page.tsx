@@ -72,13 +72,6 @@ export default function CashierPage() {
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
 
-    useEffect(() => {
-        if (editingBillId) {
-            setIsOrderOpen(true);
-        }
-    }, [editingBillId]);
-
-
   return (
     <AppLayout>
       <AppLayout.Header>

@@ -17,6 +17,7 @@ type ReceiptProps = {
   tax: number;
   fees: Fee[];
   total: number;
+  showPrintButton?: boolean;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
@@ -25,7 +26,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, re
     const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
 
     return (
-        <div ref={ref} className="p-4 text-sm bg-background text-foreground font-mono">
+        <div ref={ref} id="receipt-to-print" className="p-4 text-sm bg-background text-foreground font-mono">
             <div className="text-center mb-4">
                 <div className="flex justify-center items-center gap-2">
                     <CoffeeIcon className="h-6 w-6" />
@@ -76,7 +77,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, re
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total }: ReceiptProps) {
+export default function Receipt({ orderItems, subtotal, tax, fees, total, showPrintButton = true }: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -96,7 +97,6 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total }: Rece
                     hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
                 </style>
             `);
-            printWindow?.document.write('</head><body>');
             printWindow?.document.write(printContent.innerHTML);
             printWindow?.document.write('</body></html>');
             printWindow?.document.close();
@@ -114,9 +114,11 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total }: Rece
                     <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total}} />
                 </ScrollArea>
              </div>
-            <Button onClick={handlePrint} className="mt-4 w-full">
-                <Printer className="mr-2 h-4 w-4" /> Print Receipt
-            </Button>
+            {showPrintButton && (
+                <Button onClick={handlePrint} className="mt-4 w-full">
+                    <Printer className="mr-2 h-4 w-4" /> Print Receipt
+                </Button>
+            )}
         </div>
     );
 }

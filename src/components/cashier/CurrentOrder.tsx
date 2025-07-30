@@ -63,19 +63,13 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid') {
      return (
-       <div className="h-full flex flex-col bg-background">
-         <DialogHeader className='p-6 pb-2 flex-shrink-0 flex-row items-center justify-between'>
-            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Order Paid</DialogTitle>
-            <Badge variant="default" className="capitalize bg-green-600 text-white">
-                Paid
-            </Badge>
-         </DialogHeader>
-         <div className="flex-1 flex flex-col min-h-0 p-6">
-           <div className="flex-1 min-h-0">
-             <ScrollArea className="h-full">
-                <Receipt orderItems={items} subtotal={subtotal} tax={tax} fees={fees} total={total} showPrintButton={false} />
-             </ScrollArea>
-           </div>
+       <>
+         <div className="flex-1 min-h-0">
+           <ScrollArea className="h-full">
+            <div className='p-6'>
+              <Receipt orderItems={items} subtotal={subtotal} tax={tax} fees={fees} total={total} showPrintButton={false} />
+            </div>
+           </ScrollArea>
          </div>
          <footer className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
             <Button size="lg" variant="outline" className="w-full" onClick={() => {
@@ -107,12 +101,12 @@ export default function CurrentOrder({
                Start New Order
            </Button>
          </footer>
-       </div>
+       </>
      )
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <>
         <div className="flex-1 min-h-0">
             <ScrollArea className="h-full">
                 <div className="p-6 pt-2">
@@ -244,6 +238,6 @@ export default function CurrentOrder({
                 )}
             </div>
         </div>
-    </div>
+    </>
   );
 }

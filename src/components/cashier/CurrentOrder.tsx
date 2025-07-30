@@ -77,7 +77,7 @@ export default function CurrentOrder({
              </ScrollArea>
            </div>
          </div>
-         <footer className="p-6 pt-4 border-t mt-auto flex-shrink-0 flex items-center gap-2">
+         <footer className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
             <Button size="lg" variant="outline" className="w-full" onClick={() => {
                 const printWindow = window.open('', '', 'height=600,width=800');
                 // A very basic styling for printing
@@ -112,7 +112,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex flex-col h-full">
         <div className="flex-1 min-h-0">
             <ScrollArea className="h-full">
                 <div className="p-6 pt-2">
@@ -170,7 +170,7 @@ export default function CurrentOrder({
             </ScrollArea>
         </div>
 
-        <div className="bg-background p-6 pt-4 border-t mt-auto flex-shrink-0">
+        <div className="bg-background p-6 pt-4 border-t flex-shrink-0">
             <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>

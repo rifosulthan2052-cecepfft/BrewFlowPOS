@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 
 type CurrentOrderProps = {
@@ -51,7 +51,7 @@ export default function CurrentOrder({
   onClose,
 }: CurrentOrderProps) {
   const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, editingBillId, lastCompletedOrder } = useApp();
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
   const isOrderEmpty = items.length === 0;
 
   const handlePaymentSuccess = (paymentMethod: 'cash' | 'card') => {
@@ -147,50 +147,48 @@ export default function CurrentOrder({
       
       {/* SECTION 2: Order Items List */}
       <div className="flex-1 px-6 pt-0 min-h-0">
-          <div className="h-full border-t border-b">
-              <div className="h-full max-h-96">
-                <ScrollArea className="h-full">
-                    {items.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-16">
-                        <p>No items in order.</p>
-                        <p className="text-sm">Click on menu items to add them.</p>
-                    </div>
-                    ) : (
-                    <ul className="space-y-4 pr-4 py-4">
-                        {items.map((item) => (
-                        <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
-                            <div className="flex-1">
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                                type="number"
-                                className="h-8 w-12 text-center"
-                                value={item.quantity}
-                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
-                                aria-label={`${item.name} quantity`}
-                            />
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                            </div>
-                            <p className="w-24 text-right font-medium">
-                            {formatCurrency(item.price * item.quantity, currency)}
-                            </p>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
-                            <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </li>
-                        ))}
-                    </ul>
-                    )}
-                </ScrollArea>
+        <div className="h-full border-t border-b">
+          <ScrollArea className="h-full">
+              {items.length === 0 ? (
+              <div className="text-center text-muted-foreground py-16">
+                  <p>No items in order.</p>
+                  <p className="text-sm">Click on menu items to add them.</p>
               </div>
-          </div>
+              ) : (
+              <ul className="space-y-4 pr-4 py-4">
+                  {items.map((item) => (
+                  <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
+                      <div className="flex-1">
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
+                          <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                          type="number"
+                          className="h-8 w-12 text-center"
+                          value={item.quantity}
+                          onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
+                          aria-label={`${item.name} quantity`}
+                      />
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
+                          <Plus className="h-4 w-4" />
+                      </Button>
+                      </div>
+                      <p className="w-24 text-right font-medium">
+                      {formatCurrency(item.price * item.quantity, currency)}
+                      </p>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
+                      <Trash2 className="h-4 w-4" />
+                      </Button>
+                  </li>
+                  ))}
+              </ul>
+              )}
+          </ScrollArea>
+        </div>
       </div>
       
       {/* SECTION 3: Footer with Totals and Actions */}
@@ -229,9 +227,7 @@ export default function CurrentOrder({
                 {editingBillId ? (
                     <div className='grid grid-cols-2 gap-2'>
                         <Button variant="secondary" className="w-full" onClick={handleSaveOpenBill}>Done</Button>
-                        <DialogClose asChild>
-                        <Button variant="outline" className="w-full">Cancel</Button>
-                        </DialogClose>
+                        <Button variant="outline" className="w-full" onClick={onClose}>Cancel</Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 gap-2">

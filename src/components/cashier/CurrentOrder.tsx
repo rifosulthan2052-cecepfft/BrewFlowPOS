@@ -80,16 +80,16 @@ export default function CurrentOrder({
                     Paid by {lastCompletedOrder.paymentMethod}
                 </Badge>
             </div>
-             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)}>
+             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-pulse">
                  <FileText className="mr-2" />
                  View Receipt
              </Button>
          </div>
-         <footer className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
+         <DialogFooter className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
             <Button size="lg" className="w-full" onClick={onNewOrder}>
                Start New Order
             </Button>
-         </footer>
+         </DialogFooter>
          <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
             <DialogContent className="max-w-sm">
                 <DialogHeader>

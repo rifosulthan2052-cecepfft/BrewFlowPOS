@@ -85,9 +85,8 @@ export default function CurrentOrder({
                  View Receipt
              </Button>
          </div>
-         <DialogFooter className="p-6 pt-4 border-t flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 items-center gap-2">
-            <div className="hidden sm:block"></div>
-            <Button size="lg" className="w-full" onClick={onNewOrder}>
+         <DialogFooter className="p-6 pt-4 border-t flex-shrink-0 sm:justify-center">
+            <Button size="lg" className="w-full sm:w-auto" onClick={onNewOrder}>
                Start New Order
             </Button>
          </DialogFooter>

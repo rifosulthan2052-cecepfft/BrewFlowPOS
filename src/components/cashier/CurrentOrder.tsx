@@ -111,7 +111,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <>
+    <div className='flex flex-col h-full'>
       <div className="p-6 pt-2 space-y-4 flex-shrink-0">
         <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -241,6 +241,6 @@ export default function CurrentOrder({
                 )}
             </div>
         </div>
-    </>
+    </div>
   );
 }

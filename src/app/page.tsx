@@ -14,6 +14,7 @@ import { ChevronUp, ShoppingCart } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -117,7 +118,7 @@ export default function CashierPage() {
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
+            <DialogContent className={cn("max-w-2xl p-0 gap-0 flex flex-col", orderStatus !== 'paid' && "h-[90vh]")}>
                 <CurrentOrder
                     items={orderItems}
                     customerName={customerName}

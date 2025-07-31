@@ -27,6 +27,7 @@ import {
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 
 export default function OpenBillsPage() {
@@ -182,7 +183,7 @@ export default function OpenBillsPage() {
                     </Card>
                 </div>
                  <Dialog open={isSettleDialogOpen} onOpenChange={handleSettleDialogOpen}>
-                    <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
+                    <DialogContent className={cn("max-w-2xl p-0 gap-0 flex flex-col", orderStatus !== 'paid' && "h-[90vh]")}>
                         <CurrentOrder
                             items={orderItems}
                             customerName={customerName}

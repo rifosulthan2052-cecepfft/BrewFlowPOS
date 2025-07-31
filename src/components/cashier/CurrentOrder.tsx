@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 
 type CurrentOrderProps = {
@@ -107,7 +107,6 @@ export default function CurrentOrder({
 
   return (
     <div className="flex flex-col h-full">
-      {/* SECTION 1: Customer Name Input */}
         <div className="p-6 pt-2 space-y-4 flex-shrink-0">
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -145,10 +144,9 @@ export default function CurrentOrder({
             </div>
         </div>
       
-      {/* SECTION 2: Order Items List */}
       <div className="flex-1 px-6 pt-0 min-h-0">
         <div className="h-full border-t border-b">
-          <ScrollArea className="h-full">
+           <ScrollArea className="h-full">
               {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                   <p>No items in order.</p>
@@ -191,7 +189,6 @@ export default function CurrentOrder({
         </div>
       </div>
       
-      {/* SECTION 3: Footer with Totals and Actions */}
       <div className="bg-background p-6 pt-4 flex-shrink-0">
             <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

@@ -10,6 +10,7 @@ import { Printer } from 'lucide-react';
 import React from 'react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
+import { DialogFooter } from '../ui/dialog';
 
 type ReceiptProps = {
   orderItems: OrderItem[];
@@ -20,7 +21,7 @@ type ReceiptProps = {
   showPrintButton?: boolean;
 };
 
-const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
+const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
     const { orderItems, subtotal, tax, fees, total } = props;
     const { currency } = useApp();
     const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
@@ -84,9 +85,10 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, showPr
         const printContent = receiptRef.current;
         if (printContent) {
             const printWindow = window.open('', '', 'height=600,width=800');
-            printWindow?.document.write('<html><head><title>Print Receipt</title>');
+            if (!printWindow) return;
+            printWindow.document.write('<html><head><title>Print Receipt</title>');
              // A very basic styling for printing
-            printWindow?.document.write(`
+            printWindow.document.write(`
                 <style>
                     body { font-family: monospace; font-size: 14px; }
                     .receipt-container { width: 300px; margin: auto; }
@@ -97,27 +99,29 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, showPr
                     hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
                 </style>
             `);
-            printWindow?.document.write(printContent.innerHTML);
-            printWindow?.document.write('</body></html>');
-            printWindow?.document.close();
-            printWindow?.focus();
-            printWindow?.print();
-            printWindow?.close();
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
         }
     };
     
     return (
-        <div className="flex flex-col h-full">
-            <h3 className="font-semibold text-center mb-2">Receipt</h3>
-             <div className="border rounded-md flex-1 overflow-hidden">
+        <div className="flex flex-col h-full max-h-[70vh]">
+             <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
                     <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total}} />
                 </ScrollArea>
              </div>
             {showPrintButton && (
-                <Button onClick={handlePrint} className="mt-4 w-full">
+              <DialogFooter className="pt-4">
+                <Button onClick={handlePrint} className="w-full">
                     <Printer className="mr-2 h-4 w-4" /> Print Receipt
                 </Button>
+              </DialogFooter>
             )}
         </div>
     );

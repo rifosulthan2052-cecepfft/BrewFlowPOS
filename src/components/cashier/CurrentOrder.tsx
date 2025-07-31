@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 
 type CurrentOrderProps = {
@@ -95,13 +95,15 @@ export default function CurrentOrder({
                 <DialogHeader>
                     <DialogTitle>Receipt</DialogTitle>
                 </DialogHeader>
-                <Receipt 
-                    orderItems={lastCompletedOrder.items}
-                    subtotal={lastCompletedOrder.subtotal}
-                    tax={lastCompletedOrder.tax}
-                    fees={lastCompletedOrder.fees}
-                    total={lastCompletedOrder.total}
-                />
+                {lastCompletedOrder && (
+                  <Receipt 
+                      orderItems={lastCompletedOrder.items}
+                      subtotal={lastCompletedOrder.subtotal}
+                      tax={lastCompletedOrder.tax}
+                      fees={lastCompletedOrder.fees}
+                      total={lastCompletedOrder.total}
+                  />
+                )}
             </DialogContent>
          </Dialog>
        </>
@@ -110,62 +112,61 @@ export default function CurrentOrder({
 
   return (
     <>
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-            <div className="p-6 pt-2 space-y-4">
-                <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Customer Name" 
-                        value={customerName}
-                        onChange={(e) => onCustomerNameChange(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
-
-                <div>
-                    {items.length === 0 ? (
-                    <div className="text-center text-muted-foreground py-16">
-                        <p>No items in order.</p>
-                        <p className="text-sm">Click on menu items to add them.</p>
-                    </div>
-                    ) : (
-                    <ul className="space-y-4">
-                        {items.map((item) => (
-                        <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
-                            <div className="flex-1">
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                                type="number"
-                                className="h-8 w-12 text-center"
-                                value={item.quantity}
-                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
-                                aria-label={`${item.name} quantity`}
-                            />
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                            </div>
-                            <p className="w-24 text-right font-medium">
-                            {formatCurrency(item.price * item.quantity, currency)}
-                            </p>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
-                            <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </li>
-                        ))}
-                    </ul>
-                    )}
-                </div>
-            </div>
-        </ScrollArea>
+      <div className="p-6 pt-2 space-y-4 flex-shrink-0">
+        <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+                placeholder="Customer Name" 
+                value={customerName}
+                onChange={(e) => onCustomerNameChange(e.target.value)}
+                className="pl-9"
+            />
+        </div>
       </div>
+      <ScrollArea className="flex-1 min-h-0">
+          <div className="p-6 pt-0 space-y-4">
+              <div>
+                  {items.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-16">
+                      <p>No items in order.</p>
+                      <p className="text-sm">Click on menu items to add them.</p>
+                  </div>
+                  ) : (
+                  <ul className="space-y-4">
+                      {items.map((item) => (
+                      <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
+                          <div className="flex-1">
+                          <p className="font-semibold">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
+                              <Minus className="h-4 w-4" />
+                          </Button>
+                          <Input
+                              type="number"
+                              className="h-8 w-12 text-center"
+                              value={item.quantity}
+                              onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
+                              aria-label={`${item.name} quantity`}
+                          />
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
+                              <Plus className="h-4 w-4" />
+                          </Button>
+                          </div>
+                          <p className="w-24 text-right font-medium">
+                          {formatCurrency(item.price * item.quantity, currency)}
+                          </p>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
+                          <Trash2 className="h-4 w-4" />
+                          </Button>
+                      </li>
+                      ))}
+                  </ul>
+                  )}
+              </div>
+          </div>
+      </ScrollArea>
       <div className="bg-background p-6 pt-4 border-t flex-shrink-0">
             <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

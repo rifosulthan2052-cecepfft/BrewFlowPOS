@@ -108,61 +108,88 @@ export default function CurrentOrder({
   return (
     <div className="flex flex-col h-full">
       {/* SECTION 1: Customer Name Input */}
-      <div className="p-6 pt-2 space-y-4 flex-shrink-0">
-        <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-                placeholder="Customer Name" 
-                value={customerName}
-                onChange={(e) => onCustomerNameChange(e.target.value)}
-                className="pl-9"
-            />
+        <div className="p-6 pt-2 space-y-4 flex-shrink-0">
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Customer Name"
+                        value={customerName}
+                        onChange={(e) => onCustomerNameChange(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
+                {!editingBillId && (
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" disabled={isOrderEmpty}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will clear all items from the current order. This action cannot be undone.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={onClearOrder}>
+                                Clear Order
+                            </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+            </div>
         </div>
-      </div>
       
       {/* SECTION 2: Order Items List */}
       <div className="flex-1 px-6 pt-0 min-h-0">
           <div className="h-full border-t border-b">
-              <ScrollArea className="h-full">
-                  {items.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-16">
-                      <p>No items in order.</p>
-                      <p className="text-sm">Click on menu items to add them.</p>
-                  </div>
-                  ) : (
-                  <ul className="space-y-4 pr-4 py-4">
-                      {items.map((item) => (
-                      <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
-                          <div className="flex-1">
-                          <p className="font-semibold">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
-                              <Minus className="h-4 w-4" />
-                          </Button>
-                          <Input
-                              type="number"
-                              className="h-8 w-12 text-center"
-                              value={item.quantity}
-                              onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
-                              aria-label={`${item.name} quantity`}
-                          />
-                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
-                              <Plus className="h-4 w-4" />
-                          </Button>
-                          </div>
-                          <p className="w-24 text-right font-medium">
-                          {formatCurrency(item.price * item.quantity, currency)}
-                          </p>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
-                          <Trash2 className="h-4 w-4" />
-                          </Button>
-                      </li>
-                      ))}
-                  </ul>
-                  )}
-              </ScrollArea>
+              <div className="h-full max-h-96">
+                <ScrollArea className="h-full">
+                    {items.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-16">
+                        <p>No items in order.</p>
+                        <p className="text-sm">Click on menu items to add them.</p>
+                    </div>
+                    ) : (
+                    <ul className="space-y-4 pr-4 py-4">
+                        {items.map((item) => (
+                        <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
+                            <div className="flex-1">
+                            <p className="font-semibold">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <Input
+                                type="number"
+                                className="h-8 w-12 text-center"
+                                value={item.quantity}
+                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
+                                aria-label={`${item.name} quantity`}
+                            />
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                            </div>
+                            <p className="w-24 text-right font-medium">
+                            {formatCurrency(item.price * item.quantity, currency)}
+                            </p>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </li>
+                        ))}
+                    </ul>
+                    )}
+                </ScrollArea>
+              </div>
           </div>
       </div>
       
@@ -216,29 +243,6 @@ export default function CurrentOrder({
                         <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
                             Save as Open Bill
                         </Button>
-                         <div className="col-span-2">
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" className="w-full" disabled={isOrderEmpty}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Clear Order
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This will clear all items from the current order. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={onClearOrder}>
-                                        Clear Order
-                                    </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </div>
                     </div>
                 )}
             </div>

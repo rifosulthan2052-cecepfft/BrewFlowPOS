@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -50,7 +50,7 @@ export default function CurrentOrder({
   onClearOrder,
   onClose,
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, editingBillId } = useApp();
+  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, editingBillId, lastCompletedOrder } = useApp();
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const isOrderEmpty = items.length === 0;
 
@@ -63,7 +63,7 @@ export default function CurrentOrder({
     onClose();
   }
 
-  if (orderStatus === 'paid') {
+  if (orderStatus === 'paid' && lastCompletedOrder) {
      return (
        <>
           <DialogHeader className="p-6 pb-4 flex-shrink-0">
@@ -71,14 +71,19 @@ export default function CurrentOrder({
                   Payment Successful
               </DialogTitle>
           </DialogHeader>
-         <div className="flex-1 min-h-0 flex flex-col justify-center items-center text-center p-6">
-             <div className="space-y-4">
-                 <p className="text-muted-foreground">The order has been completed.</p>
-                 <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)}>
-                     <FileText className="mr-2" />
-                     View Receipt
-                 </Button>
-             </div>
+         <div className="flex-1 min-h-0 flex flex-col justify-center items-center text-center p-6 gap-4">
+             <div className="text-center">
+                <p className="text-sm text-muted-foreground">Total Paid</p>
+                <p className="text-4xl font-bold text-primary">{formatCurrency(lastCompletedOrder.total, currency)}</p>
+                <Badge variant={lastCompletedOrder.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 mt-2">
+                    {lastCompletedOrder.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
+                    Paid by {lastCompletedOrder.paymentMethod}
+                </Badge>
+            </div>
+             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)}>
+                 <FileText className="mr-2" />
+                 View Receipt
+             </Button>
          </div>
          <footer className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
             <Button size="lg" className="w-full" onClick={onNewOrder}>
@@ -91,11 +96,11 @@ export default function CurrentOrder({
                     <DialogTitle>Receipt</DialogTitle>
                 </DialogHeader>
                 <Receipt 
-                    orderItems={items}
-                    subtotal={subtotal}
-                    tax={tax}
-                    fees={fees}
-                    total={total}
+                    orderItems={lastCompletedOrder.items}
+                    subtotal={lastCompletedOrder.subtotal}
+                    tax={lastCompletedOrder.tax}
+                    fees={lastCompletedOrder.fees}
+                    total={lastCompletedOrder.total}
                 />
             </DialogContent>
          </Dialog>
@@ -106,56 +111,58 @@ export default function CurrentOrder({
   return (
     <>
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full p-6 pt-2">
-            <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Customer Name" 
-                    value={customerName}
-                    onChange={(e) => onCustomerNameChange(e.target.value)}
-                    className="pl-9"
-                />
-            </div>
-
-            <div className="py-4">
-                {items.length === 0 ? (
-                <div className="text-center text-muted-foreground py-16">
-                    <p>No items in order.</p>
-                    <p className="text-sm">Click on menu items to add them.</p>
+        <ScrollArea className="h-full">
+            <div className="p-6 pt-2 space-y-4">
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Customer Name" 
+                        value={customerName}
+                        onChange={(e) => onCustomerNameChange(e.target.value)}
+                        className="pl-9"
+                    />
                 </div>
-                ) : (
-                <ul className="space-y-4">
-                    {items.map((item) => (
-                    <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
-                        <div className="flex-1">
-                        <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
-                            <Minus className="h-4 w-4" />
-                        </Button>
-                        <Input
-                            type="number"
-                            className="h-8 w-12 text-center"
-                            value={item.quantity}
-                            onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
-                            aria-label={`${item.name} quantity`}
-                        />
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                        </div>
-                        <p className="w-24 text-right font-medium">
-                        {formatCurrency(item.price * item.quantity, currency)}
-                        </p>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
-                        <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </li>
-                    ))}
-                </ul>
-                )}
+
+                <div>
+                    {items.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-16">
+                        <p>No items in order.</p>
+                        <p className="text-sm">Click on menu items to add them.</p>
+                    </div>
+                    ) : (
+                    <ul className="space-y-4">
+                        {items.map((item) => (
+                        <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
+                            <div className="flex-1">
+                            <p className="font-semibold">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <Input
+                                type="number"
+                                className="h-8 w-12 text-center"
+                                value={item.quantity}
+                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
+                                aria-label={`${item.name} quantity`}
+                            />
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                            </div>
+                            <p className="w-24 text-right font-medium">
+                            {formatCurrency(item.price * item.quantity, currency)}
+                            </p>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </li>
+                        ))}
+                    </ul>
+                    )}
+                </div>
             </div>
         </ScrollArea>
       </div>

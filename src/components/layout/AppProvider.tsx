@@ -39,6 +39,7 @@ type AppContextType = {
   editingBillId: string | null;
 
   completedOrders: CompletedOrder[];
+  lastCompletedOrder: CompletedOrder | null;
 
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
@@ -90,6 +91,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
+  const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
 
   // Separate state for a potentially unsaved order
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[] });
@@ -151,6 +153,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCustomerName('');
     setOrderStatus('pending');
     setEditingBillId(null);
+    setLastCompletedOrder(null);
   }
 
   const { subtotal, totalFees, tax, total } = useMemo(() => {
@@ -175,6 +178,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       paymentMethod,
     };
     setCompletedOrders(prev => [newCompletedOrder, ...prev]);
+    setLastCompletedOrder(newCompletedOrder);
     setOrderStatus('paid');
   }
 
@@ -249,6 +253,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     openBills,
     editingBillId,
     completedOrders,
+    lastCompletedOrder,
     setOrderItems,
     setFees,
     setCustomerName,
@@ -270,7 +275,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [currency, taxRate, menuItems, orderItems, fees, customerName, orderStatus, openBills, editingBillId, completedOrders, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [currency, taxRate, menuItems, orderItems, fees, customerName, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -190,27 +191,40 @@ export default function CurrentOrder({
       </div>
       
       <div className="bg-background p-6 pt-4 flex-shrink-0">
-            <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
-                </div>
-                {fees.length > 0 && (
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fees</span>
-                    <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
-                </div>
-                )}
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
-                    <span className='font-mono'>{formatCurrency(tax, currency)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold text-lg text-primary">
-                    <span>Total</span>
-                    <span className='font-mono'>{formatCurrency(total, currency)}</span>
-                </div>
-            </div>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1" className="border-b-0">
+                 <div className="flex justify-between font-bold text-lg text-primary">
+                    <AccordionTrigger className="flex-1 py-0">
+                        <div className="flex justify-between w-full items-center">
+                             <span>Total</span>
+                             <div className="flex items-center gap-2">
+                                <span className='font-mono'>{formatCurrency(total, currency)}</span>
+                                <ChevronUp className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                             </div>
+                        </div>
+                    </AccordionTrigger>
+                 </div>
+                 <AccordionContent>
+                    <div className="space-y-2 text-sm pt-2">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
+                        </div>
+                        {fees.length > 0 && (
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Fees</span>
+                            <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
+                        </div>
+                        )}
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
+                            <span className='font-mono'>{formatCurrency(tax, currency)}</span>
+                        </div>
+                    </div>
+                 </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
             <div className='w-full space-y-2 mt-4'>
                 <PaymentDialog 
                     totalAmount={total}

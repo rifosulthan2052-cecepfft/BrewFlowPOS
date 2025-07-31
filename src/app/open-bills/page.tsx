@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState } from 'react';
@@ -44,11 +45,17 @@ export default function OpenBillsPage() {
     const handleSettleDialogOpen = (open: boolean) => {
         if (!open) {
           handleCloseDialog();
+        } else {
+            setIsSettleDialogOpen(true);
         }
-        setIsSettleDialogOpen(open);
     }
     
     const handleCloseDialog = () => {
+         if (orderStatus === 'paid') {
+            handleNewOrder();
+            return;
+        }
+
         setIsSettleDialogOpen(false);
         setSelectedBill(null);
         // If there was an unsaved order before opening the dialog, restore it.
@@ -69,7 +76,9 @@ export default function OpenBillsPage() {
         if (selectedBill) {
             removeOpenBill(selectedBill.id);
         }
-        handleCloseDialog();
+        setIsSettleDialogOpen(false);
+        setSelectedBill(null);
+        resetOrder();
     }
     
     const handleAddToBill = () => {
@@ -173,12 +182,14 @@ export default function OpenBillsPage() {
                 </div>
                  <Dialog open={isSettleDialogOpen} onOpenChange={handleSettleDialogOpen}>
                     <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
-                        <DialogHeader className='p-6 pb-2 flex-shrink-0 flex-row items-center justify-between'>
-                            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
-                             <Button variant="outline" onClick={handleAddToBill}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Items
-                            </Button>
-                        </DialogHeader>
+                        { orderStatus !== 'paid' && (
+                            <DialogHeader className='p-6 pb-2 flex-shrink-0 flex-row items-center justify-between'>
+                                <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
+                                <Button variant="outline" onClick={handleAddToBill}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Items
+                                </Button>
+                            </DialogHeader>
+                        )}
                         <CurrentOrder
                             items={orderItems}
                             customerName={customerName}

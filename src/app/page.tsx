@@ -71,6 +71,24 @@ export default function CashierPage() {
         });
         return ['All', ...Array.from(cats)];
     }, [menuItems]);
+    
+    const handleNewOrder = () => {
+        resetOrder();
+        setIsOrderOpen(false);
+    }
+    
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            // If dialog is closing and the order was just paid, trigger a new order.
+            if (orderStatus === 'paid') {
+                handleNewOrder();
+            } else {
+                setIsOrderOpen(false);
+            }
+        } else {
+            setIsOrderOpen(true);
+        }
+    }
 
   return (
     <AppLayout>
@@ -97,13 +115,15 @@ export default function CashierPage() {
             </Tabs>
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
-        <Dialog open={isOrderOpen} onOpenChange={setIsOrderOpen}>
+        <Dialog open={isOrderOpen} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-2xl p-0 gap-0 max-h-[90vh] flex flex-col">
-                <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                    <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
-                        { editingBillId ? 'Editing Bill' : 'Current Order' }
-                    </DialogTitle>
-                </DialogHeader>
+                { orderStatus !== 'paid' && (
+                    <DialogHeader className='p-6 pb-2 flex-shrink-0'>
+                        <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
+                            { editingBillId ? 'Editing Bill' : 'Current Order' }
+                        </DialogTitle>
+                    </DialogHeader>
+                )}
                 <CurrentOrder
                     items={orderItems}
                     customerName={customerName}
@@ -111,10 +131,7 @@ export default function CashierPage() {
                     onUpdateQuantity={updateItemQuantity}
                     onRemoveItem={removeItemFromOrder}
                     onCustomerNameChange={setCustomerName}
-                    onNewOrder={() => {
-                        resetOrder();
-                        setIsOrderOpen(false);
-                    }}
+                    onNewOrder={handleNewOrder}
                     onClearOrder={() => {
                         resetOrder();
                          if (!editingBillId) {

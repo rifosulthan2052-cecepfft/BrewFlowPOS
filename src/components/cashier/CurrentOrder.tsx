@@ -66,11 +66,6 @@ export default function CurrentOrder({
   if (orderStatus === 'paid' && lastCompletedOrder) {
      return (
        <div className="flex flex-col h-full">
-          <DialogHeader className="p-6 pb-4 flex-shrink-0">
-              <DialogTitle className="text-2xl font-semibold leading-none tracking-tight">
-                  Payment Successful
-              </DialogTitle>
-          </DialogHeader>
          <div className="flex-1 min-h-0 flex flex-col justify-center items-center text-center p-6 gap-4">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -111,7 +106,7 @@ export default function CurrentOrder({
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* SECTION 1: Customer Name Input */}
       <div className="p-6 pt-2 space-y-4 flex-shrink-0">
         <div className="relative">
@@ -126,15 +121,15 @@ export default function CurrentOrder({
       </div>
       
       {/* SECTION 2: Order Items List */}
-      <div className="px-6 pt-0 space-y-4">
-          <div>
+      <div className="flex-1 px-6 pt-0 min-h-0">
+          <ScrollArea className="h-full">
               {items.length === 0 ? (
               <div className="text-center text-muted-foreground py-16">
                   <p>No items in order.</p>
                   <p className="text-sm">Click on menu items to add them.</p>
               </div>
               ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-4 pr-4">
                   {items.map((item) => (
                   <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
                       <div className="flex-1">
@@ -166,7 +161,7 @@ export default function CurrentOrder({
                   ))}
               </ul>
               )}
-          </div>
+          </ScrollArea>
       </div>
       
       {/* SECTION 3: Footer with Totals and Actions */}
@@ -244,6 +239,6 @@ export default function CurrentOrder({
                 )}
             </div>
         </div>
-    </>
+    </div>
   );
 }

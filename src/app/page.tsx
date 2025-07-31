@@ -117,7 +117,7 @@ export default function CashierPage() {
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-2xl p-0 gap-0 max-h-[90vh] flex flex-col">
+            <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
                  <DialogHeader className='p-6 pb-0 flex-shrink-0'>
                     <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
                         { editingBillId ? 'Editing Bill' : 'Current Order' }

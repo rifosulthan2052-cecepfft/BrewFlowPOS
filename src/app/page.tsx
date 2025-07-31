@@ -13,6 +13,7 @@ import { formatCurrency } from '@/lib/utils';
 import { ChevronUp, ShoppingCart } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -117,13 +118,11 @@ export default function CashierPage() {
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
         <Dialog open={isOrderOpen} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-2xl p-0 gap-0 max-h-[90vh] flex flex-col">
-                { orderStatus !== 'paid' && (
-                    <DialogHeader className='p-6 pb-2 flex-shrink-0'>
-                        <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
-                            { editingBillId ? 'Editing Bill' : 'Current Order' }
-                        </DialogTitle>
-                    </DialogHeader>
-                )}
+                 <DialogHeader className='p-6 pb-0 flex-shrink-0'>
+                    <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
+                        { editingBillId ? 'Editing Bill' : 'Current Order' }
+                    </DialogTitle>
+                </DialogHeader>
                 <CurrentOrder
                     items={orderItems}
                     customerName={customerName}

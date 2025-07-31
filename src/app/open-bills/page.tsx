@@ -183,12 +183,6 @@ export default function OpenBillsPage() {
                 </div>
                  <Dialog open={isSettleDialogOpen} onOpenChange={handleSettleDialogOpen}>
                     <DialogContent className="max-w-2xl p-0 gap-0 h-[90vh] flex flex-col">
-                        <DialogHeader className='p-6 pb-0 flex-shrink-0 flex-row items-center justify-between'>
-                            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>Settle Bill</DialogTitle>
-                            <Button variant="outline" onClick={handleAddToBill}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Items
-                            </Button>
-                        </DialogHeader>
                         <CurrentOrder
                             items={orderItems}
                             customerName={customerName}

@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -27,6 +27,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -107,7 +108,25 @@ export default function CurrentOrder({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <TooltipProvider>
+      <div className="flex flex-col h-full">
+         <DialogHeader className='p-6 pb-2 flex-shrink-0 flex-row justify-between items-center'>
+            <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
+                { editingBillId ? 'Editing Bill' : 'Current Order' }
+            </DialogTitle>
+            {!editingBillId && (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                            <Save className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Save to open bills</p>
+                    </TooltipContent>
+                </Tooltip>
+            )}
+        </DialogHeader>
         <div className="p-6 pt-2 space-y-4 flex-shrink-0">
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -241,19 +260,17 @@ export default function CurrentOrder({
                         <Button variant="outline" className="w-full" onClick={onClose}>Cancel</Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                         <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
                             <Button variant="outline" className="w-full">
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                             </Button>
                         </FeeDialog>
-                        <Button variant="secondary" className="w-full" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
-                            Save as Open Bill
-                        </Button>
                     </div>
                 )}
             </div>
         </div>
     </div>
+    </TooltipProvider>
   );
 }

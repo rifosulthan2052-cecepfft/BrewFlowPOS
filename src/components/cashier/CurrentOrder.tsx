@@ -65,7 +65,7 @@ export default function CurrentOrder({
 
   if (orderStatus === 'paid' && lastCompletedOrder) {
      return (
-       <>
+       <div className="flex flex-col h-full">
           <DialogHeader className="p-6 pb-4 flex-shrink-0">
               <DialogTitle className="text-2xl font-semibold leading-none tracking-tight">
                   Payment Successful
@@ -80,12 +80,13 @@ export default function CurrentOrder({
                     Paid by {lastCompletedOrder.paymentMethod}
                 </Badge>
             </div>
-             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-pulse">
+             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-bounce-in">
                  <FileText className="mr-2" />
                  View Receipt
              </Button>
          </div>
-         <DialogFooter className="p-6 pt-4 border-t flex-shrink-0 flex items-center gap-2">
+         <DialogFooter className="p-6 pt-4 border-t flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 items-center gap-2">
+            <div className="hidden sm:block"></div>
             <Button size="lg" className="w-full" onClick={onNewOrder}>
                Start New Order
             </Button>
@@ -106,7 +107,7 @@ export default function CurrentOrder({
                 )}
             </DialogContent>
          </Dialog>
-       </>
+       </div>
      )
   }
 

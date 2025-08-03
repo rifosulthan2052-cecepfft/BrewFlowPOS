@@ -193,11 +193,7 @@ export default function CurrentOrder({
                         </TooltipContent>
                     </Tooltip>
                 )}
-                 <DialogClose asChild>
-                    <Button variant="ghost" size="icon">
-                        <X className="h-4 w-4" />
-                    </Button>
-                </DialogClose>
+                 
             </div>
         </DialogHeader>
         <div className="p-6 pt-2 space-y-2 flex-shrink-0">

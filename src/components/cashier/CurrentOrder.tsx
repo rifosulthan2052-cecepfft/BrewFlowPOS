@@ -58,9 +58,11 @@ export default function CurrentOrder({
     addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, 
     editingBillId, lastCompletedOrder,
     memberId, setMemberId, getMemberById,
+    getMemberByLookup,
   } = useApp();
   const { toast } = useToast();
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
+  const [lookupValue, setLookupValue] = React.useState('');
   const isOrderEmpty = items.length === 0;
 
   const handlePaymentSuccess = (paymentMethod: 'cash' | 'card') => {
@@ -72,24 +74,47 @@ export default function CurrentOrder({
     onClose();
   }
 
-  const handleMemberIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const id = e.target.value;
-    setMemberId(id);
-    if (!getMemberById(id)) {
-        toast({
-            variant: 'destructive',
-            title: 'Member not found',
-            description: 'The entered Member ID does not exist.'
-        })
+  const handleLookupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLookupValue(value);
+  }
+  
+  const handleLookupBlur = () => {
+    if (lookupValue) {
+        const member = getMemberByLookup(lookupValue);
+        if (member) {
+            setMemberId(member.id);
+            setLookupValue(member.name || `Member ${member.id}`);
+            toast({
+                title: 'Member Found',
+                description: `${member.name} (${member.id}) has been associated with this order.`,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Member not found',
+                description: 'No member found with the provided ID, Email, or Phone.',
+            });
+            setMemberId(undefined); // Clear if not found
+        }
+    } else {
+        setMemberId(undefined);
     }
   }
+
+  React.useEffect(() => {
+    if (memberId) {
+        const member = getMemberById(memberId);
+        if (member) {
+            setLookupValue(member.name || `Member ${member.id}`);
+        }
+    } else {
+        setLookupValue('');
+    }
+  }, [memberId, getMemberById]);
   
   const handleScanClick = async () => {
     toast({ title: 'QR Scanner Not Implemented', description: 'This would open the camera to scan a QR code.' });
-    // In a real implementation:
-    // 1. Open camera feed
-    // 2. Use a QR scanning library (e.g., html5-qrcode-scanner)
-    // 3. On successful scan, setMemberId(scannedId) and close camera.
   }
 
   if (orderStatus === 'paid' && lastCompletedOrder) {
@@ -202,9 +227,10 @@ export default function CurrentOrder({
                 <div className="relative flex-1">
                     <QrCode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Member ID (Optional)"
-                        value={memberId || ''}
-                        onChange={handleMemberIdChange}
+                        placeholder="Member ID, Email, or Phone"
+                        value={lookupValue}
+                        onChange={handleLookupChange}
+                        onBlur={handleLookupBlur}
                         className="pl-9"
                     />
                 </div>

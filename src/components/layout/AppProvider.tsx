@@ -34,6 +34,7 @@ type AppContextType = {
   members: Member[];
   addMember: (member: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>) => Member;
   getMemberById: (id: string) => Member | undefined;
+  getMemberByLookup: (lookup: string) => Member | undefined;
 
   orderItems: OrderItem[];
   fees: Fee[];
@@ -86,6 +87,18 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Simple hashing function for email
+function hashEmail(email: string): string {
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) {
+        const char = email.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36).substring(0, 4).toUpperCase();
+}
+
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>('IDR');
   const [taxRate, setTaxRate] = useState<number>(0);
@@ -126,13 +139,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const addMember = (memberData: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>): Member => {
-    const now = new Date();
-    const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const randomPart = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const namePart = (memberData.name || 'CUS').substring(0, 3).toUpperCase();
+    let contactPart = '';
+
+    if (memberData.phone) {
+        contactPart = memberData.phone.slice(-4);
+    } else if (memberData.email) {
+        contactPart = hashEmail(memberData.email);
+    }
+
     const newMember: Member = {
         ...memberData,
-        id: `MBR-${datePart}-${randomPart}`,
-        createdAt: now.toISOString(),
+        id: `MBR-${namePart}-${contactPart}`,
+        createdAt: new Date().toISOString(),
         transactionIds: []
     };
     setMembers(prev => [...prev, newMember]);
@@ -142,6 +161,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const getMemberById = (id: string) => {
     return members.find(m => m.id === id);
   }
+  
+  const getMemberByLookup = (lookup: string) => {
+    // Can be ID, email, or phone
+    return members.find(m => 
+        m.id.toLowerCase() === lookup.toLowerCase() ||
+        (m.email && m.email.toLowerCase() === lookup.toLowerCase()) ||
+        (m.phone && m.phone === lookup)
+    );
+  };
 
   const addItemToOrder = (item: MenuItem) => {
     setOrderItems((prevItems) => {
@@ -290,6 +318,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     members,
     addMember,
     getMemberById,
+    getMemberByLookup,
     orderItems,
     fees,
     customerName,

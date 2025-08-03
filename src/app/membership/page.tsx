@@ -21,12 +21,12 @@ import { CoffeeIcon } from '@/components/icons';
 
 
 const memberFormSchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(1, "Name is required."),
   email: z.string().email({ message: "Invalid email address." }).optional().or(z.literal('')),
   phone: z.string().optional(),
-}).refine(data => !!data.name || !!data.email || !!data.phone, {
-  message: "At least one field (Name, Email, or Phone) must be filled.",
-  path: ["name"], // you can pick any field to display the error
+}).refine(data => !!data.email || !!data.phone, {
+  message: "Either Email or Phone Number must be provided.",
+  path: ["email"],
 });
 
 type MemberFormValues = z.infer<typeof memberFormSchema>;
@@ -227,4 +227,3 @@ export default function MembershipPage() {
         </AppLayout>
     );
 }
-

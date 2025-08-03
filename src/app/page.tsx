@@ -10,11 +10,13 @@ import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useApp } from '@/components/layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
-import { ChevronUp, ShoppingCart } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChevronUp, ShoppingCart, PlayCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -60,9 +62,12 @@ export default function CashierPage() {
         setCustomerName,
         orderStatus,
         resetOrder,
-        editingBillId
+        editingBillId,
+        storeStatus,
+        startNewDay,
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
+    const { toast } = useToast();
 
     const categories = useMemo(() => {
         const cats = new Set<string>();
@@ -91,6 +96,15 @@ export default function CashierPage() {
             setIsOrderOpen(true);
         }
     }
+    
+    const handleStartNewDay = () => {
+        startNewDay();
+        toast({
+            title: "New Day Started",
+            description: "Ready for new sales.",
+        });
+    }
+
 
   return (
     <AppLayout>
@@ -136,6 +150,21 @@ export default function CashierPage() {
                     }}
                     onClose={() => setIsOrderOpen(false)}
                 />
+            </DialogContent>
+        </Dialog>
+         <Dialog open={storeStatus === 'CLOSED'} >
+            <DialogContent className="sm:max-w-md" hideCloseButton>
+                <DialogHeader>
+                    <DialogTitle>Store is Closed</DialogTitle>
+                    <DialogDescription>
+                        You need to start a new day before you can take new orders.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                     <Button onClick={handleStartNewDay} className="w-full">
+                        <PlayCircle className="mr-2 h-4 w-4" /> Start New Day
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
       </AppLayout.Content>

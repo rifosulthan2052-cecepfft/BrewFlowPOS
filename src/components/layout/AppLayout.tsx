@@ -15,7 +15,7 @@ import {
     SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
-import { BookOpen, Coffee, History, Utensils, Home, Users, Settings, ClipboardList } from "lucide-react";
+import { BookOpen, Coffee, History, Utensils, Home, Users, Settings, ClipboardList, BarChart } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 

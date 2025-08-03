@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, Menu, Percent } from "lucide-react";
+import { LogOut, UserCircle, Menu, Percent, Settings } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useApp } from "./AppProvider";
 import { Label } from "../ui/label";
@@ -65,6 +65,12 @@ export default function Header() {
           <DropdownMenuSeparator />
            <DropdownMenuGroup>
              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+             <DropdownMenuItem asChild>
+                <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Receipt Settings</span>
+                </Link>
+             </DropdownMenuItem>
              <div className="px-2 py-1">
                 <Label htmlFor="tax-rate" className="text-xs font-normal text-muted-foreground flex items-center gap-2 mb-1">
                   <Percent className="h-3 w-3"/> Tax Rate

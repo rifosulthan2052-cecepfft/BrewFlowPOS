@@ -1,3 +1,4 @@
+
 'use client';
 import {
     SidebarProvider,
@@ -14,7 +15,7 @@ import {
     SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
-import { BookOpen, Coffee, History, Utensils, Home, Users } from "lucide-react";
+import { BookOpen, Coffee, History, Utensils, Home, Users, Settings } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -60,6 +61,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild isActive={pathname === '/order-history'}>
                                 <Link href="/order-history"><History /> Order History</Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname === '/settings'}>
+                                <Link href="/settings"><Settings /> Settings</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>

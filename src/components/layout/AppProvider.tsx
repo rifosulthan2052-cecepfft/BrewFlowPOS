@@ -19,12 +19,22 @@ const initialMenuItems: MenuItem[] = [
   { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry", category: 'Pastry' },
 ];
 
+type ReceiptSettings = {
+    logoUrl?: string;
+    address: string;
+    phoneNumber: string;
+    footerMessage: string;
+}
+
 type AppContextType = {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   taxRate: number;
   setTaxRate: (taxRate: number) => void;
   formatCurrency: (amount: number) => string;
+
+  receiptSettings: ReceiptSettings;
+  setReceiptSettings: (settings: ReceiptSettings) => void;
 
   menuItems: MenuItem[];
   addMenuItem: (item: MenuItem) => void;
@@ -102,6 +112,12 @@ function hashEmail(email: string): string {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>('IDR');
   const [taxRate, setTaxRate] = useState<number>(0);
+  const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
+      address: '123 Coffee Lane, Brewville, CA 90210',
+      phoneNumber: '(555) 123-4567',
+      footerMessage: 'Thank you for your visit!',
+      logoUrl: '',
+  });
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
   const [members, setMembers] = useState<Member[]>([]);
@@ -311,6 +327,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     taxRate,
     setTaxRate,
     formatCurrency,
+    receiptSettings,
+    setReceiptSettings,
     menuItems,
     addMenuItem,
     updateMenuItem,
@@ -350,7 +368,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [currency, taxRate, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

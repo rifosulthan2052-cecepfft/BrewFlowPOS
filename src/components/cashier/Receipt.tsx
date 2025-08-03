@@ -11,6 +11,7 @@ import React from 'react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { DialogFooter } from '../ui/dialog';
+import Image from 'next/image';
 
 type ReceiptProps = {
   orderItems: OrderItem[];
@@ -18,24 +19,27 @@ type ReceiptProps = {
   tax: number;
   fees: Fee[];
   total: number;
-  showPrintButton?: boolean;
   memberId?: string;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
     const { orderItems, subtotal, tax, fees, total, memberId } = props;
-    const { currency } = useApp();
+    const { currency, receiptSettings } = useApp();
     const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
 
     return (
         <div ref={ref} id="receipt-to-print" className="p-4 text-sm bg-background text-foreground font-mono">
             <div className="text-center mb-4">
-                <div className="flex justify-center items-center gap-2">
-                    <CoffeeIcon className="h-6 w-6" />
-                    <h2 className="text-xl font-bold">Brew Flow</h2>
-                </div>
-                <p>123 Coffee Lane, Brewville, CA 90210</p>
-                <p>Tel: (555) 123-4567</p>
+                 {receiptSettings.logoUrl ? (
+                    <Image src={receiptSettings.logoUrl} alt="logo" width={80} height={80} className="mx-auto mb-2" />
+                ) : (
+                    <div className="flex justify-center items-center gap-2">
+                        <CoffeeIcon className="h-6 w-6" />
+                        <h2 className="text-xl font-bold">Brew Flow</h2>
+                    </div>
+                )}
+                <p>{receiptSettings.address}</p>
+                <p>Tel: {receiptSettings.phoneNumber}</p>
                 <p>{new Date().toLocaleString()}</p>
             </div>
             <Separator className="my-2" />
@@ -76,7 +80,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                 <span>{formatCurrency(total, currency)}</span>
             </div>
             <div className="text-center mt-4">
-                <p>Thank you for your visit!</p>
+                <p>{receiptSettings.footerMessage}</p>
             </div>
         </div>
     );
@@ -84,7 +88,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total, showPrintButton = true, memberId }: ReceiptProps) {
+export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId }: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -122,13 +126,11 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, showPr
                     <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId}} />
                 </ScrollArea>
              </div>
-            {showPrintButton && (
               <DialogFooter className="pt-4">
                 <Button onClick={handlePrint} className="w-full">
                     <Printer className="mr-2 h-4 w-4" /> Print Receipt
                 </Button>
               </DialogFooter>
-            )}
         </div>
     );
 }

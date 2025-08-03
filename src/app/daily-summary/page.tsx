@@ -26,15 +26,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-function SummaryCard({ title, value, icon, className }: { title: string, value: string | number, icon: React.ReactNode, className?: string }) {
+function SummaryCard({ title, value, icon, className, isCompact = false }: { title: string, value: string | number, icon: React.ReactNode, className?: string, isCompact?: boolean }) {
     return (
         <Card className={className}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className={cn("flex flex-row items-center justify-between space-y-0", isCompact ? "p-3" : "pb-2")}>
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 {icon}
             </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
+            <CardContent className={isCompact ? "p-3 pt-0" : ""}>
+                <div className={cn("font-bold", isCompact ? "text-lg" : "text-2xl")}>{value}</div>
             </CardContent>
         </Card>
     )
@@ -125,11 +125,18 @@ export default function DailySummaryPage() {
                             </AlertDialog>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
                                 <SummaryCard title="Total Revenue" value={formatCurrency(summary.totalRevenue, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />}/>
                                 <SummaryCard title="Cash Sales" value={formatCurrency(summary.cashTotal, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
                                 <SummaryCard title="Card Sales" value={formatCurrency(summary.cardTotal, currency)} icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
                                 <SummaryCard title="Transactions" value={summary.totalTransactions} icon={<List className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
+                            </div>
+                            
+                             {/* Mobile only compact view */}
+                            <div className="grid grid-cols-3 gap-2 md:hidden mb-4">
+                               <SummaryCard title="Cash Sales" value={formatCurrency(summary.cashTotal, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} isCompact />
+                                <SummaryCard title="Card Sales" value={formatCurrency(summary.cardTotal, currency)} icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} isCompact />
+                                <SummaryCard title="Transactions" value={summary.totalTransactions} icon={<List className="h-4 w-4 text-muted-foreground" />} isCompact />
                             </div>
                             
                             <Separator className="my-4" />

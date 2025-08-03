@@ -161,12 +161,12 @@ export default function OrderHistoryPage() {
                         {selectedOrder && (
                              <Receipt 
                                 orderItems={selectedOrder.items}
+                                customerName={selectedOrder.customerName}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
                                 fees={selectedOrder.fees}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.memberId}
-                                showPrintButton={true}
                              />
                         )}
                     </DialogContent>

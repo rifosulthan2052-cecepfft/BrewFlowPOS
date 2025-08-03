@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, X, UserX } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX, X } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -160,6 +160,7 @@ export default function CurrentOrder({
                 {lastCompletedOrder && (
                   <Receipt 
                       orderItems={lastCompletedOrder.items}
+                      customerName={lastCompletedOrder.customerName}
                       subtotal={lastCompletedOrder.subtotal}
                       tax={lastCompletedOrder.tax}
                       fees={lastCompletedOrder.fees}
@@ -193,7 +194,6 @@ export default function CurrentOrder({
                         </TooltipContent>
                     </Tooltip>
                 )}
-                 
             </div>
         </DialogHeader>
         <div className="p-6 pt-2 space-y-2 flex-shrink-0">

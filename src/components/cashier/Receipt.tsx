@@ -20,12 +20,12 @@ type ReceiptProps = {
   fees: Fee[];
   total: number;
   memberId?: string;
+  customerName?: string;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
-    const { orderItems, subtotal, tax, fees, total, memberId } = props;
-    const { currency, receiptSettings } = useApp();
-    const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
+    const { orderItems, subtotal, tax, fees, total, memberId, customerName } = props;
+    const { currency, receiptSettings, taxRate } = useApp();
 
     return (
         <div ref={ref} id="receipt-to-print" className="p-4 text-sm bg-background text-foreground font-mono">
@@ -43,12 +43,10 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                 <p>{new Date().toLocaleString()}</p>
             </div>
             <Separator className="my-2" />
-            <h3 className="text-center font-bold mb-2">RECEIPT</h3>
-            {memberId && (
-                <div className="text-center mb-2">
-                    <p>Member ID: {memberId}</p>
-                </div>
-            )}
+            <div className='text-center mb-2'>
+                {customerName && <p>Customer: {customerName}</p>}
+                {memberId && <p>Member ID: {memberId}</p>}
+            </div>
             <div className="space-y-1">
                 {orderItems.map(item => (
                     <div key={item.menuItemId} className="flex justify-between">
@@ -63,14 +61,14 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotal, currency)}</span>
                 </div>
-                 {fees.length > 0 && (
-                    <div className="flex justify-between">
-                        <span>Fees</span>
-                        <span>{formatCurrency(totalFees, currency)}</span>
+                 {fees.map((fee, index) => (
+                    <div key={index} className="flex justify-between">
+                        <span>{fee.name}</span>
+                        <span>{formatCurrency(fee.amount, currency)}</span>
                     </div>
-                 )}
+                 ))}
                  <div className="flex justify-between">
-                    <span>Tax</span>
+                    <span>Tax ({taxRate * 100}%)</span>
                     <span>{formatCurrency(tax, currency)}</span>
                 </div>
             </div>
@@ -88,7 +86,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId }: ReceiptProps) {
+export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId, customerName }: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -123,7 +121,7 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, member
         <div className="flex flex-col h-full max-h-[70vh]">
              <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
-                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId}} />
+                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId, customerName}} />
                 </ScrollArea>
              </div>
               <DialogFooter className="pt-4">

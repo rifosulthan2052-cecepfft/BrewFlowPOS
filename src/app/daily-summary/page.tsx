@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
+import Receipt from '@/components/cashier/Receipt';
 
 function SummaryCard({ title, value, icon, className, isCompact = false }: { title: string, value: string | number, icon: React.ReactNode, className?: string, isCompact?: boolean }) {
     return (
@@ -42,7 +43,7 @@ function SummaryCard({ title, value, icon, className, isCompact = false }: { tit
     )
 }
 
-function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
+function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency } = useApp();
     return (
         <Card>
@@ -57,6 +58,7 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
                         {order.paymentMethod}
                     </Badge>
                     <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
+                    <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>
                 </div>
             </CardContent>
         </Card>
@@ -136,6 +138,7 @@ export default function DailySummaryPage() {
     const { toast } = useToast();
     const componentToPrintRef = useRef<HTMLDivElement>(null);
     const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
 
     const summary = useMemo(() => completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
@@ -189,6 +192,14 @@ export default function DailySummaryPage() {
     const handlePrint = useReactToPrint({
         content: () => componentToPrintRef.current,
     });
+    
+    const handleSelectOrder = (order: CompletedOrder) => {
+        setSelectedOrder(order);
+    };
+
+    const handleCloseDialog = () => {
+        setSelectedOrder(null);
+    }
 
     const isTodaySummaryEmpty = completedOrders.length === 0;
 
@@ -279,7 +290,7 @@ export default function DailySummaryPage() {
                             ) : (
                                 <div className="grid grid-cols-1 gap-2">
                                     {completedOrders.map(order => 
-                                        <OrderHistoryCompactCard key={order.id} order={order} />
+                                        <OrderHistoryCompactCard key={order.id} order={order} onSelect={handleSelectOrder} />
                                     )}
                                 </div>
                             )}
@@ -306,6 +317,26 @@ export default function DailySummaryPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && handleCloseDialog()}>
+                    <DialogContent className="max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>Receipt</DialogTitle>
+                        </DialogHeader>
+                        {selectedOrder && (
+                             <Receipt 
+                                orderItems={selectedOrder.items}
+                                customerName={selectedOrder.customerName}
+                                subtotal={selectedOrder.subtotal}
+                                tax={selectedOrder.tax}
+                                fees={selectedOrder.fees}
+                                total={selectedOrder.total}
+                                memberId={selectedOrder.memberId}
+                             />
+                        )}
+                    </DialogContent>
+                </Dialog>
+
             </AppLayout.Content>
         </AppLayout>
     )

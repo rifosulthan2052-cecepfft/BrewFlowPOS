@@ -84,6 +84,9 @@ export default function CurrentOrder({
         const member = getMemberByLookup(lookupValue);
         if (member) {
             setMemberId(member.id);
+            if (member.name) {
+                onCustomerNameChange(member.name);
+            }
             setLookupValue(member.name || `Member ${member.id}`);
             toast({
                 title: 'Member Found',

@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX, CheckCircle } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -382,15 +382,33 @@ export default function CurrentOrder({
             </Accordion>
 
             <div className='w-full space-y-2 mt-4'>
-                <PaymentDialog 
-                    totalAmount={total}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    disabled={isOrderEmpty}
-                >
-                    <Button size="lg" className="w-full" disabled={isOrderEmpty}>
-                    <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                    </Button>
-                </PaymentDialog>
+                 { editingBillId ? (
+                    <div className='grid grid-cols-2 gap-2'>
+                       <Button size="lg" onClick={onClose}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Done
+                        </Button>
+                        <PaymentDialog 
+                            totalAmount={total}
+                            onPaymentSuccess={handlePaymentSuccess}
+                            disabled={isOrderEmpty}
+                        >
+                            <Button size="lg" disabled={isOrderEmpty} variant="primary">
+                                <Wallet className="mr-2 h-4 w-4" /> Payment
+                            </Button>
+                        </PaymentDialog>
+                    </div>
+                 ) : (
+                    <PaymentDialog 
+                        totalAmount={total}
+                        onPaymentSuccess={handlePaymentSuccess}
+                        disabled={isOrderEmpty}
+                    >
+                        <Button size="lg" className="w-full" disabled={isOrderEmpty}>
+                            <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                        </Button>
+                    </PaymentDialog>
+                 )}
                 <div className="grid grid-cols-1 gap-2">
                     <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
                         <Button variant="outline" className="w-full">

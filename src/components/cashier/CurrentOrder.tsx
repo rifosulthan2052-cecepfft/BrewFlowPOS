@@ -353,12 +353,12 @@ export default function CurrentOrder({
                             <span className="text-muted-foreground">Subtotal</span>
                             <span className='font-mono'>{formatCurrency(subtotal, currency)}</span>
                         </div>
-                        {fees.length > 0 && (
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Fees</span>
-                            <span className='font-mono'>{formatCurrency(totalFees, currency)}</span>
-                        </div>
-                        )}
+                        {fees.map((fee, index) => (
+                         <div key={index} className="flex justify-between">
+                            <span className="text-muted-foreground">{fee.name}</span>
+                            <span className='font-mono'>{formatCurrency(fee.amount, currency)}</span>
+                         </div>
+                        ))}
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
                             <span className='font-mono'>{formatCurrency(tax, currency)}</span>
@@ -369,28 +369,30 @@ export default function CurrentOrder({
             </Accordion>
 
             <div className='w-full space-y-2 mt-4'>
-                <PaymentDialog 
-                    totalAmount={total}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    disabled={isOrderEmpty}
-                >
-                    <Button size="lg" className="w-full" disabled={isOrderEmpty}>
-                    <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                    </Button>
-                </PaymentDialog>
                 {editingBillId ? (
                     <div className='grid grid-cols-2 gap-2'>
                         <Button variant="secondary" className="w-full" onClick={handleSaveOpenBill}>Done</Button>
                         <Button variant="outline" className="w-full" onClick={onClose}>Cancel</Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-2">
-                        <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
-                            <Button variant="outline" className="w-full">
-                                <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                    <>
+                        <PaymentDialog 
+                            totalAmount={total}
+                            onPaymentSuccess={handlePaymentSuccess}
+                            disabled={isOrderEmpty}
+                        >
+                            <Button size="lg" className="w-full" disabled={isOrderEmpty}>
+                            <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
                             </Button>
-                        </FeeDialog>
-                    </div>
+                        </PaymentDialog>
+                        <div className="grid grid-cols-1 gap-2">
+                            <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                                <Button variant="outline" className="w-full">
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                </Button>
+                            </FeeDialog>
+                        </div>
+                    </>
                 )}
             </div>
         </div>

@@ -1,5 +1,4 @@
 
-
 'use client'
 
 import { useState } from 'react';
@@ -13,7 +12,13 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,13 +30,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CurrentOrder from '@/components/cashier/CurrentOrder';
-import { PlusCircle } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 
 export default function OpenBillsPage() {
-    const { openBills, loadOrderFromBill, orderItems, customerName, orderStatus, updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder } = useApp();
+    const { 
+        openBills, loadOrderFromBill, orderItems, customerName, orderStatus, 
+        updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, 
+        removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder 
+    } = useApp();
     const router = useRouter();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
     const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
@@ -39,35 +47,34 @@ export default function OpenBillsPage() {
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
-        loadOrderFromBill(bill); // Load the bill data immediately
+        loadOrderFromBill(bill);
         setEditingBillId(bill.id);
         setIsSettleDialogOpen(true);
     };
-    
+
     const handleSettleDialogOpen = (open: boolean) => {
         if (!open) {
           handleCloseDialog();
         } else {
-            setIsSettleDialogOpen(true);
+          setIsSettleDialogOpen(true);
         }
     }
-    
+
     const handleCloseDialog = () => {
          if (orderStatus === 'paid') {
             handleNewOrder();
             return;
         }
-
         setIsSettleDialogOpen(false);
         setSelectedBill(null);
-        // If there was an unsaved order before opening the dialog, restore it.
         if (activeOrderExists) {
              loadOrderFromBill({
                 id: '',
                 customerName: unsavedOrder.customerName,
                 items: unsavedOrder.items,
                 fees: unsavedOrder.fees,
-                subtotal: 0, tax: 0, total: 0, totalFees: 0, date: ''
+                subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
+                memberId: unsavedOrder.memberId
              });
         } else {
             resetOrder();
@@ -83,7 +90,9 @@ export default function OpenBillsPage() {
         resetOrder();
     }
     
-    const handleAddToBill = () => {
+    const handleAddToBillClick = (bill: OpenBill) => {
+        setSelectedBill(bill);
+        loadOrderFromBill(bill);
         if (activeOrderExists) {
             setIsWarningDialogOpen(true);
         } else {
@@ -92,20 +101,28 @@ export default function OpenBillsPage() {
     };
 
     const proceedToAddToBill = () => {
-        if (selectedBill) {
-            // The bill is already loaded in the AppProvider state
-            // so we just need to navigate.
-            router.push('/');
-        }
+        router.push('/');
     };
 
-
     const handleConfirmWarning = () => {
-        // Discarding the current unsaved order happens by simply proceeding,
-        // as the AppProvider state is already reflecting the selected bill's data.
         proceedToAddToBill();
         setIsWarningDialogOpen(false);
     };
+    
+    const handleCancelWarning = () => {
+        // If the user cancels, we should revert the state to what it was before they clicked "Add to Bill".
+        // This means loading the unsaved order back into the main state.
+        loadOrderFromBill({
+            id: '',
+            customerName: unsavedOrder.customerName,
+            items: unsavedOrder.items,
+            fees: unsavedOrder.fees,
+            subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
+            memberId: unsavedOrder.memberId
+        });
+        setEditingBillId(null);
+        setIsWarningDialogOpen(false);
+    }
 
     return (
         <AppLayout>
@@ -172,8 +189,20 @@ export default function OpenBillsPage() {
                                                     </div>
                                                 </div>
                                             </CardContent>
-                                            <CardFooter>
-                                                <Button className="w-full" onClick={() => handleSettleClick(bill)}>Settle Bill</Button>
+                                            <CardFooter className="flex items-center gap-2">
+                                                <Button className="flex-1" onClick={() => handleAddToBillClick(bill)}>Add to Bill</Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleSettleClick(bill)}>
+                                                            Settle Bill
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </CardFooter>
                                         </Card>
                                     ))}
@@ -207,7 +236,7 @@ export default function OpenBillsPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel onClick={handleCancelWarning}>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleConfirmWarning}>Discard and Proceed</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

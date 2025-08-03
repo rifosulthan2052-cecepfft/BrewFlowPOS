@@ -69,7 +69,7 @@ type AppContextType = {
   addFeeToOrder: (fee: Fee) => void;
   resetOrder: () => void;
   saveAsOpenBill: () => void;
-  loadOrderFromBill: (bill: OpenBill) => void;
+  loadOrderFromBill: (bill: Partial<Bill>) => void;
   removeOpenBill: (billId: string) => void;
   setEditingBillId: (billId: string | null) => void;
   activeOrderExists: boolean;
@@ -260,6 +260,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (memberId) {
         setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, orderId] } : m));
     }
+    
+    // If this was a bill being settled, remove it from open bills.
+    if (editingBillId) {
+        removeOpenBill(editingBillId);
+    }
   }
 
   const saveAsOpenBill = () => {
@@ -293,13 +298,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     resetOrder();
   };
 
-  const loadOrderFromBill = (bill: OpenBill) => {
-    setOrderItems(bill.items);
-    setFees(bill.fees);
-    setCustomerName(bill.customerName);
+  const loadOrderFromBill = (bill: Partial<Bill>) => {
+    setOrderItems(bill.items || []);
+    setFees(bill.fees || []);
+    setCustomerName(bill.customerName || '');
     setMemberId(bill.memberId);
-    setOrderStatus('open_bill');
-    setEditingBillId(bill.id);
+    setOrderStatus(bill.id ? 'open_bill' : 'pending');
+    setEditingBillId(bill.id || null);
   };
 
   const removeOpenBill = (billId: string) => {
@@ -311,8 +316,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const activeOrderExists = useMemo(() => {
-    // An active order exists if there are items, a customer name, or fees,
-    // AND it's not associated with a bill being edited.
     return (unsavedOrder.items.length > 0 || unsavedOrder.customerName !== '' || unsavedOrder.fees.length > 0);
   }, [unsavedOrder]);
 

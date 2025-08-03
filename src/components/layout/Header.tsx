@@ -10,22 +10,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, UserCircle, Menu, Percent, Settings } from "lucide-react";
+import { LogOut, UserCircle, Menu, Settings } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
-import { useApp } from "./AppProvider";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
-  const { currency, setCurrency, taxRate, setTaxRate } = useApp();
   const { user, signOut } = useAuth();
 
   return (
@@ -63,38 +56,12 @@ export default function Header() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-           <DropdownMenuGroup>
-             <DropdownMenuLabel>Settings</DropdownMenuLabel>
-             <DropdownMenuItem asChild>
-                <Link href="/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Receipt Settings</span>
-                </Link>
-             </DropdownMenuItem>
-             <div className="px-2 py-1">
-                <Label htmlFor="tax-rate" className="text-xs font-normal text-muted-foreground flex items-center gap-2 mb-1">
-                  <Percent className="h-3 w-3"/> Tax Rate
-                </Label>
-                <div className="relative">
-                   <Input 
-                      id="tax-rate"
-                      type="number"
-                      value={taxRate * 100}
-                      onChange={(e) => setTaxRate(parseFloat(e.target.value) / 100)}
-                      className="h-8 pl-3 pr-8 text-sm"
-                      min="0"
-                      step="0.1"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
-                </div>
-              </div>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup value={currency} onValueChange={(value) => setCurrency(value as 'USD' | 'IDR')}>
-            <DropdownMenuLabel>Currency</DropdownMenuLabel>
-            <DropdownMenuRadioItem value="IDR">IDR (Rp)</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="USD">USD ($)</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />

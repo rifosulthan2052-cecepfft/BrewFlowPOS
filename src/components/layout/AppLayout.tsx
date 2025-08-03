@@ -13,11 +13,13 @@ import {
     SidebarMenuSub,
     SidebarMenuSubItem,
     SidebarMenuSubButton,
+    SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import { BookOpen, Coffee, History, Utensils, Home, Users, Settings, ClipboardList, BarChart } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import { useApp } from "./AppProvider";
 
 type AppLayoutProps = {
     children: React.ReactNode;
@@ -30,6 +32,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     const childrenArray = React.Children.toArray(children);
     const header = childrenArray.find(child => (child as React.ReactElement).type === AppLayoutHeader);
     const content = childrenArray.find(child => (child as React.ReactElement).type === AppLayoutContent);
+    const { openBills } = useApp();
 
     return (
         <SidebarProvider>
@@ -47,6 +50,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                             <SidebarMenuButton asChild isActive={pathname === '/open-bills'}>
                                 <Link href="/open-bills"><BookOpen /> Open Bills</Link>
                             </SidebarMenuButton>
+                             {openBills.length > 0 && <SidebarMenuBadge>{openBills.length}</SidebarMenuBadge>}
                         </SidebarMenuItem>
                          <SidebarMenuItem>
                             <SidebarMenuButton asChild isActive={pathname === '/daily-summary'}>

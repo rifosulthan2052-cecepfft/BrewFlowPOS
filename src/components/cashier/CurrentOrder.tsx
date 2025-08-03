@@ -187,7 +187,7 @@ export default function CurrentOrder({
       <div className="flex flex-col h-full">
          <DialogHeader className='p-6 pb-2 flex-shrink-0 flex-row justify-between items-center'>
             <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
-                { editingBillId ? 'Editing Bill' : 'Current Order' }
+                { editingBillId ? 'Settle Bill' : 'Current Order' }
             </DialogTitle>
              <div className="flex items-center gap-1">
                 {!editingBillId && (
@@ -369,31 +369,22 @@ export default function CurrentOrder({
             </Accordion>
 
             <div className='w-full space-y-2 mt-4'>
-                {editingBillId ? (
-                    <div className='grid grid-cols-2 gap-2'>
-                        <Button variant="secondary" className="w-full" onClick={handleSaveOpenBill}>Done</Button>
-                        <Button variant="outline" className="w-full" onClick={onClose}>Cancel</Button>
-                    </div>
-                ) : (
-                    <>
-                        <PaymentDialog 
-                            totalAmount={total}
-                            onPaymentSuccess={handlePaymentSuccess}
-                            disabled={isOrderEmpty}
-                        >
-                            <Button size="lg" className="w-full" disabled={isOrderEmpty}>
-                            <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
-                            </Button>
-                        </PaymentDialog>
-                        <div className="grid grid-cols-1 gap-2">
-                            <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
-                                <Button variant="outline" className="w-full">
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                                </Button>
-                            </FeeDialog>
-                        </div>
-                    </>
-                )}
+                <PaymentDialog 
+                    totalAmount={total}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    disabled={isOrderEmpty}
+                >
+                    <Button size="lg" className="w-full" disabled={isOrderEmpty}>
+                    <Wallet className="mr-2 h-4 w-4" /> Proceed to Payment
+                    </Button>
+                </PaymentDialog>
+                <div className="grid grid-cols-1 gap-2">
+                    <FeeDialog onAddFee={addFeeToOrder} disabled={isOrderEmpty}>
+                        <Button variant="outline" className="w-full">
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                        </Button>
+                    </FeeDialog>
+                </div>
             </div>
         </div>
     </div>

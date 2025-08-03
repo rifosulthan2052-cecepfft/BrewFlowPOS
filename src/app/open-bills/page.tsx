@@ -44,11 +44,38 @@ export default function OpenBillsPage() {
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
     const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
     const [selectedBill, setSelectedBill] = useState<OpenBill | null>(null);
+    const [actionToConfirm, setActionToConfirm] = useState<'addToBill' | 'settleBill' | null>(null);
 
     const handleSettleClick = (bill: OpenBill) => {
         setSelectedBill(bill);
         loadOrderFromBill(bill);
         setEditingBillId(bill.id);
+        if (activeOrderExists) {
+            setActionToConfirm('settleBill');
+            setIsWarningDialogOpen(true);
+        } else {
+            proceedToSettleBill();
+        }
+    };
+
+    const handleAddToBillClick = (bill: OpenBill) => {
+        setSelectedBill(bill);
+        loadOrderFromBill(bill);
+        setEditingBillId(bill.id); // Set editing bill context
+        if (activeOrderExists) {
+            setActionToConfirm('addToBill');
+            setIsWarningDialogOpen(true);
+        } else {
+            proceedToAddToBill();
+        }
+    };
+    
+    const proceedToAddToBill = () => {
+        // We just need to route, the state is already loaded
+        router.push('/');
+    };
+
+    const proceedToSettleBill = () => {
         setIsSettleDialogOpen(true);
     };
 
@@ -90,27 +117,19 @@ export default function OpenBillsPage() {
         resetOrder();
     }
     
-    const handleAddToBillClick = (bill: OpenBill) => {
-        setSelectedBill(bill);
-        loadOrderFromBill(bill);
-        if (activeOrderExists) {
-            setIsWarningDialogOpen(true);
-        } else {
-            proceedToAddToBill();
-        }
-    };
-
-    const proceedToAddToBill = () => {
-        router.push('/');
-    };
 
     const handleConfirmWarning = () => {
-        proceedToAddToBill();
+        if (actionToConfirm === 'addToBill') {
+            proceedToAddToBill();
+        } else if (actionToConfirm === 'settleBill') {
+            proceedToSettleBill();
+        }
         setIsWarningDialogOpen(false);
+        setActionToConfirm(null);
     };
     
     const handleCancelWarning = () => {
-        // If the user cancels, we should revert the state to what it was before they clicked "Add to Bill".
+        // If the user cancels, we should revert the state to what it was before they clicked.
         // This means loading the unsaved order back into the main state.
         loadOrderFromBill({
             id: '',
@@ -122,6 +141,7 @@ export default function OpenBillsPage() {
         });
         setEditingBillId(null);
         setIsWarningDialogOpen(false);
+        setActionToConfirm(null);
     }
 
     return (

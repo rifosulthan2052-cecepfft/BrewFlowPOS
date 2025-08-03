@@ -92,7 +92,7 @@ export default function MenuItemCard({ item, quantity, onAddItem, onUpdateQuanti
                         type="number"
                         value={quantity}
                         onChange={handleQuantityChange}
-                        className="w-12 h-8 text-center bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="w-14 h-8 text-center bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                      />
                       <Button 
                        variant="primary" 

@@ -43,17 +43,17 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     const { currency } = useApp();
     return (
         <Card>
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
                 <div className="flex-1">
                     <p className="font-semibold">{order.customerName}</p>
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 w-24 justify-center">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
                         {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
                         {order.paymentMethod}
                     </Badge>
-                    <p className="w-32 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
+                    <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
                 </div>
             </CardContent>
         </Card>

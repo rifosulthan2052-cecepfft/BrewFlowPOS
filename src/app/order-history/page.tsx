@@ -11,9 +11,9 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Receipt from '@/components/cashier/Receipt';
-import { CreditCard, Wallet, List, Grid } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, Printer } from 'lucide-react';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency } = useApp();
@@ -82,7 +82,7 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 w-24 justify-center">
+                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
                         {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
                         {order.paymentMethod}
                     </Badge>

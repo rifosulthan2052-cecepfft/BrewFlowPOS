@@ -110,7 +110,8 @@ export default function CashierPage() {
                        <MenuList 
                             menuItems={category === 'All' ? menuItems : menuItems.filter(item => item.category === category)} 
                             orderItems={orderItems} 
-                            onAddItem={addItemToOrder} 
+                            onAddItem={addItemToOrder}
+                            onUpdateQuantity={updateItemQuantity}
                         />
                     </TabsContent>
                 ))}

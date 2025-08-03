@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { MenuItem, OrderItem } from '@/types';
@@ -9,9 +10,10 @@ type MenuListProps = {
   menuItems: MenuItem[];
   orderItems: OrderItem[];
   onAddItem: (item: MenuItem) => void;
+  onUpdateQuantity: (menuItemId: string, quantity: number) => void;
 };
 
-export default function MenuList({ menuItems, orderItems, onAddItem }: MenuListProps) {
+export default function MenuList({ menuItems, orderItems, onAddItem, onUpdateQuantity }: MenuListProps) {
   const getQuantity = (menuItemId: string) => {
     const item = orderItems.find(item => item.menuItemId === menuItemId);
     return item ? item.quantity : 0;
@@ -24,7 +26,9 @@ export default function MenuList({ menuItems, orderItems, onAddItem }: MenuListP
               key={item.id} 
               item={item} 
               quantity={getQuantity(item.id)}
-              onAddItem={onAddItem} />
+              onAddItem={onAddItem}
+              onUpdateQuantity={onUpdateQuantity}
+            />
           ))}
         </div>
   );

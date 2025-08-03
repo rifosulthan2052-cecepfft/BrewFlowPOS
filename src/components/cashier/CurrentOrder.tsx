@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -147,11 +147,11 @@ export default function CurrentOrder({
                  View Receipt
              </Button>
          </div>
-         <DialogClose asChild>
+         <DialogFooter className="p-6 pt-0 border-t flex-shrink-0 sm:justify-center">
           <Button size="lg" className="w-full sm:w-auto" onClick={onNewOrder}>
              Start New Order
           </Button>
-         </DialogClose>
+         </DialogFooter>
          <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
             <DialogContent className="max-w-sm">
                 <DialogHeader>

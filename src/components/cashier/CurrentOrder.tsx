@@ -29,6 +29,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { QRScanner } from './QRScanner';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -62,6 +63,7 @@ export default function CurrentOrder({
   } = useApp();
   const { toast } = useToast();
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
+  const [isScannerOpen, setIsScannerOpen] = React.useState(false);
   const [lookupValue, setLookupValue] = React.useState('');
   const isOrderEmpty = items.length === 0;
 
@@ -73,6 +75,30 @@ export default function CurrentOrder({
     saveAsOpenBill();
     onClose();
   }
+  
+  const associateMember = (memberId: string) => {
+    const member = getMemberById(memberId);
+    if (member) {
+        setMemberId(member.id);
+        if (member.name) {
+            onCustomerNameChange(member.name);
+        }
+        toast({
+            title: 'Member Found',
+            description: `${member.name || 'Member'} (${member.id}) has been associated with this order.`,
+        });
+        return true;
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Member not found',
+            description: 'No member found with the provided ID.',
+        });
+        setMemberId(undefined); // Clear if not found
+        return false;
+    }
+  }
+
 
   const handleLookupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -83,14 +109,7 @@ export default function CurrentOrder({
     if (lookupValue && !memberId) { // Only lookup if no member is set yet
         const member = getMemberByLookup(lookupValue);
         if (member) {
-            setMemberId(member.id);
-            if (member.name) {
-                onCustomerNameChange(member.name);
-            }
-            toast({
-                title: 'Member Found',
-                description: `${member.name} (${member.id}) has been associated with this order.`,
-            });
+            associateMember(member.id);
         } else {
             toast({
                 variant: 'destructive',
@@ -113,9 +132,11 @@ export default function CurrentOrder({
     }
   }, [memberId, getMemberById]);
   
-  const handleScanClick = async () => {
-    toast({ title: 'QR Scanner Not Implemented', description: 'This would open the camera to scan a QR code.' });
-  }
+  const handleScanSuccess = (result: string) => {
+    if (associateMember(result)) {
+        setIsScannerOpen(false);
+    }
+  };
 
   const handleClearMember = () => {
     setMemberId(undefined);
@@ -181,7 +202,7 @@ export default function CurrentOrder({
             <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
                 { editingBillId ? 'Editing Bill' : 'Current Order' }
             </DialogTitle>
-            <div className="flex items-center gap-1">
+             <div className="flex items-center gap-1">
                 {!editingBillId && (
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -253,16 +274,29 @@ export default function CurrentOrder({
                         </TooltipContent>
                     </Tooltip>
                 ) : (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="outline" size="icon" onClick={handleScanClick}>
-                                <ScanLine className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Scan Member QR Code</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon" >
+                                        <ScanLine className="h-4 w-4" />
+                                    </Button>
+                                </DialogTrigger>
+                            </TooltipTrigger>
+                             <TooltipContent>
+                                <p>Scan Member QR Code</p>
+                            </TooltipContent>
+                        </Tooltip>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Scan Member QR Code</DialogTitle>
+                            </DialogHeader>
+                            <QRScanner 
+                                onScanSuccess={handleScanSuccess} 
+                                onScanError={(error) => toast({ variant: 'destructive', title: 'Scan Error', description: error})}
+                            />
+                        </DialogContent>
+                    </Dialog>
                 )}
             </div>
         </div>

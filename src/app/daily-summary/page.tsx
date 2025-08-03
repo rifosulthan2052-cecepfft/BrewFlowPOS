@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, Wallet, List, Grid, AlertCircle } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, AlertCircle, Printer } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useReactToPrint } from 'react-to-print';
 
 function SummaryCard({ title, value, icon, className, isCompact = false }: { title: string, value: string | number, icon: React.ReactNode, className?: string, isCompact?: boolean }) {
     return (
@@ -61,10 +62,63 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     )
 }
 
+const DailySummaryPrintout = forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string }>(({ summary, orders, currency }, ref) => {
+    return (
+        <div ref={ref} className="p-8 font-sans">
+            <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold">Daily Sales Summary</h1>
+                <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4 mb-6 border-t border-b py-4">
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Total Revenue</p>
+                    <p className="text-xl font-bold">{formatCurrency(summary.totalRevenue, currency)}</p>
+                </div>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Cash Sales</p>
+                    <p className="text-xl font-bold">{formatCurrency(summary.cashTotal, currency)}</p>
+                </div>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Card Sales</p>
+                    <p className="text-xl font-bold">{formatCurrency(summary.cardTotal, currency)}</p>
+                </div>
+                <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Transactions</p>
+                    <p className="text-xl font-bold">{summary.totalTransactions}</p>
+                </div>
+            </div>
+
+            <h2 className="text-xl font-semibold mb-4">Completed Orders</h2>
+            <table className="w-full text-left">
+                <thead>
+                    <tr>
+                        <th className="p-2 border-b">Customer</th>
+                        <th className="p-2 border-b">Time</th>
+                        <th className="p-2 border-b">Payment</th>
+                        <th className="p-2 border-b text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {orders.map(order => (
+                        <tr key={order.id}>
+                            <td className="p-2 border-b">{order.customerName}</td>
+                            <td className="p-2 border-b">{new Date(order.date).toLocaleTimeString()}</td>
+                            <td className="p-2 border-b capitalize">{order.paymentMethod}</td>
+                            <td className="p-2 border-b text-right font-mono">{formatCurrency(order.total, currency)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+});
+DailySummaryPrintout.displayName = 'DailySummaryPrintout';
 
 export default function DailySummaryPage() {
     const { completedOrders, currency, endDay } = useApp();
     const { toast } = useToast();
+    const printRef = useRef<HTMLDivElement>(null);
 
     const summary = completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
@@ -90,6 +144,10 @@ export default function DailySummaryPage() {
         });
     }
 
+    const handlePrint = useReactToPrint({
+        content: () => printRef.current,
+    });
+
     return (
         <AppLayout>
             <AppLayout.Header>
@@ -103,26 +161,31 @@ export default function DailySummaryPage() {
                                 <CardTitle>Daily Summary</CardTitle>
                                 <CardDescription>Review of today's sales activity.</CardDescription>
                             </div>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" disabled={completedOrders.length === 0}>
-                                        <AlertCircle className="mr-2 h-4 w-4" /> End Day
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action will finalize the daily sales and clear all completed order history. 
-                                            This cannot be undone. Make sure you have reconciled your cash and card payments.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleEndDay}>Yes, End Day</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" onClick={handlePrint} disabled={completedOrders.length === 0}>
+                                    <Printer className="mr-2 h-4 w-4" /> Print
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" disabled={completedOrders.length === 0}>
+                                            <AlertCircle className="mr-2 h-4 w-4" /> End Day
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action will finalize the daily sales and clear all completed order history. 
+                                                This cannot be undone. Make sure you have reconciled your cash and card payments.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleEndDay}>Yes, End Day</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
                         </CardHeader>
                         <CardContent>
                              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -155,6 +218,9 @@ export default function DailySummaryPage() {
                             )}
                         </CardContent>
                     </Card>
+                </div>
+                <div style={{ display: 'none' }}>
+                    <DailySummaryPrintout ref={printRef} summary={summary} orders={completedOrders} currency={currency} />
                 </div>
             </AppLayout.Content>
         </AppLayout>

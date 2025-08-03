@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
+import React from 'react';
 
 function SummaryCard({ title, value, icon, className, isCompact = false }: { title: string, value: string | number, icon: React.ReactNode, className?: string, isCompact?: boolean }) {
     return (
@@ -124,7 +125,6 @@ class DailySummaryPrintoutWrapper extends React.Component<{ summary: any, orders
 export default function DailySummaryPage() {
     const { completedOrders, currency, endDay } = useApp();
     const { toast } = useToast();
-    const printRef = useRef<HTMLDivElement>(null);
     const componentToPrintRef = useRef<DailySummaryPrintoutWrapper>(null);
 
     const summary = completedOrders.reduce((acc, order) => {
@@ -233,5 +233,3 @@ export default function DailySummaryPage() {
         </AppLayout>
     )
 }
-
-    

@@ -112,7 +112,10 @@ export default function CashierPage() {
         <Header />
       </AppLayout.Header>
       <AppLayout.Content>
-       <div className="p-4 md:p-6 pb-24">
+       <div className="relative p-4 md:p-6 pb-24">
+            {storeStatus === 'CLOSED' && (
+                <div className="absolute inset-0 bg-background/50 z-10" />
+            )}
             <Tabs defaultValue="All" className="space-y-4">
               <TabsList>
                 {categories.map(category => (

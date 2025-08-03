@@ -88,6 +88,7 @@ type AppContextType = {
   }>>
 
   addOrderToHistory: (paymentMethod: 'cash' | 'card') => void;
+  endDay: () => void;
 
   subtotal: number;
   totalFees: number;
@@ -304,6 +305,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeOpenBill = (billId: string) => {
     setOpenBills(prev => prev.filter(b => b.id !== billId));
   };
+  
+  const endDay = () => {
+    setCompletedOrders([]);
+  }
 
   const activeOrderExists = useMemo(() => {
     // An active order exists if there are items, a customer name, or fees,
@@ -364,6 +369,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     unsavedOrder,
     setUnsavedOrder,
     addOrderToHistory,
+    endDay,
     subtotal,
     totalFees,
     tax,

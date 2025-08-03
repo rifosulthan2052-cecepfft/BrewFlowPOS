@@ -64,9 +64,9 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     )
 }
 
-const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string }>(({ summary, orders, currency }, ref) => {
+const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, orders: CompletedOrder[], currency: string }) => {
     return (
-        <div ref={ref} className="p-8 font-sans">
+        <div className="p-8 font-sans">
             <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold">Daily Sales Summary</h1>
                 <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
@@ -114,8 +114,8 @@ const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, or
             </table>
         </div>
     );
-});
-DailySummaryPrintout.displayName = 'DailySummaryPrintout';
+};
+
 
 export default function DailySummaryPage() {
     const { completedOrders, currency, endDay } = useApp();
@@ -222,9 +222,13 @@ export default function DailySummaryPage() {
                         </CardContent>
                     </Card>
                 </div>
+
                 <div style={{ display: "none" }}>
-                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
+                    <div ref={componentToPrintRef}>
+                        <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} />
+                    </div>
                 </div>
+
                 <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>
@@ -244,5 +248,3 @@ export default function DailySummaryPage() {
         </AppLayout>
     )
 }
-
-    

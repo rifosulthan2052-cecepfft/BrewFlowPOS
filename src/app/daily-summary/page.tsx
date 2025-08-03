@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useRef, forwardRef } from 'react';
+import { useState, useRef } from 'react';
 import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
@@ -63,9 +64,9 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     )
 }
 
-const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, orders: CompletedOrder[], currency: string }) => {
+const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string }>(({ summary, orders, currency }, ref) => {
     return (
-        <div className="p-8 font-sans">
+        <div ref={ref} className="p-8 font-sans">
             <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold">Daily Sales Summary</h1>
                 <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
@@ -113,19 +114,14 @@ const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, ord
             </table>
         </div>
     );
-};
-
-class DailySummaryPrintoutWrapper extends React.Component<{ summary: any, orders: CompletedOrder[], currency: string }> {
-    render() {
-        return <DailySummaryPrintout {...this.props} />
-    }
-}
-
+});
+DailySummaryPrintout.displayName = 'DailySummaryPrintout';
 
 export default function DailySummaryPage() {
     const { completedOrders, currency, endDay } = useApp();
     const { toast } = useToast();
-    const componentToPrintRef = useRef<DailySummaryPrintoutWrapper>(null);
+    const componentToPrintRef = useRef<HTMLDivElement>(null);
+    const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
 
     const summary = completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
@@ -169,7 +165,7 @@ export default function DailySummaryPage() {
                                 <CardDescription>Review of today's sales activity.</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" onClick={handlePrint} disabled={completedOrders.length === 0}>
+                                <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)} disabled={completedOrders.length === 0}>
                                     <Printer className="mr-2 h-4 w-4" /> Print
                                 </Button>
                                 <AlertDialog>
@@ -226,9 +222,19 @@ export default function DailySummaryPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <div style={{ display: 'none' }}>
-                    <DailySummaryPrintoutWrapper ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
-                </div>
+                <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+                    <DialogContent className="max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>Daily Summary Printout</DialogTitle>
+                        </DialogHeader>
+                        <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
+                        <DialogFooter>
+                            <Button onClick={handlePrint} className="w-full">
+                                <Printer className="mr-2 h-4 w-4" /> Print Summary
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </AppLayout.Content>
         </AppLayout>
     )

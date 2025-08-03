@@ -60,6 +60,7 @@ export default function CurrentOrder({
     editingBillId, lastCompletedOrder,
     memberId, setMemberId, getMemberById,
     getMemberByLookup,
+    resetOrder,
   } = useApp();
   const { toast } = useToast();
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
@@ -73,12 +74,12 @@ export default function CurrentOrder({
 
   const handleSaveOpenBill = () => {
     saveAsOpenBill();
+    resetOrder();
     onClose();
   }
 
   const handleDoneClick = () => {
-    saveAsOpenBill();
-    onClose();
+    handleSaveOpenBill();
   }
   
   const associateMember = (memberId: string) => {
@@ -398,7 +399,7 @@ export default function CurrentOrder({
                             onPaymentSuccess={handlePaymentSuccess}
                             disabled={isOrderEmpty}
                         >
-                            <Button size="lg" disabled={isOrderEmpty} variant="primary">
+                            <Button size="lg" disabled={isOrderEmpty}>
                                 <Wallet className="mr-2 h-4 w-4" /> Payment
                             </Button>
                         </PaymentDialog>

@@ -1,7 +1,7 @@
 
 'use client'
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
@@ -63,26 +63,29 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     )
 }
 
-const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, orders: CompletedOrder[], currency: string }) => {
+type AggregatedItems = {
+    [key: string]: number; // itemName: quantity
+};
+
+type SalesByPaymentMethod = {
+    cash: AggregatedItems;
+    card: AggregatedItems;
+};
+
+
+const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string, salesByPaymentMethod: SalesByPaymentMethod }>(
+    ({ summary, currency, salesByPaymentMethod }, ref) => {
     return (
-        <div className="p-8 font-sans">
+        <div ref={ref} className="p-8 font-sans">
             <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold">Daily Sales Summary</h1>
                 <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
             </div>
             
-            <div className="grid grid-cols-4 gap-4 mb-6 border-t border-b py-4">
+            <div className="grid grid-cols-2 gap-4 mb-6 border-t border-b py-4">
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">Total Revenue</p>
                     <p className="text-xl font-bold">{formatCurrency(summary.totalRevenue, currency)}</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Cash Sales</p>
-                    <p className="text-xl font-bold">{formatCurrency(summary.cashTotal, currency)}</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Card Sales</p>
-                    <p className="text-xl font-bold">{formatCurrency(summary.cardTotal, currency)}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-sm text-muted-foreground">Transactions</p>
@@ -90,30 +93,42 @@ const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, ord
                 </div>
             </div>
 
-            <h2 className="text-xl font-semibold mb-4">Completed Orders</h2>
-            <table className="w-full text-left">
-                <thead>
-                    <tr>
-                        <th className="p-2 border-b">Customer</th>
-                        <th className="p-2 border-b">Time</th>
-                        <th className="p-2 border-b">Payment</th>
-                        <th className="p-2 border-b text-right">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {orders.map(order => (
-                        <tr key={order.id}>
-                            <td className="p-2 border-b">{order.customerName}</td>
-                            <td className="p-2 border-b">{new Date(order.date).toLocaleTimeString()}</td>
-                            <td className="p-2 border-b capitalize">{order.paymentMethod}</td>
-                            <td className="p-2 border-b text-right font-mono">{formatCurrency(order.total, currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <div className="grid grid-cols-2 gap-8">
+                <div>
+                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Cash Sales ({formatCurrency(summary.cashTotal, currency)})</h3>
+                    {Object.keys(salesByPaymentMethod.cash).length > 0 ? (
+                        <table className="w-full text-left text-sm">
+                             <tbody>
+                                {Object.entries(salesByPaymentMethod.cash).map(([name, quantity]) => (
+                                    <tr key={name}>
+                                        <td className="p-1">{name}</td>
+                                        <td className="p-1 text-right font-mono">{quantity}x</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ): <p className="text-sm text-muted-foreground">No cash sales.</p>}
+                </div>
+                 <div>
+                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Card Sales ({formatCurrency(summary.cardTotal, currency)})</h3>
+                     {Object.keys(salesByPaymentMethod.card).length > 0 ? (
+                        <table className="w-full text-left text-sm">
+                            <tbody>
+                                {Object.entries(salesByPaymentMethod.card).map(([name, quantity]) => (
+                                    <tr key={name}>
+                                        <td className="p-1">{name}</td>
+                                        <td className="p-1 text-right font-mono">{quantity}x</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ): <p className="text-sm text-muted-foreground">No card sales.</p>}
+                </div>
+            </div>
         </div>
     );
-};
+});
+DailySummaryPrintout.displayName = 'DailySummaryPrintout';
 
 
 export default function DailySummaryPage() {
@@ -122,7 +137,7 @@ export default function DailySummaryPage() {
     const componentToPrintRef = useRef<HTMLDivElement>(null);
     const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
 
-    const summary = completedOrders.reduce((acc, order) => {
+    const summary = useMemo(() => completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
         if (order.paymentMethod === 'cash') {
             acc.cashTotal += order.total;
@@ -136,7 +151,24 @@ export default function DailySummaryPage() {
         cashTotal: 0,
         cardTotal: 0,
         totalTransactions: 0
-    });
+    }), [completedOrders]);
+    
+    const salesByPaymentMethod = useMemo(() => {
+        const sales: SalesByPaymentMethod = {
+            cash: {},
+            card: {},
+        };
+
+        completedOrders.forEach(order => {
+            const target = sales[order.paymentMethod];
+            order.items.forEach(item => {
+                target[item.name] = (target[item.name] || 0) + item.quantity;
+            });
+        });
+
+        return sales;
+    }, [completedOrders]);
+
 
     const handleEndDay = () => {
         endDay();
@@ -256,7 +288,7 @@ export default function DailySummaryPage() {
                 </div>
 
                 <div style={{ display: "none" }}>
-                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
+                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} salesByPaymentMethod={salesByPaymentMethod} />
                 </div>
 
                 <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
@@ -265,7 +297,7 @@ export default function DailySummaryPage() {
                             <DialogTitle>Daily Summary Printout</DialogTitle>
                         </DialogHeader>
                         <div className="max-h-[60vh] overflow-y-auto border rounded-md my-4">
-                           <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} />
+                           <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} salesByPaymentMethod={salesByPaymentMethod}/>
                         </div>
                         <DialogFooter>
                             <Button onClick={handlePrint} className="w-full">

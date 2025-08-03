@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX, X } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter, DialogTrigger } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -163,34 +163,21 @@ export default function CurrentOrder({
                     Paid by {lastCompletedOrder.paymentMethod}
                 </Badge>
             </div>
-             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-in fade-in zoom-in-95">
-                 <FileText className="mr-2" />
-                 View Receipt
-             </Button>
+             <Receipt 
+                orderItems={lastCompletedOrder.items}
+                customerName={lastCompletedOrder.customerName}
+                subtotal={lastCompletedOrder.subtotal}
+                tax={lastCompletedOrder.tax}
+                fees={lastCompletedOrder.fees}
+                total={lastCompletedOrder.total}
+                memberId={lastCompletedOrder.memberId}
+             />
          </div>
          <DialogFooter className="p-6 pt-0 border-t flex-shrink-0 sm:justify-center">
           <Button size="lg" className="w-full sm:w-auto" onClick={onNewOrder}>
              Start New Order
           </Button>
          </DialogFooter>
-         <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
-            <DialogContent className="max-w-sm">
-                <DialogHeader>
-                    <DialogTitle>Receipt</DialogTitle>
-                </DialogHeader>
-                {lastCompletedOrder && (
-                  <Receipt 
-                      orderItems={lastCompletedOrder.items}
-                      customerName={lastCompletedOrder.customerName}
-                      subtotal={lastCompletedOrder.subtotal}
-                      tax={lastCompletedOrder.tax}
-                      fees={lastCompletedOrder.fees}
-                      total={lastCompletedOrder.total}
-                      memberId={lastCompletedOrder.memberId}
-                  />
-                )}
-            </DialogContent>
-         </Dialog>
        </div>
      )
   }

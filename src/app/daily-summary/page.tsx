@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, Wallet, List, Grid, AlertCircle, Printer } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, AlertCircle, Printer, PlayCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +27,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
-import React from 'react';
 
 function SummaryCard({ title, value, icon, className, isCompact = false }: { title: string, value: string | number, icon: React.ReactNode, className?: string, isCompact?: boolean }) {
     return (
@@ -118,7 +117,7 @@ const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, ord
 
 
 export default function DailySummaryPage() {
-    const { completedOrders, currency, endDay } = useApp();
+    const { completedOrders, currency, endDay, startNewDay, storeStatus } = useApp();
     const { toast } = useToast();
     const componentToPrintRef = useRef<HTMLDivElement>(null);
     const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
@@ -143,13 +142,23 @@ export default function DailySummaryPage() {
         endDay();
         toast({
             title: "Day Ended",
-            description: "Daily sales have been finalized and the order history has been cleared.",
+            description: "Daily sales have been finalized. You can review the summary until you start a new day.",
+        });
+    }
+    
+    const handleStartNewDay = () => {
+        startNewDay();
+        toast({
+            title: "New Day Started",
+            description: "Previous day's summary has been cleared. Ready for new sales.",
         });
     }
 
     const handlePrint = useReactToPrint({
         content: () => componentToPrintRef.current,
     });
+
+    const isTodaySummaryEmpty = completedOrders.length === 0;
 
     return (
         <AppLayout>
@@ -162,32 +171,55 @@ export default function DailySummaryPage() {
                         <CardHeader className="flex flex-row items-center justify-between">
                              <div>
                                 <CardTitle>Daily Summary</CardTitle>
-                                <CardDescription>Review of today's sales activity.</CardDescription>
+                                <CardDescription>
+                                    {storeStatus === 'OPEN' ? "Review of today's sales activity." : "Store is closed. Review the summary before starting a new day."}
+                                </CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)} disabled={completedOrders.length === 0}>
+                                <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)} disabled={isTodaySummaryEmpty}>
                                     <Printer className="mr-2 h-4 w-4" /> Print
                                 </Button>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" disabled={completedOrders.length === 0}>
-                                            <AlertCircle className="mr-2 h-4 w-4" /> End Day
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                This action will finalize the daily sales and clear all completed order history. 
-                                                This cannot be undone. Make sure you have reconciled your cash and card payments.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleEndDay}>Yes, End Day</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+                                {storeStatus === 'OPEN' ? (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" disabled={isTodaySummaryEmpty}>
+                                                <AlertCircle className="mr-2 h-4 w-4" /> End Day
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will close the store for the day. You will be able to review the summary, but no new transactions can be made until you start a new day.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleEndDay}>Yes, End Day</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                ) : (
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button>
+                                                <PlayCircle className="mr-2 h-4 w-4" /> Start New Day
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Start a new sales day?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will clear the current summary and prepare the system for new transactions. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleStartNewDay}>Yes, Start New Day</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -210,7 +242,7 @@ export default function DailySummaryPage() {
                             <h3 className="text-lg font-semibold mb-2">Completed Orders</h3>
                             {completedOrders.length === 0 ? (
                                 <div className="text-center text-muted-foreground py-16">
-                                    <p>No completed orders for today.</p>
+                                    <p>No completed orders for this period.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-2">
@@ -224,9 +256,7 @@ export default function DailySummaryPage() {
                 </div>
 
                 <div style={{ display: "none" }}>
-                    <div ref={componentToPrintRef}>
-                        <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} />
-                    </div>
+                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
                 </div>
 
                 <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>

@@ -26,6 +26,8 @@ type ReceiptSettings = {
     footerMessage: string;
 }
 
+type StoreStatus = 'OPEN' | 'CLOSED';
+
 type AppContextType = {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
@@ -56,6 +58,8 @@ type AppContextType = {
 
   completedOrders: CompletedOrder[];
   lastCompletedOrder: CompletedOrder | null;
+
+  storeStatus: StoreStatus;
 
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
@@ -89,6 +93,7 @@ type AppContextType = {
 
   addOrderToHistory: (paymentMethod: 'cash' | 'card') => void;
   endDay: () => void;
+  startNewDay: () => void;
 
   subtotal: number;
   totalFees: number;
@@ -132,6 +137,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>('OPEN');
+
 
   // Separate state for a potentially unsaved order
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
@@ -311,7 +318,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const endDay = () => {
+    setStoreStatus('CLOSED');
+  }
+
+  const startNewDay = () => {
     setCompletedOrders([]);
+    setStoreStatus('OPEN');
   }
 
   const activeOrderExists = useMemo(() => {
@@ -353,6 +365,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     editingBillId,
     completedOrders,
     lastCompletedOrder,
+    storeStatus,
     setOrderItems,
     setFees,
     setCustomerName,
@@ -372,11 +385,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUnsavedOrder,
     addOrderToHistory,
     endDay,
+    startNewDay,
     subtotal,
     totalFees,
     tax,
     total
-  }), [currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

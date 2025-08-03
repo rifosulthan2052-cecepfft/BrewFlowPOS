@@ -62,9 +62,9 @@ function OrderHistoryCompactCard({ order }: { order: CompletedOrder }) {
     )
 }
 
-const DailySummaryPrintout = forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string }>(({ summary, orders, currency }, ref) => {
+const DailySummaryPrintout = ({ summary, orders, currency }: { summary: any, orders: CompletedOrder[], currency: string }) => {
     return (
-        <div ref={ref} className="p-8 font-sans">
+        <div className="p-8 font-sans">
             <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold">Daily Sales Summary</h1>
                 <p className="text-muted-foreground">{new Date().toLocaleDateString()}</p>
@@ -112,13 +112,20 @@ const DailySummaryPrintout = forwardRef<HTMLDivElement, { summary: any, orders: 
             </table>
         </div>
     );
-});
-DailySummaryPrintout.displayName = 'DailySummaryPrintout';
+};
+
+class DailySummaryPrintoutWrapper extends React.Component<{ summary: any, orders: CompletedOrder[], currency: string }> {
+    render() {
+        return <DailySummaryPrintout {...this.props} />
+    }
+}
+
 
 export default function DailySummaryPage() {
     const { completedOrders, currency, endDay } = useApp();
     const { toast } = useToast();
     const printRef = useRef<HTMLDivElement>(null);
+    const componentToPrintRef = useRef<DailySummaryPrintoutWrapper>(null);
 
     const summary = completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
@@ -145,7 +152,7 @@ export default function DailySummaryPage() {
     }
 
     const handlePrint = useReactToPrint({
-        content: () => printRef.current,
+        content: () => componentToPrintRef.current,
     });
 
     return (
@@ -220,9 +227,11 @@ export default function DailySummaryPage() {
                     </Card>
                 </div>
                 <div style={{ display: 'none' }}>
-                    <DailySummaryPrintout ref={printRef} summary={summary} orders={completedOrders} currency={currency} />
+                    <DailySummaryPrintoutWrapper ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
                 </div>
             </AppLayout.Content>
         </AppLayout>
     )
 }
+
+    

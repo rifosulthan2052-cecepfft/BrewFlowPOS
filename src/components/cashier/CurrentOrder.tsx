@@ -163,15 +163,28 @@ export default function CurrentOrder({
                     Paid by {lastCompletedOrder.paymentMethod}
                 </Badge>
             </div>
-             <Receipt 
-                orderItems={lastCompletedOrder.items}
-                customerName={lastCompletedOrder.customerName}
-                subtotal={lastCompletedOrder.subtotal}
-                tax={lastCompletedOrder.tax}
-                fees={lastCompletedOrder.fees}
-                total={lastCompletedOrder.total}
-                memberId={lastCompletedOrder.memberId}
-             />
+             <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
+                <DialogTrigger asChild>
+                     <Button variant="outline">
+                        <FileText className="mr-2 h-4 w-4" />
+                        View Receipt
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Receipt</DialogTitle>
+                    </DialogHeader>
+                    <Receipt
+                        orderItems={lastCompletedOrder.items}
+                        customerName={lastCompletedOrder.customerName}
+                        subtotal={lastCompletedOrder.subtotal}
+                        tax={lastCompletedOrder.tax}
+                        fees={lastCompletedOrder.fees}
+                        total={lastCompletedOrder.total}
+                        memberId={lastCompletedOrder.memberId}
+                    />
+                </DialogContent>
+            </Dialog>
          </div>
          <DialogFooter className="p-6 pt-0 border-t flex-shrink-0 sm:justify-center">
           <Button size="lg" className="w-full sm:w-auto" onClick={onNewOrder}>

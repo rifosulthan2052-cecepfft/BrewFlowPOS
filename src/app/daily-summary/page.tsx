@@ -24,10 +24,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-function SummaryCard({ title, value, icon }: { title: string, value: string | number, icon: React.ReactNode }) {
+function SummaryCard({ title, value, icon, className }: { title: string, value: string | number, icon: React.ReactNode, className?: string }) {
     return (
-        <Card>
+        <Card className={className}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 {icon}
@@ -126,9 +127,9 @@ export default function DailySummaryPage() {
                         <CardContent>
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
                                 <SummaryCard title="Total Revenue" value={formatCurrency(summary.totalRevenue, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />}/>
-                                <SummaryCard title="Cash Sales" value={formatCurrency(summary.cashTotal, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />}/>
-                                <SummaryCard title="Card Sales" value={formatCurrency(summary.cardTotal, currency)} icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}/>
-                                <SummaryCard title="Transactions" value={summary.totalTransactions} icon={<List className="h-4 w-4 text-muted-foreground" />}/>
+                                <SummaryCard title="Cash Sales" value={formatCurrency(summary.cashTotal, currency)} icon={<Wallet className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
+                                <SummaryCard title="Card Sales" value={formatCurrency(summary.cardTotal, currency)} icon={<CreditCard className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
+                                <SummaryCard title="Transactions" value={summary.totalTransactions} icon={<List className="h-4 w-4 text-muted-foreground" />} className="hidden md:block" />
                             </div>
                             
                             <Separator className="my-4" />

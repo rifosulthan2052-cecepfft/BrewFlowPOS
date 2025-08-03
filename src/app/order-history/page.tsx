@@ -165,6 +165,8 @@ export default function OrderHistoryPage() {
                                 tax={selectedOrder.tax}
                                 fees={selectedOrder.fees}
                                 total={selectedOrder.total}
+                                memberId={selectedOrder.memberId}
+                                showPrintButton={true}
                              />
                         )}
                     </DialogContent>

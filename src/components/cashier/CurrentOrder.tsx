@@ -75,6 +75,11 @@ export default function CurrentOrder({
     saveAsOpenBill();
     onClose();
   }
+
+  const handleDoneClick = () => {
+    saveAsOpenBill();
+    onClose();
+  }
   
   const associateMember = (memberId: string) => {
     const member = getMemberById(memberId);
@@ -384,7 +389,7 @@ export default function CurrentOrder({
             <div className='w-full space-y-2 mt-4'>
                  { editingBillId ? (
                     <div className='grid grid-cols-2 gap-2'>
-                       <Button size="lg" onClick={onClose}>
+                       <Button size="lg" onClick={handleDoneClick}>
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Done
                         </Button>

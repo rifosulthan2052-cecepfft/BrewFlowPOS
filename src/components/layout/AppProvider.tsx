@@ -295,7 +295,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (memberId) {
         setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, billId] } : m));
     }
-    resetOrder();
+    // State cleanup is now handled by the calling component (e.g. onClose or onNewOrder)
+    // resetOrder();
   };
 
   const loadOrderFromBill = (bill: Partial<Bill>) => {

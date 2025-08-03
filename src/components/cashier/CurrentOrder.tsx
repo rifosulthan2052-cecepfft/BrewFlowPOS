@@ -80,14 +80,13 @@ export default function CurrentOrder({
   }
   
   const handleLookupBlur = () => {
-    if (lookupValue) {
+    if (lookupValue && !memberId) { // Only lookup if no member is set yet
         const member = getMemberByLookup(lookupValue);
         if (member) {
             setMemberId(member.id);
             if (member.name) {
                 onCustomerNameChange(member.name);
             }
-            setLookupValue(member.name || `Member ${member.id}`);
             toast({
                 title: 'Member Found',
                 description: `${member.name} (${member.id}) has been associated with this order.`,
@@ -100,8 +99,6 @@ export default function CurrentOrder({
             });
             setMemberId(undefined); // Clear if not found
         }
-    } else {
-        setMemberId(undefined);
     }
   }
 
@@ -118,6 +115,16 @@ export default function CurrentOrder({
   
   const handleScanClick = async () => {
     toast({ title: 'QR Scanner Not Implemented', description: 'This would open the camera to scan a QR code.' });
+  }
+
+  const handleClearMember = () => {
+    setMemberId(undefined);
+    onCustomerNameChange('');
+    setLookupValue('');
+    toast({
+        title: 'Member cleared',
+        description: 'The member has been removed from the order.',
+    });
   }
 
   if (orderStatus === 'paid' && lastCompletedOrder) {
@@ -235,18 +242,32 @@ export default function CurrentOrder({
                         onChange={handleLookupChange}
                         onBlur={handleLookupBlur}
                         className="pl-9"
+                        disabled={!!memberId}
                     />
                 </div>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={handleScanClick}>
-                            <ScanLine className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Scan Member QR Code</p>
-                    </TooltipContent>
-                </Tooltip>
+                {memberId ? (
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" onClick={handleClearMember}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Clear Member</p>
+                        </TooltipContent>
+                    </Tooltip>
+                ) : (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="outline" size="icon" onClick={handleScanClick}>
+                                <ScanLine className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Scan Member QR Code</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
             </div>
         </div>
       

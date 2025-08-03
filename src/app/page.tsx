@@ -152,7 +152,7 @@ export default function CashierPage() {
                 />
             </DialogContent>
         </Dialog>
-         <Dialog open={storeStatus === 'CLOSED'} >
+         <Dialog open={storeStatus === 'CLOSED'} modal={false}>
             <DialogContent className="sm:max-w-md" hideCloseButton>
                 <DialogHeader>
                     <DialogTitle>Store is Closed</DialogTitle>

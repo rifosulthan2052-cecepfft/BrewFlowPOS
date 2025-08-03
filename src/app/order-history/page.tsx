@@ -55,7 +55,7 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
                         </div>
                         )}
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tax</span>
+                        <span className="text-muted-foreground">Tax ({useApp().taxRate * 100}%)</span>
                         <span className="font-mono">{formatCurrency(order.tax, currency)}</span>
                     </div>
                     <Separator className="my-2" />
@@ -76,17 +76,17 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
     const { currency } = useApp();
     return (
         <Card>
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex-1">
                     <p className="font-semibold">{order.customerName}</p>
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
                      <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 w-24 justify-center">
                         {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
                         {order.paymentMethod}
                     </Badge>
-                    <p className="w-32 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
+                    <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
                     <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>
                 </div>
             </CardContent>

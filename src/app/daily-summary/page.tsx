@@ -222,12 +222,17 @@ export default function DailySummaryPage() {
                         </CardContent>
                     </Card>
                 </div>
+                <div style={{ display: "none" }}>
+                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
+                </div>
                 <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>
                             <DialogTitle>Daily Summary Printout</DialogTitle>
                         </DialogHeader>
-                        <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} />
+                        <div className="max-h-[60vh] overflow-y-auto border rounded-md my-4">
+                           <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} />
+                        </div>
                         <DialogFooter>
                             <Button onClick={handlePrint} className="w-full">
                                 <Printer className="mr-2 h-4 w-4" /> Print Summary
@@ -239,3 +244,5 @@ export default function DailySummaryPage() {
         </AppLayout>
     )
 }
+
+    

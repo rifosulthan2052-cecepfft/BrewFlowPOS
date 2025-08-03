@@ -65,17 +65,20 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
     )
 }
 
-type AggregatedItems = {
-    [key: string]: number; // itemName: quantity
+type SalesDetails = {
+    items: { [key: string]: number }; // itemName: quantity
+    totalFees: number;
+    totalTax: number;
+    totalSales: number;
 };
 
 type SalesByPaymentMethod = {
-    cash: AggregatedItems;
-    card: AggregatedItems;
+    cash: SalesDetails;
+    card: SalesDetails;
 };
 
 
-const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, orders: CompletedOrder[], currency: string, salesByPaymentMethod: SalesByPaymentMethod }>(
+const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, currency: string, salesByPaymentMethod: SalesByPaymentMethod }>(
     ({ summary, currency, salesByPaymentMethod }, ref) => {
     return (
         <div ref={ref} className="p-8 font-sans">
@@ -97,33 +100,63 @@ const DailySummaryPrintout = React.forwardRef<HTMLDivElement, { summary: any, or
 
             <div className="grid grid-cols-2 gap-8">
                 <div>
-                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Cash Sales ({formatCurrency(summary.cashTotal, currency)})</h3>
-                    {Object.keys(salesByPaymentMethod.cash).length > 0 ? (
-                        <table className="w-full text-left text-sm">
-                             <tbody>
-                                {Object.entries(salesByPaymentMethod.cash).map(([name, quantity]) => (
-                                    <tr key={name}>
-                                        <td className="p-1">{name}</td>
-                                        <td className="p-1 text-right font-mono">{quantity}x</td>
+                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Cash Sales ({formatCurrency(salesByPaymentMethod.cash.totalSales, currency)})</h3>
+                    {Object.keys(salesByPaymentMethod.cash.items).length > 0 ? (
+                        <>
+                            <table className="w-full text-left text-sm">
+                                 <tbody>
+                                    {Object.entries(salesByPaymentMethod.cash.items).map(([name, quantity]) => (
+                                        <tr key={name}>
+                                            <td className="p-1">{name}</td>
+                                            <td className="p-1 text-right font-mono">{quantity}x</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                             <Separator className="my-2" />
+                            <table className="w-full text-left text-sm">
+                                <tbody>
+                                    <tr>
+                                        <td className="p-1 text-muted-foreground">Fees</td>
+                                        <td className="p-1 text-right font-mono">{formatCurrency(salesByPaymentMethod.cash.totalFees, currency)}</td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                    <tr>
+                                        <td className="p-1 text-muted-foreground">Tax</td>
+                                        <td className="p-1 text-right font-mono">{formatCurrency(salesByPaymentMethod.cash.totalTax, currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </>
                     ): <p className="text-sm text-muted-foreground">No cash sales.</p>}
                 </div>
                  <div>
-                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Card Sales ({formatCurrency(summary.cardTotal, currency)})</h3>
-                     {Object.keys(salesByPaymentMethod.card).length > 0 ? (
-                        <table className="w-full text-left text-sm">
-                            <tbody>
-                                {Object.entries(salesByPaymentMethod.card).map(([name, quantity]) => (
-                                    <tr key={name}>
-                                        <td className="p-1">{name}</td>
-                                        <td className="p-1 text-right font-mono">{quantity}x</td>
+                    <h3 className="text-lg font-semibold mb-2 border-b pb-1">Card Sales ({formatCurrency(salesByPaymentMethod.card.totalSales, currency)})</h3>
+                     {Object.keys(salesByPaymentMethod.card.items).length > 0 ? (
+                        <>
+                            <table className="w-full text-left text-sm">
+                                <tbody>
+                                    {Object.entries(salesByPaymentMethod.card.items).map(([name, quantity]) => (
+                                        <tr key={name}>
+                                            <td className="p-1">{name}</td>
+                                            <td className="p-1 text-right font-mono">{quantity}x</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <Separator className="my-2" />
+                             <table className="w-full text-left text-sm">
+                                <tbody>
+                                    <tr>
+                                        <td className="p-1 text-muted-foreground">Fees</td>
+                                        <td className="p-1 text-right font-mono">{formatCurrency(salesByPaymentMethod.card.totalFees, currency)}</td>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                    <tr>
+                                        <td className="p-1 text-muted-foreground">Tax</td>
+                                        <td className="p-1 text-right font-mono">{formatCurrency(salesByPaymentMethod.card.totalTax, currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </>
                     ): <p className="text-sm text-muted-foreground">No card sales.</p>}
                 </div>
             </div>
@@ -158,15 +191,18 @@ export default function DailySummaryPage() {
     
     const salesByPaymentMethod = useMemo(() => {
         const sales: SalesByPaymentMethod = {
-            cash: {},
-            card: {},
+            cash: { items: {}, totalFees: 0, totalTax: 0, totalSales: 0 },
+            card: { items: {}, totalFees: 0, totalTax: 0, totalSales: 0 },
         };
 
         completedOrders.forEach(order => {
             const target = sales[order.paymentMethod];
             order.items.forEach(item => {
-                target[item.name] = (target[item.name] || 0) + item.quantity;
+                target.items[item.name] = (target.items[item.name] || 0) + item.quantity;
             });
+            target.totalFees += order.totalFees;
+            target.totalTax += order.tax;
+            target.totalSales += order.total;
         });
 
         return sales;
@@ -299,7 +335,7 @@ export default function DailySummaryPage() {
                 </div>
 
                 <div style={{ display: "none" }}>
-                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} orders={completedOrders} currency={currency} salesByPaymentMethod={salesByPaymentMethod} />
+                    <DailySummaryPrintout ref={componentToPrintRef} summary={summary} currency={currency} salesByPaymentMethod={salesByPaymentMethod} />
                 </div>
 
                 <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
@@ -308,7 +344,7 @@ export default function DailySummaryPage() {
                             <DialogTitle>Daily Summary Printout</DialogTitle>
                         </DialogHeader>
                         <div className="max-h-[60vh] overflow-y-auto border rounded-md my-4">
-                           <DailySummaryPrintout summary={summary} orders={completedOrders} currency={currency} salesByPaymentMethod={salesByPaymentMethod}/>
+                           <DailySummaryPrintout summary={summary} currency={currency} salesByPaymentMethod={salesByPaymentMethod}/>
                         </div>
                         <DialogFooter>
                             <Button onClick={handlePrint} className="w-full">
@@ -341,3 +377,5 @@ export default function DailySummaryPage() {
         </AppLayout>
     )
 }
+
+    

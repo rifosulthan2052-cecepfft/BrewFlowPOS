@@ -19,10 +19,11 @@ type ReceiptProps = {
   fees: Fee[];
   total: number;
   showPrintButton?: boolean;
+  memberId?: string;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
-    const { orderItems, subtotal, tax, fees, total } = props;
+    const { orderItems, subtotal, tax, fees, total, memberId } = props;
     const { currency } = useApp();
     const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
 
@@ -39,6 +40,11 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
             </div>
             <Separator className="my-2" />
             <h3 className="text-center font-bold mb-2">RECEIPT</h3>
+            {memberId && (
+                <div className="text-center mb-2">
+                    <p>Member ID: {memberId}</p>
+                </div>
+            )}
             <div className="space-y-1">
                 {orderItems.map(item => (
                     <div key={item.menuItemId} className="flex justify-between">
@@ -78,7 +84,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total, showPrintButton = true }: ReceiptProps) {
+export default function Receipt({ orderItems, subtotal, tax, fees, total, showPrintButton = true, memberId }: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -113,7 +119,7 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, showPr
         <div className="flex flex-col h-full max-h-[70vh]">
              <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
-                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total}} />
+                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId}} />
                 </ScrollArea>
              </div>
             {showPrintButton && (

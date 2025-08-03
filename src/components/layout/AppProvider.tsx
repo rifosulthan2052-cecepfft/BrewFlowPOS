@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Bill } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Bill, Member } from '@/types';
 
 type Currency = 'USD' | 'IDR';
 
@@ -31,9 +31,14 @@ type AppContextType = {
   updateMenuItem: (item: MenuItem) => void;
   removeMenuItem: (id: string) => void;
 
+  members: Member[];
+  addMember: (member: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>) => Member;
+  getMemberById: (id: string) => Member | undefined;
+
   orderItems: OrderItem[];
   fees: Fee[];
   customerName: string;
+  memberId?: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
   openBills: OpenBill[];
   editingBillId: string | null;
@@ -44,6 +49,7 @@ type AppContextType = {
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
   setCustomerName: React.Dispatch<React.SetStateAction<string>>;
+  setMemberId: React.Dispatch<React.SetStateAction<string | undefined>>;
   setOrderStatus: React.Dispatch<React.SetStateAction<'pending' | 'paid' | 'open_bill'>>;
   
   addItemToOrder: (item: MenuItem) => void;
@@ -61,15 +67,16 @@ type AppContextType = {
     items: OrderItem[];
     customerName: string;
     fees: Fee[];
+    memberId?: string;
   },
   setUnsavedOrder: React.Dispatch<React.SetStateAction<{
     items: OrderItem[];
     customerName: string;
     fees: Fee[];
+    memberId?: string;
   }>>
 
   addOrderToHistory: (paymentMethod: 'cash' | 'card') => void;
-
 
   subtotal: number;
   totalFees: number;
@@ -84,9 +91,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [taxRate, setTaxRate] = useState<number>(0);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+  const [members, setMembers] = useState<Member[]>([]);
+
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
   const [customerName, setCustomerName] = useState('');
+  const [memberId, setMemberId] = useState<string | undefined>();
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
@@ -94,14 +104,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
 
   // Separate state for a potentially unsaved order
-  const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[] });
+  const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   useEffect(() => {
     // If there's no bill being edited, we update the unsaved order state
     if (!editingBillId) {
-        setUnsavedOrder({ items: orderItems, customerName, fees });
+        setUnsavedOrder({ items: orderItems, customerName, fees, memberId });
     }
-  }, [orderItems, customerName, fees, editingBillId]);
+  }, [orderItems, customerName, fees, memberId, editingBillId]);
 
   const addMenuItem = (item: MenuItem) => {
     setMenuItems(prev => [...prev, item]);
@@ -113,6 +123,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const removeMenuItem = (id: string) => {
     setMenuItems(prev => prev.filter(i => i.id !== id));
+  }
+
+  const addMember = (memberData: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>): Member => {
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomPart = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const newMember: Member = {
+        ...memberData,
+        id: `MBR-${datePart}-${randomPart}`,
+        createdAt: now.toISOString(),
+        transactionIds: []
+    };
+    setMembers(prev => [...prev, newMember]);
+    return newMember;
+  };
+
+  const getMemberById = (id: string) => {
+    return members.find(m => m.id === id);
   }
 
   const addItemToOrder = (item: MenuItem) => {
@@ -151,6 +179,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrderItems([]);
     setFees([]);
     setCustomerName('');
+    setMemberId(undefined);
     setOrderStatus('pending');
     setEditingBillId(null);
     setLastCompletedOrder(null);
@@ -165,8 +194,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = (paymentMethod: 'cash' | 'card') => {
+    const orderId = `order-${Date.now()}`;
     const newCompletedOrder: CompletedOrder = {
-      id: `order-${Date.now()}`,
+      id: orderId,
       customerName: customerName || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -176,10 +206,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       total,
       date: new Date().toISOString(),
       paymentMethod,
+      memberId,
     };
     setCompletedOrders(prev => [newCompletedOrder, ...prev]);
     setLastCompletedOrder(newCompletedOrder);
     setOrderStatus('paid');
+
+    if (memberId) {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, orderId] } : m));
+    }
   }
 
   const saveAsOpenBill = () => {
@@ -194,6 +229,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fees,
       total,
       date: new Date().toISOString(),
+      memberId,
     };
     
     setOpenBills(prev => {
@@ -205,6 +241,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         return [...prev, newOpenBill]
     });
+
+    if (memberId) {
+        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, billId] } : m));
+    }
     resetOrder();
   };
 
@@ -212,6 +252,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrderItems(bill.items);
     setFees(bill.fees);
     setCustomerName(bill.customerName);
+    setMemberId(bill.memberId);
     setOrderStatus('open_bill');
     setEditingBillId(bill.id);
   };
@@ -246,9 +287,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addMenuItem,
     updateMenuItem,
     removeMenuItem,
+    members,
+    addMember,
+    getMemberById,
     orderItems,
     fees,
     customerName,
+    memberId,
     orderStatus,
     openBills,
     editingBillId,
@@ -257,6 +302,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOrderItems,
     setFees,
     setCustomerName,
+    setMemberId,
     setOrderStatus,
     addItemToOrder,
     updateItemQuantity,
@@ -275,7 +321,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [currency, taxRate, menuItems, orderItems, fees, customerName, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [currency, taxRate, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

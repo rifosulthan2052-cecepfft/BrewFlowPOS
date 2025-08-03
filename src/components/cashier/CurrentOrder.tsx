@@ -5,7 +5,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -24,10 +24,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
 type CurrentOrderProps = {
   items: OrderItem[];
@@ -52,7 +53,13 @@ export default function CurrentOrder({
   onClearOrder,
   onClose,
 }: CurrentOrderProps) {
-  const { currency, subtotal, tax, totalFees, fees, total, addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, editingBillId, lastCompletedOrder } = useApp();
+  const { 
+    currency, subtotal, tax, totalFees, fees, total, 
+    addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, 
+    editingBillId, lastCompletedOrder,
+    memberId, setMemberId, getMemberById,
+  } = useApp();
+  const { toast } = useToast();
   const [isReceiptOpen, setIsReceiptOpen] = React.useState(false);
   const isOrderEmpty = items.length === 0;
 
@@ -65,9 +72,32 @@ export default function CurrentOrder({
     onClose();
   }
 
+  const handleMemberIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const id = e.target.value;
+    setMemberId(id);
+    if (!getMemberById(id)) {
+        toast({
+            variant: 'destructive',
+            title: 'Member not found',
+            description: 'The entered Member ID does not exist.'
+        })
+    }
+  }
+  
+  const handleScanClick = async () => {
+    toast({ title: 'QR Scanner Not Implemented', description: 'This would open the camera to scan a QR code.' });
+    // In a real implementation:
+    // 1. Open camera feed
+    // 2. Use a QR scanning library (e.g., html5-qrcode-scanner)
+    // 3. On successful scan, setMemberId(scannedId) and close camera.
+  }
+
   if (orderStatus === 'paid' && lastCompletedOrder) {
      return (
        <div className="flex flex-col h-full">
+         <DialogHeader className='p-6 pb-4 flex-shrink-0'>
+            <DialogTitle>Payment Successful</DialogTitle>
+         </DialogHeader>
          <div className="flex-1 min-h-0 flex flex-col justify-center items-center text-center p-6 gap-4">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
@@ -77,7 +107,7 @@ export default function CurrentOrder({
                     Paid by {lastCompletedOrder.paymentMethod}
                 </Badge>
             </div>
-             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-bounce-in">
+             <Button variant="outline" size="lg" onClick={() => setIsReceiptOpen(true)} className="animate-in fade-in zoom-in-95">
                  <FileText className="mr-2" />
                  View Receipt
              </Button>
@@ -99,6 +129,7 @@ export default function CurrentOrder({
                       tax={lastCompletedOrder.tax}
                       fees={lastCompletedOrder.fees}
                       total={lastCompletedOrder.total}
+                      memberId={lastCompletedOrder.memberId}
                   />
                 )}
             </DialogContent>
@@ -114,20 +145,27 @@ export default function CurrentOrder({
             <DialogTitle className='text-2xl font-semibold leading-none tracking-tight'>
                 { editingBillId ? 'Editing Bill' : 'Current Order' }
             </DialogTitle>
-            {!editingBillId && (
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
-                            <Save className="h-4 w-4" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Save to open bills</p>
-                    </TooltipContent>
-                </Tooltip>
-            )}
+            <div className="flex items-center gap-1">
+                {!editingBillId && (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" disabled={isOrderEmpty} onClick={handleSaveOpenBill}>
+                                <Save className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Save to open bills</p>
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+                 <DialogClose asChild>
+                    <Button variant="ghost" size="icon">
+                        <X className="h-4 w-4" />
+                    </Button>
+                </DialogClose>
+            </div>
         </DialogHeader>
-        <div className="p-6 pt-2 space-y-4 flex-shrink-0">
+        <div className="p-6 pt-2 space-y-2 flex-shrink-0">
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -138,29 +176,48 @@ export default function CurrentOrder({
                         className="pl-9"
                     />
                 </div>
-                {!editingBillId && (
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="icon" disabled={isOrderEmpty}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will clear all items from the current order. This action cannot be undone.
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={onClearOrder}>
-                                Clear Order
-                            </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                )}
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" disabled={isOrderEmpty}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will clear all items from the current order. This action cannot be undone.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={onClearOrder}>
+                            Clear Order
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+             <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <QrCode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Member ID (Optional)"
+                        value={memberId || ''}
+                        onChange={handleMemberIdChange}
+                        className="pl-9"
+                    />
+                </div>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={handleScanClick}>
+                            <ScanLine className="h-4 w-4" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Scan Member QR Code</p>
+                    </TooltipContent>
+                </Tooltip>
             </div>
         </div>
       

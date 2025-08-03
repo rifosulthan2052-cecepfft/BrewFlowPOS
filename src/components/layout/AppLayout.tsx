@@ -14,7 +14,7 @@ import {
     SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
-import { BookOpen, Coffee, History, Utensils, Home } from "lucide-react";
+import { BookOpen, Coffee, History, Utensils, Home, Users } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -45,6 +45,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild isActive={pathname === '/open-bills'}>
                                 <Link href="/open-bills"><BookOpen /> Open Bills</Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={pathname === '/membership'}>
+                                <Link href="/membership"><Users /> Membership</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>

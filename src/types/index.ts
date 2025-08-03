@@ -21,6 +21,16 @@ export type Fee = {
   notes: string;
 };
 
+export type Member = {
+  id: string; // MBR-YYYYMMDD-XXX
+  name?: string;
+  email?: string;
+  phone?: string;
+  createdAt: string;
+  transactionIds: string[];
+};
+
+
 export type Bill = {
   id: string;
   customerName: string;
@@ -31,6 +41,7 @@ export type Bill = {
   fees: Fee[];
   total: number;
   date: string;
+  memberId?: string;
 }
 
 export type OpenBill = Bill & {

@@ -33,8 +33,8 @@ export default function LoginPage() {
         description: error.message || 'An unexpected error occurred.',
       });
     } else {
-       // The redirect is now handled by the useAuth hook.
-       // We don't need to do anything here on success.
+       // On success, programmatically navigate to the main page.
+       router.push('/');
     }
     setIsLoading(false);
   };

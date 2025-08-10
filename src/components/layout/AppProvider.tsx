@@ -280,8 +280,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       total,
       date: new Date().toISOString(),
       paymentMethod: paymentDetails.method,
-      cashPaid: paymentDetails.cashPaid,
-      changeDue: paymentDetails.changeDue,
+      cash_paid: paymentDetails.cashPaid,
+      change_due: paymentDetails.changeDue,
       member_id: memberId,
     };
     
@@ -445,5 +445,3 @@ export function useApp() {
   }
   return context;
 }
-
-    

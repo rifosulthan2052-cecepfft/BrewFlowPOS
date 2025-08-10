@@ -50,8 +50,8 @@ export type OpenBill = Bill & {
 
 export type CompletedOrder = Bill & {
   paymentMethod: 'cash' | 'card';
-  cashPaid?: number;
-  changeDue?: number;
+  cash_paid?: number;
+  change_due?: number;
 };
 
 // For component props that might not have all fields from Supabase yet

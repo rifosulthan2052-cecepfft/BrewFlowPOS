@@ -18,22 +18,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [loginResult, setLoginResult] = useState<any>(null); // State for debugging output
   const { signInWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setLoginResult(null); // Clear previous results
-    const { data, error } = await signInWithEmail(email, password);
-    setLoginResult({ data, error }); // Store the result for display
+    const { error } = await signInWithEmail(email, password);
     setIsLoading(false);
 
-    if (!error && data.user) {
-       // Although we are debugging, let's keep the intended redirect
-       // in case the session state catches up.
-       router.push('/');
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message,
+      });
+    } else {
+      // On successful login, force a redirect to the main page.
+      // The auth provider and middleware will handle the session state.
+      router.push('/');
+      router.refresh(); // This ensures the page reloads and middleware runs with the new session
     }
   };
 
@@ -96,27 +101,6 @@ export default function LoginPage() {
               Login with Google
             </Button>
           </form>
-          {/* Debugging Output */}
-          {loginResult && (
-            <div className="mt-4 p-2 border rounded bg-muted">
-              <h4 className="font-bold text-sm">Login Attempt Result:</h4>
-              {loginResult.error && (
-                <pre className="mt-2 text-xs text-destructive whitespace-pre-wrap">
-                  {JSON.stringify(loginResult.error, null, 2)}
-                </pre>
-              )}
-              {loginResult.data?.user && (
-                 <pre className="mt-2 text-xs text-green-600 whitespace-pre-wrap">
-                  {JSON.stringify(loginResult.data, null, 2)}
-                </pre>
-              )}
-               {loginResult.data?.user === null && !loginResult.error && (
-                 <pre className="mt-2 text-xs text-amber-600 whitespace-pre-wrap">
-                  {`Login attempt returned no user and no error. This usually indicates incorrect credentials.`}
-                </pre>
-               )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

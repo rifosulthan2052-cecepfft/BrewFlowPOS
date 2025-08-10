@@ -6,7 +6,7 @@ import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { useApp } from '@/components/layout/AppProvider';
+import { useApp } from "@/components/layout/AppProvider";
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -227,7 +227,7 @@ export default function OrderHistoryPage() {
                                 tax={selectedOrder.tax}
                                 fees={selectedOrder.fees}
                                 total={selectedOrder.total}
-                                memberId={selectedOrder.memberId}
+                                memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cashPaid}
                                 changeDue={selectedOrder.changeDue}
                              />

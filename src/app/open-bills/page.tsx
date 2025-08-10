@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { OpenBill } from '@/types';
+import type { OpenBill, BillProps } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -125,14 +125,14 @@ export default function OpenBillsPage() {
         setIsSettleDialogOpen(false);
         setSelectedBill(null);
         if (activeOrderExists) {
-             loadOrderFromBill({
-                id: '',
+             const unsavedBill: BillProps = {
                 customerName: unsavedOrder.customerName,
                 items: unsavedOrder.items,
                 fees: unsavedOrder.fees,
                 subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
-                memberId: unsavedOrder.memberId
-             });
+                member_id: unsavedOrder.memberId
+             }
+             loadOrderFromBill(unsavedBill);
         } else {
             resetOrder();
         }
@@ -159,16 +159,14 @@ export default function OpenBillsPage() {
     };
     
     const handleCancelWarning = () => {
-        // If the user cancels, we should revert the state to what it was before they clicked.
-        // This means loading the unsaved order back into the main state.
-        loadOrderFromBill({
-            id: '',
+        const unsavedBill: BillProps = {
             customerName: unsavedOrder.customerName,
             items: unsavedOrder.items,
             fees: unsavedOrder.fees,
             subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
-            memberId: unsavedOrder.memberId
-        });
+            member_id: unsavedOrder.memberId
+        };
+        loadOrderFromBill(unsavedBill);
         setEditingBillId(null);
         setIsWarningDialogOpen(false);
         setActionToConfirm(null);

@@ -193,7 +193,7 @@ export default function CurrentOrder({
                         tax={lastCompletedOrder.tax}
                         fees={lastCompletedOrder.fees}
                         total={lastCompletedOrder.total}
-                        memberId={lastCompletedOrder.memberId}
+                        memberId={lastCompletedOrder.member_id}
                         cashPaid={lastCompletedOrder.cashPaid}
                         changeDue={lastCompletedOrder.changeDue}
                     />

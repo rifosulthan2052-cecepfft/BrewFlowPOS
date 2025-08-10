@@ -19,10 +19,10 @@ type ReceiptProps = {
   tax: number;
   fees: Fee[];
   total: number;
-  memberId?: string;
-  customerName?: string;
-  cashPaid?: number;
-  changeDue?: number;
+  memberId?: string | null;
+  customerName?: string | null;
+  cashPaid?: number | null;
+  changeDue?: number | null;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
@@ -80,7 +80,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                 <span>{formatCurrency(total, currency)}</span>
             </div>
 
-            {(cashPaid !== undefined && changeDue !== undefined) && (
+            {(cashPaid !== undefined && cashPaid !== null) && (
                  <>
                     <Separator className="my-2" />
                     <div className="space-y-1">
@@ -90,7 +90,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                         </div>
                         <div className="flex justify-between">
                             <span>Change</span>
-                            <span>{formatCurrency(changeDue, currency)}</span>
+                            <span>{formatCurrency(changeDue ?? 0, currency)}</span>
                         </div>
                     </div>
                  </>
@@ -105,7 +105,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue }: ReceiptProps) {
+export default function Receipt(props: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -140,7 +140,7 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, member
         <div className="flex flex-col h-full max-h-[70vh]">
              <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
-                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue}} />
+                    <ReceiptToPrint ref={receiptRef} {...props} />
                 </ScrollArea>
              </div>
               <DialogFooter className="pt-4">

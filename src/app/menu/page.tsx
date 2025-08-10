@@ -54,7 +54,7 @@ const menuItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   price: z.coerce.number().positive('Price must be a positive number'),
   category: z.string().optional(),
-  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  image_url: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
 type MenuItemFormValues = z.infer<typeof menuItemSchema>;
@@ -103,16 +103,19 @@ export default function MenuPage() {
             name: '',
             price: 0,
             category: '',
-            imageUrl: '',
+            image_url: '',
         },
     });
 
     const handleOpenDialog = (item: MenuItem | null = null) => {
         setEditingItem(item);
         if (item) {
-            form.reset(item);
+            form.reset({
+              ...item,
+              image_url: item.image_url || '',
+            });
         } else {
-            form.reset({ name: '', price: 0, category: '', imageUrl: '' });
+            form.reset({ name: '', price: 0, category: '', image_url: '' });
         }
         setIsDialogOpen(true);
     };
@@ -128,7 +131,6 @@ export default function MenuPage() {
             updateMenuItem({ ...editingItem, ...values });
         } else {
             addMenuItem({
-                id: `menu-${Date.now()}`,
                 "data-ai-hint": values.name.toLowerCase(),
                 ...values,
             });
@@ -314,7 +316,7 @@ export default function MenuPage() {
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="imageUrl"
+                                    name="image_url"
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Image URL (Optional)</FormLabel>

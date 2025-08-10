@@ -4,8 +4,9 @@ export type MenuItem = {
   name: string;
   price: number;
   category?: string;
-  imageUrl?: string;
-  "data-ai-hint": string;
+  image_url?: string;
+  "data-ai-hint"?: string;
+  created_at: string;
 };
 
 export type OrderItem = {
@@ -22,17 +23,15 @@ export type Fee = {
 };
 
 export type Member = {
-  id: string; // MBR-YYYYMMDD-XXX
-  name?: string;
-  email?: string;
-  phone?: string;
-  createdAt: string;
-  transactionIds: string[];
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  created_at: string;
 };
 
-
 export type Bill = {
-  id:string;
+  id: string;
   customerName: string;
   items: OrderItem[];
   subtotal: number;
@@ -41,7 +40,8 @@ export type Bill = {
   fees: Fee[];
   total: number;
   date: string;
-  memberId?: string;
+  member_id?: string;
+  created_at: string;
 }
 
 export type OpenBill = Bill & {
@@ -53,3 +53,6 @@ export type CompletedOrder = Bill & {
   cashPaid?: number;
   changeDue?: number;
 };
+
+// For component props that might not have all fields from Supabase yet
+export type BillProps = Omit<Bill, 'id' | 'created_at'> & { id?: string };

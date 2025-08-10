@@ -62,7 +62,7 @@ const MemberCard = forwardRef<HTMLDivElement, { member: Member }>(({ member }, r
                     <p className="text-xs text-muted-foreground">Member ID</p>
                     <p className="font-mono font-semibold break-all">{member.id}</p>
                     <p className="text-xs text-muted-foreground pt-2">Joined</p>
-                    <p className="font-semibold">{new Date(member.createdAt).toLocaleDateString()}</p>
+                    <p className="font-semibold">{new Date(member.created_at).toLocaleDateString()}</p>
                 </div>
             </div>
         </div>
@@ -109,9 +109,11 @@ export default function MembershipPage() {
         defaultValues: { name: '', email: '', phone: '' },
     });
 
-    const onSubmit = (values: MemberFormValues) => {
-        const newMember = addMember(values);
-        setSelectedMember(newMember);
+    const onSubmit = async (values: MemberFormValues) => {
+        const newMember = await addMember(values);
+        if (newMember) {
+            setSelectedMember(newMember);
+        }
         setIsDialogOpen(false);
         form.reset();
     };

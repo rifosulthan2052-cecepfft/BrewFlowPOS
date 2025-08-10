@@ -35,7 +35,7 @@ function getInitials(name: string): string {
 
 export default function MenuItemCard({ item, quantity, onAddItem, onUpdateQuantity }: MenuItemCardProps) {
   const { currency } = useApp();
-  const hint = getHintFromItemName(item.name);
+  const hint = item.name ? getHintFromItemName(item.name) : '';
   
   const handleWrapperClick = () => {
     if (quantity === 0) {
@@ -62,9 +62,9 @@ export default function MenuItemCard({ item, quantity, onAddItem, onUpdateQuanti
     >
       <CardContent className="p-0 flex flex-col items-center text-center">
         <div className="relative w-full aspect-square bg-secondary flex items-center justify-center">
-          {item.imageUrl ? (
+          {item.image_url ? (
             <Image
-              src={item.imageUrl}
+              src={item.image_url}
               alt={item.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

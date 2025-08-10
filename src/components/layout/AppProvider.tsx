@@ -1,23 +1,12 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Bill, Member } from '@/types';
+import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 type Currency = 'USD' | 'IDR';
-
-const initialMenuItems: MenuItem[] = [
-  { id: '1', name: 'Espresso', price: 35000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "espresso coffee", category: 'Coffee' },
-  { id: '2', name: 'Latte', price: 45000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "latte coffee", category: 'Coffee' },
-  { id: '3', name: 'Cappuccino', price: 42000, imageUrl: 'https://images.unsplash.com/photo-1557006021-b85faa2bc5e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXBwdWNpbm98ZW58MHx8fHwxNzUzNzQwNDYwfDA&ixlib=rb-4.1.0&q=80&w=1080', "data-ai-hint": "cappuccino coffee", category: 'Coffee' },
-  { id: '4', name: 'Americano', price: 38000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "americano coffee", category: 'Coffee' },
-  { id: '5', name: 'Mocha', price: 50000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "mocha coffee", category: 'Coffee' },
-  { id: '6', name: 'Macchiato', price: 40000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "macchiato coffee", category: 'Coffee' },
-  { id: '7', name: 'Drip Coffee', price: 32000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "drip coffee", category: 'Coffee' },
-  { id: '8', name: 'Croissant', price: 25000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "croissant pastry", category: 'Pastry' },
-  { id: '9', name: 'Muffin', price: 22000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "muffin pastry", category: 'Pastry' },
-  { id: '10', name: 'Scone', price: 28000, imageUrl: 'https://placehold.co/150x150.png', "data-ai-hint": "scone pastry", category: 'Pastry' },
-];
 
 type ReceiptSettings = {
     logoUrl?: string;
@@ -46,12 +35,12 @@ type AppContextType = {
   setReceiptSettings: (settings: ReceiptSettings) => void;
 
   menuItems: MenuItem[];
-  addMenuItem: (item: MenuItem) => void;
+  addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at'>) => void;
   updateMenuItem: (item: MenuItem) => void;
   removeMenuItem: (id: string) => void;
 
   members: Member[];
-  addMember: (member: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>) => Member;
+  addMember: (member: Omit<Member, 'id' | 'created_at'>) => Promise<Member | null>;
   getMemberById: (id: string) => Member | undefined;
   getMemberByLookup: (lookup: string) => Member | undefined;
 
@@ -110,19 +99,8 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Simple hashing function for email
-function hashEmail(email: string): string {
-    let hash = 0;
-    for (let i = 0; i < email.length; i++) {
-        const char = email.charCodeAt(i);
-        hash = (hash << 5) - hash + char;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString(36).substring(0, 4).toUpperCase();
-}
-
-
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>('IDR');
   const [taxRate, setTaxRate] = useState<number>(0);
@@ -135,69 +113,98 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [openBills, setOpenBills] = useState<OpenBill[]>([]);
+  const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [memberId, setMemberId] = useState<string | undefined>();
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
-  const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
-  const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
   const [storeStatus, setStoreStatus] = useState<StoreStatus>('OPEN');
-
-
-  // Separate state for a potentially unsaved order
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes] = await Promise.all([
+            supabase.from('menu_items').select('*').order('name'),
+            supabase.from('members').select('*'),
+            supabase.from('open_bills').select('*'),
+            supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }) // Fetch for the day
+        ]);
+
+        if (menuItemsRes.error) throw menuItemsRes.error;
+        if (membersRes.error) throw membersRes.error;
+        if (openBillsRes.error) throw openBillsRes.error;
+        if (completedOrdersRes.error) throw completedOrdersRes.error;
+
+        setMenuItems(menuItemsRes.data || []);
+        setMembers(membersRes.data || []);
+        setOpenBills(openBillsRes.data || []);
+        setCompletedOrders(completedOrdersRes.data || []);
+
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: "Error fetching data", description: error.message });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
   
   useEffect(() => {
-    // Simulate initial data load
-    const timer = setTimeout(() => {
-      setMenuItems(initialMenuItems);
-      setIsLoading(false);
-    }, 1500); // 1.5 seconds delay
+    fetchData();
+  }, [fetchData]);
 
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
-    // If there's no bill being edited, we update the unsaved order state
     if (!editingBillId) {
         setUnsavedOrder({ items: orderItems, customerName, fees, memberId });
     }
   }, [orderItems, customerName, fees, memberId, editingBillId]);
 
-  const addMenuItem = (item: MenuItem) => {
-    setMenuItems(prev => [...prev, item]);
-  }
-  
-  const updateMenuItem = (item: MenuItem) => {
-    setMenuItems(prev => prev.map(i => i.id === item.id ? item : i));
-  }
-  
-  const removeMenuItem = (id: string) => {
-    setMenuItems(prev => prev.filter(i => i.id !== id));
-  }
-
-  const addMember = (memberData: Omit<Member, 'id' | 'createdAt' | 'transactionIds'>): Member => {
-    const namePart = (memberData.name || 'CUS').substring(0, 3).toUpperCase();
-    let contactPart = '';
-
-    if (memberData.phone) {
-        contactPart = memberData.phone.slice(-4);
-    } else if (memberData.email) {
-        contactPart = hashEmail(memberData.email);
+  const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'>) => {
+    const { data, error } = await supabase.from('menu_items').insert(item).select().single();
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
+    } else if (data) {
+        setMenuItems(prev => [...prev, data]);
+        toast({ title: 'Menu item added' });
     }
+  };
+  
+  const updateMenuItem = async (item: MenuItem) => {
+    const { data, error } = await supabase.from('menu_items').update(item).eq('id', item.id).select().single();
+     if (error) {
+        toast({ variant: 'destructive', title: 'Error updating item', description: error.message });
+    } else if (data) {
+        setMenuItems(prev => prev.map(i => i.id === item.id ? data : i));
+        toast({ title: 'Menu item updated' });
+    }
+  };
+  
+  const removeMenuItem = async (id: string) => {
+    const { error } = await supabase.from('menu_items').delete().eq('id', id);
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error removing item', description: error.message });
+    } else {
+        setMenuItems(prev => prev.filter(i => i.id !== id));
+        toast({ title: 'Menu item removed' });
+    }
+  };
 
-    const newMember: Member = {
-        ...memberData,
-        id: `MBR-${namePart}-${contactPart}`,
-        createdAt: new Date().toISOString(),
-        transactionIds: []
-    };
-    setMembers(prev => [...prev, newMember]);
-    return newMember;
+  const addMember = async (memberData: Omit<Member, 'id' | 'created_at'>): Promise<Member | null> => {
+    const { data, error } = await supabase.from('members').insert(memberData).select().single();
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
+        return null;
+    } else if (data) {
+        setMembers(prev => [...prev, data]);
+        toast({ title: 'Member added' });
+        return data;
+    }
+    return null;
   };
 
   const getMemberById = (id: string) => {
@@ -205,7 +212,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
   
   const getMemberByLookup = (lookup: string) => {
-    // Can be ID, email, or phone
     return members.find(m => 
         m.id.toLowerCase() === lookup.toLowerCase() ||
         (m.email && m.email.toLowerCase() === lookup.toLowerCase()) ||
@@ -227,7 +233,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateItemQuantity = (menuItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
+      removeItemFromOrder(menuItemId);
     } else {
       setOrderItems((prevItems) =>
         prevItems.map((i) =>
@@ -263,10 +269,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { subtotal, totalFees, tax, total };
   }, [orderItems, fees, taxRate]);
 
-  const addOrderToHistory = (paymentDetails: PaymentDetails) => {
-    const orderId = `order-${Date.now()}`;
-    const newCompletedOrder: CompletedOrder = {
-      id: orderId,
+  const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
+    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
       customerName: customerName || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -278,26 +282,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       paymentMethod: paymentDetails.method,
       cashPaid: paymentDetails.cashPaid,
       changeDue: paymentDetails.changeDue,
+      member_id: memberId,
     };
-    setCompletedOrders(prev => [newCompletedOrder, ...prev]);
-    setLastCompletedOrder(newCompletedOrder);
-    setOrderStatus('paid');
-
-    if (memberId) {
-        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, orderId] } : m));
-    }
     
-    // If this was a bill being settled, remove it from open bills.
-    if (editingBillId) {
-        removeOpenBill(editingBillId);
+    const { data, error } = await supabase.from('completed_orders').insert(newCompletedOrder).select().single();
+
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error completing order', description: error.message });
+    } else if(data) {
+        setCompletedOrders(prev => [data, ...prev]);
+        setLastCompletedOrder(data);
+        setOrderStatus('paid');
+        if (editingBillId) {
+            await removeOpenBill(editingBillId);
+        }
     }
   }
 
-  const saveAsOpenBill = () => {
-    const billId = editingBillId || `bill-${Date.now()}`;
-    const newOpenBill: OpenBill = {
-      id: billId,
-      customerName: customerName || `Bill ${billId}`,
+  const saveAsOpenBill = async () => {
+    const billPayload = {
+      customerName: customerName || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,
       tax,
@@ -305,21 +309,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fees,
       total,
       date: new Date().toISOString(),
-      memberId,
+      member_id: memberId,
     };
-    
-    setOpenBills(prev => {
-        const existingBillIndex = prev.findIndex(b => b.id === billId);
-        if (existingBillIndex > -1) {
-            const newBills = [...prev];
-            newBills[existingBillIndex] = newOpenBill;
-            return newBills;
-        }
-        return [...prev, newOpenBill]
-    });
 
-    if (memberId) {
-        setMembers(prev => prev.map(m => m.id === memberId ? { ...m, transactionIds: [...m.transactionIds, billId] } : m));
+    if (editingBillId) {
+        // Update existing bill
+        const {data, error} = await supabase.from('open_bills').update(billPayload).eq('id', editingBillId).select().single();
+        if (error) {
+             toast({ variant: 'destructive', title: 'Error updating bill', description: error.message });
+        } else if (data) {
+            setOpenBills(prev => prev.map(b => b.id === editingBillId ? data : b));
+            toast({ title: 'Bill updated' });
+        }
+    } else {
+        // Create new bill
+        const { data, error } = await supabase.from('open_bills').insert(billPayload).select().single();
+        if (error) {
+             toast({ variant: 'destructive', title: 'Error saving bill', description: error.message });
+        } else if (data) {
+            setOpenBills(prev => [...prev, data]);
+            toast({ title: 'Bill saved' });
+        }
     }
   };
 
@@ -332,23 +342,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setEditingBillId(bill.id || null);
   };
 
-  const removeOpenBill = (billId: string) => {
-    setOpenBills(prev => prev.filter(b => b.id !== billId));
+  const removeOpenBill = async (billId: string) => {
+    const { error } = await supabase.from('open_bills').delete().eq('id', billId);
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error removing bill', description: error.message });
+    } else {
+        setOpenBills(prev => prev.filter(b => b.id !== billId));
+        // No toast, often part of another action
+    }
   };
   
   const endDay = () => {
     setStoreStatus('CLOSED');
   }
 
-  const startNewDay = () => {
+  const startNewDay = async () => {
+    // In a real app, you might archive old orders, but here we'll just clear them from state.
+    // The data remains in Supabase.
     setCompletedOrders([]);
     setStoreStatus('OPEN');
+    // Optionally re-fetch today's data in case the app was open overnight
+    await fetchData();
   }
 
   const activeOrderExists = useMemo(() => {
     return (unsavedOrder.items.length > 0 || unsavedOrder.customerName !== '' || unsavedOrder.fees.length > 0);
   }, [unsavedOrder]);
-
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US', {
@@ -410,7 +429,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup]);
 
   return (
     <AppContext.Provider value={value}>

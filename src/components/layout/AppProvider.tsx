@@ -171,6 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setCurrency(settingsRes.data.currency as Currency);
         } else {
             // No settings found, create a default one for the new user
+            if (!user) throw new Error("User not available to create default settings.");
             const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
             if (error) throw error;
             if (data) {

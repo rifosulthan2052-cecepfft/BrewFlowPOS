@@ -129,6 +129,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
         const supabase = await getSupabaseClient();
@@ -154,7 +155,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
         setTimeout(() => setIsLoading(false), 500); // Simulate loading
     }
-  }, [toast, user]);
+  }, [user, toast]);
   
   useEffect(() => {
     if (user) {
@@ -471,7 +472,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     tax,
     total,
     uploadImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup, fetchData, toast]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, toast]);
 
   return (
     <AppContext.Provider value={value}>

@@ -14,10 +14,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const createSupabaseClient = (authToken?: string): SupabaseClient<Database> => {
     const headers: { [key: string]: string } = {
         'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${authToken || supabaseAnonKey}`,
     };
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
 
     return createClient<Database>(supabaseUrl, supabaseAnonKey, {
         global: {

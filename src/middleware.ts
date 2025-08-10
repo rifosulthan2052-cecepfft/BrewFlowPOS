@@ -1,3 +1,4 @@
+
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -50,6 +51,10 @@ export async function middleware(req: NextRequest) {
             ...options,
           })
         },
+      },
+      cookieOptions: {
+        sameSite: 'none',
+        secure: true,
       },
     }
   )

@@ -207,7 +207,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   useEffect(() => {
     fetchData();
-  }, [fetchData, user]);
+  }, [fetchData]);
 
 
   useEffect(() => {
@@ -584,7 +584,3 @@ export function useApp() {
   }
   return context;
 }
-
-    
-
-    

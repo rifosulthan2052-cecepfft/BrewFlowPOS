@@ -25,9 +25,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
 
+      // This is the centralized place for handling redirects.
       if (event === 'SIGNED_IN' && pathname !== '/') {
         router.push('/');
       }
@@ -73,13 +75,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGoogle,
     signOut,
   };
-
-  if (loading) {
-    // You can return a loader here if you want
-    return null;
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  
+  // Render children only after the initial loading is complete,
+  // to prevent rendering protected routes before auth state is known.
+  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

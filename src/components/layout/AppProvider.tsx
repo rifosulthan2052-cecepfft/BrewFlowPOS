@@ -128,8 +128,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   const fetchData = useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
+    // This is the crucial guard. We do not proceed if there is no user.
+    // The authLoading check ensures we don't run this prematurely.
+    if (authLoading || !user) {
+      if (!authLoading) setIsLoading(false);
       return;
     };
 
@@ -170,9 +172,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setTaxRate(settingsRes.data.tax_rate);
             setCurrency(settingsRes.data.currency as Currency);
         } else {
-            // No settings found, create a default one for the new user
+            // No settings found, create a default one for the new user, explicitly including the user_id.
             const defaultSettings = {
-              user_id: user.id, // Explicitly set the user_id
+              user_id: user.id, // This is the crucial fix.
               store_name: 'BrewFlow',
               address: '123 Coffee Lane, Brewville, CA 90210',
               phone_number: '(555) 123-4567',
@@ -183,7 +185,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             };
             const { data, error } = await supabase.from('store_settings').insert(defaultSettings).select().single();
 
-            if (error) throw error;
+            if (error) throw error; // If this fails, the RLS policy is the problem.
             
             if (data) {
                  setReceiptSettings({
@@ -203,17 +205,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
         setTimeout(() => setIsLoading(false), 500);
     }
-  }, [toast, supabase, user]);
+  }, [toast, supabase, user, authLoading]);
   
   useEffect(() => {
-    // We only want to fetch data when authentication is no longer loading and we have a user.
-    if (!authLoading && user) {
-      fetchData();
-    } else if (!authLoading && !user) {
-      // If auth is done and there's no user, we don't need to load app data.
-      setIsLoading(false);
-    }
-  }, [authLoading, user, fetchData]);
+    fetchData();
+  }, [fetchData]);
 
 
   useEffect(() => {
@@ -574,7 +570,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage]);
 
   return (
     <AppContext.Provider value={value}>

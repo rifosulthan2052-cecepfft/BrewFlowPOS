@@ -32,13 +32,43 @@ import {
 import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { MoreVertical, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
+
+function BillCardSkeleton() {
+    return (
+        <Card className="flex flex-col">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="h-4 w-48" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Separator className="my-2" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Separator className="my-2" />
+                <Skeleton className="h-8 w-full" />
+            </CardContent>
+            <CardFooter className="flex items-center gap-2">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-10" />
+            </CardFooter>
+        </Card>
+    );
+}
 
 export default function OpenBillsPage() {
     const { 
         openBills, loadOrderFromBill, orderItems, customerName, orderStatus, 
         updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, 
-        removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder 
+        removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder, isLoading
     } = useApp();
     const router = useRouter();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
@@ -157,7 +187,11 @@ export default function OpenBillsPage() {
                             <CardDescription>View and manage open bills.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {openBills.length === 0 ? (
+                            {isLoading ? (
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {Array.from({ length: 3 }).map((_, index) => <BillCardSkeleton key={index} />)}
+                                </div>
+                            ) : openBills.length === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <BookOpen className="mx-auto h-12 w-12" />
                                     <h3 className="mt-4 text-lg font-semibold">No Open Bills</h3>

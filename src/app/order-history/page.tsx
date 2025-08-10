@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Receipt from '@/components/cashier/Receipt';
 import { CreditCard, Wallet, List, Grid, Printer, History } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency } = useApp();
@@ -94,9 +95,55 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
     )
 }
 
+function HistoryCardSkeleton() {
+    return (
+        <Card className="flex flex-col">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="h-4 w-48" />
+                    </div>
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Separator className="my-2" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Separator className="my-2" />
+                <Skeleton className="h-8 w-full" />
+            </CardContent>
+            <CardFooter>
+                <Skeleton className="h-10 w-full" />
+            </CardFooter>
+        </Card>
+    );
+}
+
+function HistoryCompactSkeleton() {
+    return (
+        <Card>
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-1/3" />
+                    <Skeleton className="h-4 w-1/2" />
+                </div>
+                <div className="flex items-center gap-4 w-1/2">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-6 flex-1" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
 
 export default function OrderHistoryPage() {
-    const { completedOrders } = useApp();
+    const { completedOrders, isLoading } = useApp();
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
     const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
 
@@ -107,6 +154,17 @@ export default function OrderHistoryPage() {
     const handleCloseDialog = () => {
         setSelectedOrder(null);
     }
+
+    const renderSkeletons = () => {
+        const skeletons = Array.from({ length: 4 }).map((_, index) =>
+            viewMode === 'card' ? <HistoryCardSkeleton key={index} /> : <HistoryCompactSkeleton key={index} />
+        );
+        return (
+            <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                {skeletons}
+            </div>
+        )
+    };
 
     return (
         <AppLayout>
@@ -133,7 +191,9 @@ export default function OrderHistoryPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                           {completedOrders.length === 0 ? (
+                           {isLoading ? (
+                                renderSkeletons()
+                           ) : completedOrders.length === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <History className="mx-auto h-12 w-12" />
                                     <h3 className="mt-4 text-lg font-semibold">No Completed Orders</h3>

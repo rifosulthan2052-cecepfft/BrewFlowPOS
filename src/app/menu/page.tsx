@@ -47,6 +47,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -68,8 +69,29 @@ function EmptyState() {
     )
 }
 
+function MenuListSkeleton() {
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+             {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index}>
+                    <CardHeader className="flex-row gap-4 items-center">
+                        <Skeleton className="w-12 h-12 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-4/5" />
+                            <Skeleton className="h-4 w-2/5" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                         <Skeleton className="h-8 w-full" />
+                    </CardContent>
+                </Card>
+             ))}
+        </div>
+    )
+}
+
 export default function MenuPage() {
-    const { menuItems, addMenuItem, updateMenuItem, removeMenuItem, currency } = useApp();
+    const { menuItems, addMenuItem, updateMenuItem, removeMenuItem, currency, isLoading } = useApp();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -146,7 +168,9 @@ export default function MenuPage() {
                             </Button>
                         </CardHeader>
                         <CardContent>
-                            {menuItems.length === 0 ? (
+                            {isLoading ? (
+                                <MenuListSkeleton />
+                            ) : menuItems.length === 0 ? (
                                 <EmptyState />
                             ) : (
                                 <>

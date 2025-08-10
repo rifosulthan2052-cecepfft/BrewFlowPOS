@@ -29,6 +29,7 @@ type ReceiptSettings = {
 type StoreStatus = 'OPEN' | 'CLOSED';
 
 type AppContextType = {
+  isLoading: boolean;
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   taxRate: number;
@@ -116,6 +117,7 @@ function hashEmail(email: string): string {
 
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>('IDR');
   const [taxRate, setTaxRate] = useState<number>(0);
   const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
@@ -125,7 +127,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       logoUrl: '',
   });
 
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -142,6 +144,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Separate state for a potentially unsaved order
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
+  
+  useEffect(() => {
+    // Simulate initial data load
+    const timer = setTimeout(() => {
+      setMenuItems(initialMenuItems);
+      setIsLoading(false);
+    }, 1500); // 1.5 seconds delay
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // If there's no bill being edited, we update the unsaved order state
@@ -341,6 +353,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const value = useMemo(() => ({
+    isLoading,
     currency,
     setCurrency,
     taxRate,
@@ -390,7 +403,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder]);
 
   return (
     <AppContext.Provider value={value}>

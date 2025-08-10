@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -51,6 +52,20 @@ function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
 
 }
 
+function MenuListSkeleton() {
+    return (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                    <Skeleton className="w-full aspect-square" />
+                    <Skeleton className="h-4 w-3/4 mx-auto" />
+                    <Skeleton className="h-4 w-1/2 mx-auto" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function CashierPage() {
     const {
         menuItems,
@@ -65,6 +80,7 @@ export default function CashierPage() {
         editingBillId,
         storeStatus,
         startNewDay,
+        isLoading,
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const { toast } = useToast();
@@ -118,20 +134,32 @@ export default function CashierPage() {
             )}
             <Tabs defaultValue="All" className="space-y-4">
               <TabsList>
-                {categories.map(category => (
-                  <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                ))}
+                {isLoading ? (
+                    <div className="flex gap-2">
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                        <Skeleton className="h-8 w-20 rounded-md" />
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                    </div>
+                ) : (
+                    categories.map(category => (
+                        <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                    ))
+                )}
               </TabsList>
-                {categories.map(category => (
-                    <TabsContent key={category} value={category}>
-                       <MenuList 
-                            menuItems={category === 'All' ? menuItems : menuItems.filter(item => item.category === category)} 
-                            orderItems={orderItems} 
-                            onAddItem={addItemToOrder}
-                            onUpdateQuantity={updateItemQuantity}
-                        />
-                    </TabsContent>
-                ))}
+               {isLoading ? (
+                    <MenuListSkeleton />
+               ) : (
+                    categories.map(category => (
+                        <TabsContent key={category} value={category}>
+                        <MenuList 
+                                menuItems={category === 'All' ? menuItems : menuItems.filter(item => item.category === category)} 
+                                orderItems={orderItems} 
+                                onAddItem={addItemToOrder}
+                                onUpdateQuantity={updateItemQuantity}
+                            />
+                        </TabsContent>
+                    ))
+               )}
             </Tabs>
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
@@ -155,7 +183,7 @@ export default function CashierPage() {
                 />
             </DialogContent>
         </Dialog>
-         <Dialog open={storeStatus === 'CLOSED'} modal={false}>
+         <Dialog open={storeStatus === 'CLOSED' && !isLoading} onOpenChange={() => {}}>
             <DialogContent className="sm:max-w-md" hideCloseButton>
                 <DialogHeader>
                     <DialogTitle>Store is Closed</DialogTitle>

@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { PlusCircle, Printer, QrCode } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { CoffeeIcon } from '@/components/icons';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const memberFormSchema = z.object({
@@ -69,9 +70,31 @@ const MemberCard = forwardRef<HTMLDivElement, { member: Member }>(({ member }, r
 });
 MemberCard.displayName = 'MemberCard';
 
+function MemberListSkeleton() {
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+             {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index}>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                    </CardContent>
+                    <CardFooter>
+                        <Skeleton className="h-10 w-full" />
+                    </CardFooter>
+                </Card>
+             ))}
+        </div>
+    )
+}
+
 
 export default function MembershipPage() {
-    const { members, addMember } = useApp();
+    const { members, addMember, isLoading } = useApp();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
@@ -120,7 +143,9 @@ export default function MembershipPage() {
                             </Button>
                         </CardHeader>
                         <CardContent>
-                             {members.length === 0 ? (
+                            {isLoading ? (
+                                <MemberListSkeleton />
+                            ) : members.length === 0 ? (
                                 <div className="text-center text-muted-foreground py-16">
                                     <p>No members yet.</p>
                                     <p className="text-sm">Click "Add Member" to get started.</p>

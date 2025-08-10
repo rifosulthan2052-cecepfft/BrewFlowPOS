@@ -20,33 +20,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const user = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const loading = user === null && pathname !== '/login'; // More accurate loading state
+  const loading = user === null && !['/login'].includes(pathname);
 
   useEffect(() => {
-    if (!user && pathname !== '/login') {
-      router.push('/login');
-    } else if (user && pathname === '/login') {
+    if (user && pathname === '/login') {
       router.push('/');
+    } else if (!user && pathname !== '/login') {
+      router.push('/login');
     }
   }, [user, pathname, router]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    // The redirect to /login will be handled by the useEffect above
     router.push('/login');
   };
 
   const value = {
     user,
     supabaseClient,
-    loading,
+    loading: loading,
     signOut,
   };
   
-  // Render a loading state or null if the user state is not yet determined
-  // This prevents rendering pages that might rely on the user object before it's available
   if (loading) {
-    return null; // Or a loading spinner component
+    return null;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

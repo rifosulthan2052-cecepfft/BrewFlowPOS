@@ -1,11 +1,10 @@
 
 'use client';
 
-import type { OrderItem, Fee } from '@/types';
+import type { OrderItem, Fee, ReceiptSettings } from '@/types';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
-import { CoffeeIcon } from '../icons';
 import { Printer } from 'lucide-react';
 import React from 'react';
 import { useApp } from '../layout/AppProvider';
@@ -21,19 +20,38 @@ type ReceiptProps = {
   total: number;
   memberId?: string | null;
   customerName?: string | null;
-  cashPaid?: number | null;
-  changeDue?: number | null;
+  cash_paid?: number | null;
+  change_due?: number | null;
 };
 
-const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
-    const { orderItems, subtotal, tax, fees, total, memberId, customerName, cash_paid, change_due } = props;
-    const { currency, receiptSettings, taxRate } = useApp();
+type ReceiptToPrintProps = {
+    orderItems: OrderItem[];
+    subtotal: number;
+    tax: number;
+    fees: Fee[];
+    total: number;
+    memberId?: string | null;
+    customerName?: string | null;
+    cash_paid?: number | null;
+    change_due?: number | null;
+    currency: 'USD' | 'IDR';
+    taxRate: number;
+    receiptSettings: ReceiptSettings;
+}
+
+export const ReceiptToPrint = React.forwardRef<HTMLDivElement, ReceiptToPrintProps>((props, ref) => {
+    const { 
+        orderItems, subtotal, tax, fees, total, memberId, customerName, 
+        cash_paid, change_due, currency, taxRate, receiptSettings 
+    } = props;
 
     return (
         <div ref={ref} id="receipt-to-print" className="p-4 text-sm bg-background text-foreground font-mono">
             <div className="text-center mb-4">
                  {receiptSettings.logoUrl ? (
-                    <Image src={receiptSettings.logoUrl} alt="logo" width={80} height={80} className="mx-auto mb-2" />
+                    <div className="relative w-20 h-20 mx-auto mb-2">
+                        <Image src={receiptSettings.logoUrl} alt="logo" fill className="object-contain" />
+                    </div>
                 ) : (
                     <div className="flex justify-center items-center gap-2">
                         <h2 className="text-xl font-bold">{receiptSettings.storeName}</h2>
@@ -105,6 +123,7 @@ ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
 export default function Receipt(props: ReceiptProps) {
+    const { receiptSettings, currency, taxRate } = useApp();
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -139,7 +158,13 @@ export default function Receipt(props: ReceiptProps) {
         <div className="flex flex-col h-full max-h-[70vh]">
              <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
-                    <ReceiptToPrint ref={receiptRef} {...props} />
+                    <ReceiptToPrint 
+                        ref={receiptRef}
+                        {...props} 
+                        receiptSettings={receiptSettings}
+                        currency={currency}
+                        taxRate={taxRate}
+                    />
                 </ScrollArea>
              </div>
               <DialogFooter className="pt-4">

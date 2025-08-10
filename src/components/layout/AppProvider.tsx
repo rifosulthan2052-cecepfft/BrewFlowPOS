@@ -128,6 +128,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   const fetchData = useCallback(async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    };
+
     setIsLoading(true);
     try {
         const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes, settingsRes] = await Promise.all([
@@ -135,7 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
             supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
-            supabase.from('store_settings').select('*').single(),
+            supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
         ]);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
@@ -165,8 +170,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setTaxRate(settingsRes.data.tax_rate);
             setCurrency(settingsRes.data.currency as Currency);
         } else {
-            // No settings found, create a default one
-            const { data, error } = await supabase.from('store_settings').insert({}).select().single();
+            // No settings found, create a default one for the new user
+            const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
             if (error) throw error;
             if (data) {
                  setReceiptSettings({
@@ -186,7 +191,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
         setTimeout(() => setIsLoading(false), 500);
     }
-  }, [toast, supabase]);
+  }, [toast, supabase, user]);
   
   useEffect(() => {
     fetchData();
@@ -551,7 +556,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, fetchData, updateStoreSettings]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage]);
 
   return (
     <AppContext.Provider value={value}>
@@ -567,3 +572,5 @@ export function useApp() {
   }
   return context;
 }
+
+    

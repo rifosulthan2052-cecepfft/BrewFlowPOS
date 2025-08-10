@@ -265,7 +265,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
-    const newCompletedOrder = {
+    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -377,7 +377,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `public/${fileName}`;
+      const filePath = `${fileName}`;
 
       const { error } = await supabase.storage.from(bucket).upload(filePath, file);
 

@@ -82,6 +82,7 @@ type AppContextType = {
   }>>
 
   uploadImage: (file: File, bucket: 'menu-images' | 'logos') => Promise<string | null>;
+  removeImage: (imageUrl: string, bucket: 'menu-images' | 'logos') => Promise<void>;
   addOrderToHistory: (paymentDetails: PaymentDetails) => Promise<void>;
   endDay: () => void;
   startNewDay: () => void;
@@ -172,22 +173,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const updateMenuItem = async (item: MenuItem) => {
+    const oldItem = menuItems.find(i => i.id === item.id);
+    const oldImageUrl = oldItem?.image_url;
+
     const { data, error } = await supabase.from('menu_items').update(item).eq('id', item.id).select().single();
      if (error) {
         toast({ variant: 'destructive', title: 'Error updating item', description: error.message });
     } else if (data) {
         setMenuItems(prev => prev.map(i => i.id === item.id ? data : i));
         toast({ title: 'Menu item updated' });
+
+        if (oldImageUrl && oldImageUrl !== data.image_url) {
+            await removeImage(oldImageUrl, 'menu-images');
+        }
     }
   };
   
   const removeMenuItem = async (id: string) => {
+    const itemToDelete = menuItems.find(i => i.id === id);
+    const imageUrlToDelete = itemToDelete?.image_url;
+
     const { error } = await supabase.from('menu_items').delete().eq('id', id);
     if (error) {
         toast({ variant: 'destructive', title: 'Error removing item', description: error.message });
     } else {
         setMenuItems(prev => prev.filter(i => i.id !== id));
         toast({ title: 'Menu item removed' });
+        if (imageUrlToDelete) {
+            await removeImage(imageUrlToDelete, 'menu-images');
+        }
     }
   };
 
@@ -399,6 +413,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return null;
     }
   }
+
+  const removeImage = async (imageUrl: string, bucket: 'menu-images' | 'logos'): Promise<void> => {
+      if (!imageUrl) return;
+      try {
+        const url = new URL(imageUrl);
+        const path = url.pathname.split(`/${bucket}/`)[1];
+        if (!path) {
+            console.error("Could not determine file path from URL:", imageUrl);
+            return;
+        }
+        
+        const { error } = await supabase.storage.from(bucket).remove([path]);
+        if (error) {
+            // It's often okay to fail silently here, as it might be a new upload replacing a non-existent one
+            console.warn("Could not delete old image:", error.message);
+        }
+      } catch(error: any) {
+          console.error("Error parsing image URL for deletion:", error.message);
+      }
+  }
+
+  const handleSetReceiptSettings = (newSettings: ReceiptSettings) => {
+    const oldLogoUrl = receiptSettings.logoUrl;
+    setReceiptSettings(newSettings);
+    if (oldLogoUrl && oldLogoUrl !== newSettings.logoUrl) {
+      removeImage(oldLogoUrl, 'logos');
+    }
+  };
   
   const value = useMemo(() => ({
     isLoading,
@@ -408,7 +450,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTaxRate,
     formatCurrency,
     receiptSettings,
-    setReceiptSettings,
+    setReceiptSettings: handleSetReceiptSettings,
     menuItems,
     addMenuItem,
     updateMenuItem,
@@ -452,6 +494,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     tax,
     total,
     uploadImage,
+    removeImage,
   }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, toast, fetchData]);
 
   return (

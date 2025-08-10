@@ -20,7 +20,7 @@ import type { OrderItem, Fee } from '@/types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Eye, Loader2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const settingsFormSchema = z.object({
   storeName: z.string().min(1, 'Store name is required'),
@@ -83,6 +83,14 @@ export default function SettingsPage() {
             currency: currency,
         },
     });
+
+    useEffect(() => {
+        form.reset({
+            ...receiptSettings,
+            taxRate: taxRate * 100,
+            currency: currency,
+        });
+    }, [receiptSettings, taxRate, currency, form]);
     
     const watchedValues = form.watch();
 

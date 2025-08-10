@@ -26,19 +26,19 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signInWithEmail(email, password);
-    setIsLoading(false);
-
+    
     if (error) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: error.message,
       });
+      setIsLoading(false);
     } else {
-      // On successful login, force a redirect to the main page.
-      // The auth provider and middleware will handle the session state.
-      router.push('/');
-      router.refresh(); // This ensures the page reloads and middleware runs with the new session
+      // On successful login, force a refresh.
+      // This ensures the page reloads and the middleware runs with the new session.
+      // The `useAuth` hook will then handle the redirect based on the updated auth state.
+      router.refresh();
     }
   };
 

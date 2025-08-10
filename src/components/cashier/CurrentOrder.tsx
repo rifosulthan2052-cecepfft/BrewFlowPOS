@@ -188,14 +188,14 @@ export default function CurrentOrder({
                     </DialogHeader>
                     <Receipt
                         orderItems={lastCompletedOrder.items}
-                        customerName={lastCompletedOrder.customerName}
+                        customerName={lastCompletedOrder.customer_name}
                         subtotal={lastCompletedOrder.subtotal}
                         tax={lastCompletedOrder.tax}
                         fees={lastCompletedOrder.fees}
                         total={lastCompletedOrder.total}
                         memberId={lastCompletedOrder.member_id}
-                        cashPaid={lastCompletedOrder.cashPaid}
-                        changeDue={lastCompletedOrder.changeDue}
+                        cashPaid={lastCompletedOrder.cash_paid}
+                        changeDue={lastCompletedOrder.change_due}
                     />
                 </DialogContent>
             </Dialog>

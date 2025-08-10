@@ -32,7 +32,7 @@ export type Member = {
 
 export type Bill = {
   id: string;
-  customerName: string;
+  customer_name: string;
   items: OrderItem[];
   subtotal: number;
   tax: number;

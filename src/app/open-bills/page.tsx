@@ -126,7 +126,7 @@ export default function OpenBillsPage() {
         setSelectedBill(null);
         if (activeOrderExists) {
              const unsavedBill: BillProps = {
-                customerName: unsavedOrder.customerName,
+                customer_name: unsavedOrder.customerName,
                 items: unsavedOrder.items,
                 fees: unsavedOrder.fees,
                 subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
@@ -160,7 +160,7 @@ export default function OpenBillsPage() {
     
     const handleCancelWarning = () => {
         const unsavedBill: BillProps = {
-            customerName: unsavedOrder.customerName,
+            customer_name: unsavedOrder.customerName,
             items: unsavedOrder.items,
             fees: unsavedOrder.fees,
             subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
@@ -202,7 +202,7 @@ export default function OpenBillsPage() {
                                             <CardHeader>
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                      <CardTitle className="text-xl">{bill.customerName}</CardTitle>
+                                                      <CardTitle className="text-xl">{bill.customer_name}</CardTitle>
                                                       <CardDescription>
                                                         {new Date(bill.date).toLocaleString()}
                                                       </CardDescription>

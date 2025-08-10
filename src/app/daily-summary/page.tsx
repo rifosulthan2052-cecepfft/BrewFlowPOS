@@ -50,7 +50,7 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
         <Card>
             <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
                 <div className="flex-1">
-                    <p className="font-semibold">{order.customerName}</p>
+                    <p className="font-semibold">{order.customer_name}</p>
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
@@ -421,12 +421,12 @@ export default function DailySummaryPage() {
                         {selectedOrder && (
                              <Receipt 
                                 orderItems={selectedOrder.items}
-                                customerName={selectedOrder.customerName}
+                                customerName={selectedOrder.customer_name}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
                                 fees={selectedOrder.fees}
                                 total={selectedOrder.total}
-                                memberId={selectedOrder.memberId}
+                                memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cash_paid}
                                 changeDue={selectedOrder.change_due}
                              />

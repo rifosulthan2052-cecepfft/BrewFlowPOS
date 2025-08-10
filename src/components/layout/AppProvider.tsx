@@ -271,7 +271,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
     const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
-      customerName: customerName || 'Walk-in Customer',
+      customer_name: customerName || 'Walk-in Customer',
       items: orderItems,
       subtotal,
       tax,
@@ -301,7 +301,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const saveAsOpenBill = async () => {
     const billPayload = {
-      customerName: customerName || `Bill ${Date.now()}`,
+      customer_name: customerName || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,
       tax,
@@ -336,7 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loadOrderFromBill = (bill: Partial<OpenBill>) => {
     setOrderItems(bill.items || []);
     setFees(bill.fees || []);
-    setCustomerName(bill.customerName || '');
+    setCustomerName(bill.customer_name || '');
     setMemberId(bill.member_id);
     setOrderStatus(bill.id ? 'open_bill' : 'pending');
     setEditingBillId(bill.id || null);

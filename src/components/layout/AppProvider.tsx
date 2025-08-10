@@ -171,8 +171,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setCurrency(settingsRes.data.currency as Currency);
         } else {
             // No settings found, create a default one for the new user
-            const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
+            const defaultSettings = {
+              user_id: user.id, // Explicitly set the user_id
+              store_name: 'BrewFlow',
+              address: '123 Coffee Lane, Brewville, CA 90210',
+              phone_number: '(555) 123-4567',
+              footer_message: 'Thank you for your visit!',
+              tax_rate: 0.11,
+              currency: 'IDR',
+              logo_url: ''
+            };
+            const { data, error } = await supabase.from('store_settings').insert(defaultSettings).select().single();
+
             if (error) throw error;
+            
             if (data) {
                  setReceiptSettings({
                     storeName: data.store_name,
@@ -572,5 +584,7 @@ export function useApp() {
   }
   return context;
 }
+
+    
 
     

@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings } from '@/types';
-import { createSupabaseClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -122,17 +122,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
   const [storeStatus, setStoreStatus] = useState<StoreStatus>('OPEN');
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
-  
-  const getSupabaseClient = async () => {
-    const token = await user?.getIdToken();
-    return createSupabaseClient(token);
-  }
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
     setIsLoading(true);
     try {
-        const supabase = await getSupabaseClient();
         const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes] = await Promise.all([
             supabase.from('menu_items').select('*').order('name'),
             supabase.from('members').select('*'),
@@ -155,13 +148,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
         setTimeout(() => setIsLoading(false), 500); // Simulate loading
     }
-  }, [user, toast]);
+  }, [toast]);
   
   useEffect(() => {
-    if (user) {
-        fetchData();
-    }
-  }, [fetchData, user]);
+    fetchData();
+  }, [fetchData]);
 
 
   useEffect(() => {
@@ -171,7 +162,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, customer_name, fees, member_id, editingBillId]);
 
   const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'>) => {
-    const supabase = await getSupabaseClient();
     const { data, error } = await supabase.from('menu_items').insert([item]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
@@ -182,7 +172,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const updateMenuItem = async (item: MenuItem) => {
-    const supabase = await getSupabaseClient();
     const { data, error } = await supabase.from('menu_items').update(item).eq('id', item.id).select().single();
      if (error) {
         toast({ variant: 'destructive', title: 'Error updating item', description: error.message });
@@ -193,7 +182,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const removeMenuItem = async (id: string) => {
-    const supabase = await getSupabaseClient();
     const { error } = await supabase.from('menu_items').delete().eq('id', id);
     if (error) {
         toast({ variant: 'destructive', title: 'Error removing item', description: error.message });
@@ -204,7 +192,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addMember = async (memberData: Omit<Member, 'id' | 'created_at'>): Promise<Member | null> => {
-    const supabase = await getSupabaseClient();
     const { data, error } = await supabase.from('members').insert([memberData]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
@@ -280,7 +267,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
-    const supabase = await getSupabaseClient();
     const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
@@ -311,7 +297,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const saveAsOpenBill = async () => {
-    const supabase = await getSupabaseClient();
     const billPayload = {
       customer_name: customer_name || `Bill ${Date.now()}`,
       items: orderItems,
@@ -355,7 +340,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeOpenBill = async (billId: string) => {
-    const supabase = await getSupabaseClient();
     const { error } = await supabase.from('open_bills').delete().eq('id', billId);
     if (error) {
         toast({ variant: 'destructive', title: 'Error removing bill', description: error.message });
@@ -374,10 +358,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // The data remains in Supabase.
     setCompletedOrders([]);
     setStoreStatus('OPEN');
-    // Optionally re-fetch today's data in case the app was open overnight
-    if (user) {
-      await fetchData();
-    }
+    await fetchData();
   }
 
   const activeOrderExists = useMemo(() => {
@@ -395,7 +376,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   
   const uploadImage = async (file: File, bucket: 'menu-images' | 'logos'): Promise<string | null> => {
     try {
-      const supabase = await getSupabaseClient();
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
@@ -472,7 +452,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     tax,
     total,
     uploadImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, toast]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, toast, fetchData]);
 
   return (
     <AppContext.Provider value={value}>

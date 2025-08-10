@@ -20,13 +20,13 @@ type PaymentDetails = {
 type AppContextType = {
   isLoading: boolean;
   currency: Currency;
-  setCurrency: (currency: Currency) => void;
   taxRate: number;
-  setTaxRate: (taxRate: number) => void;
-  formatCurrency: (amount: number) => string;
-
   receiptSettings: ReceiptSettings;
-  setReceiptSettings: (settings: ReceiptSettings) => void;
+  updateStoreSettings: (settings: {
+    receiptSettings: ReceiptSettings;
+    taxRate: number;
+    currency: Currency;
+  }) => Promise<void>;
 
   menuItems: MenuItem[];
   addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at'>) => Promise<void>;
@@ -99,8 +99,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Settings state with defaults
   const [currency, setCurrency] = useState<Currency>('IDR');
-  const [taxRate, setTaxRate] = useState<number>(0.11); // Default 11%
+  const [taxRate, setTaxRate] = useState<number>(0.11);
   const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
       storeName: 'BrewFlow',
       address: '123 Coffee Lane, Brewville, CA 90210',
@@ -125,13 +127,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
-        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes] = await Promise.all([
+        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes, settingsRes] = await Promise.all([
             supabase.from('menu_items').select('*').order('name'),
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
-            supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }) // Fetch for the day
+            supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
+            supabase.from('store_settings').select('*').single(),
         ]);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
@@ -143,13 +147,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setMembers(membersRes.data || []);
         setOpenBills(openBillsRes.data || []);
         setCompletedOrders(completedOrdersRes.data || []);
+        
+        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error
+            throw settingsRes.error;
+        }
+
+        if (settingsRes.data) {
+            setReceiptSettings({
+                storeName: settingsRes.data.store_name,
+                address: settingsRes.data.address,
+                phoneNumber: settingsRes.data.phone_number,
+                footerMessage: settingsRes.data.footer_message,
+                logoUrl: settingsRes.data.logo_url || '',
+            });
+            setTaxRate(settingsRes.data.tax_rate);
+            setCurrency(settingsRes.data.currency as Currency);
+        } else {
+            // No settings found, create default one
+            const { data, error } = await supabase.from('store_settings').insert({}).select().single();
+            if (error) throw error;
+            if (data) {
+                 setReceiptSettings({
+                    storeName: data.store_name,
+                    address: data.address,
+                    phoneNumber: data.phone_number,
+                    footerMessage: data.footer_message,
+                    logoUrl: data.logo_url || '',
+                });
+                setTaxRate(data.tax_rate);
+                setCurrency(data.currency as Currency);
+            }
+        }
 
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error fetching data", description: error.message });
     } finally {
-        setTimeout(() => setIsLoading(false), 500); // Simulate loading
+        setTimeout(() => setIsLoading(false), 500);
     }
-  }, [toast]);
+  }, [toast, user]);
   
   useEffect(() => {
     fetchData();
@@ -379,15 +414,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return (unsavedOrder.items.length > 0 || unsavedOrder.customerName !== '' || unsavedOrder.fees.length > 0);
   }, [unsavedOrder]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(currency === 'IDR' ? 'id-ID' : 'en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: currency === 'IDR' ? 0 : 2,
-      maximumFractionDigits: currency === 'IDR' ? 0 : 2,
-    }).format(amount);
-  };
-  
   const uploadImage = async (file: File, bucket: 'menu-images' | 'logos'): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
@@ -434,23 +460,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
   }
 
-  const handleSetReceiptSettings = (newSettings: ReceiptSettings) => {
+  const updateStoreSettings = async (settings: {
+    receiptSettings: ReceiptSettings;
+    taxRate: number;
+    currency: Currency;
+  }) => {
     const oldLogoUrl = receiptSettings.logoUrl;
-    setReceiptSettings(newSettings);
-    if (oldLogoUrl && oldLogoUrl !== newSettings.logoUrl) {
-      removeImage(oldLogoUrl, 'logos');
+    
+    // Update state immediately for responsiveness
+    setReceiptSettings(settings.receiptSettings);
+    setTaxRate(settings.taxRate);
+    setCurrency(settings.currency);
+    
+    // Persist to Supabase
+    const { error } = await supabase.from('store_settings').update({
+        store_name: settings.receiptSettings.storeName,
+        logo_url: settings.receiptSettings.logoUrl,
+        address: settings.receiptSettings.address,
+        phone_number: settings.receiptSettings.phoneNumber,
+        footer_message: settings.receiptSettings.footerMessage,
+        tax_rate: settings.taxRate,
+        currency: settings.currency,
+    }).eq('user_id', user!.id);
+
+    if (error) {
+        toast({ variant: 'destructive', title: "Error saving settings", description: error.message });
+        // Optionally revert state on error
+    } else {
+        toast({ title: "Settings saved" });
+         if (oldLogoUrl && oldLogoUrl !== settings.receiptSettings.logoUrl) {
+            await removeImage(oldLogoUrl, 'logos');
+        }
     }
   };
   
   const value = useMemo(() => ({
     isLoading,
     currency,
-    setCurrency,
     taxRate,
-    setTaxRate,
-    formatCurrency,
     receiptSettings,
-    setReceiptSettings: handleSetReceiptSettings,
+    updateStoreSettings,
     menuItems,
     addMenuItem,
     updateMenuItem,

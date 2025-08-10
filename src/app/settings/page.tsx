@@ -71,7 +71,7 @@ function ReceiptPreview({ formData }: { formData: SettingsFormValues }) {
 }
 
 export default function SettingsPage() {
-    const { receiptSettings, setReceiptSettings, taxRate, setTaxRate, currency, setCurrency, uploadImage } = useApp();
+    const { receiptSettings, taxRate, currency, uploadImage, updateStoreSettings } = useApp();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -94,16 +94,15 @@ export default function SettingsPage() {
     
     const watchedValues = form.watch();
 
-    const onSubmit = (values: SettingsFormValues) => {
+    const onSubmit = async (values: SettingsFormValues) => {
         setIsSubmitting(true);
-        const { taxRate, currency, ...newReceiptSettings } = values;
-        setReceiptSettings(newReceiptSettings);
-        setTaxRate(taxRate / 100); // Store as decimal
-        setCurrency(currency);
-        toast({
-            title: 'Settings Saved',
-            description: 'Your settings have been updated successfully.',
-        })
+        const { taxRate: formTaxRate, currency: formCurrency, ...newReceiptSettings } = values;
+        
+        await updateStoreSettings({
+            receiptSettings: newReceiptSettings,
+            taxRate: formTaxRate / 100, // Store as decimal
+            currency: formCurrency
+        });
         setIsSubmitting(false);
     };
 

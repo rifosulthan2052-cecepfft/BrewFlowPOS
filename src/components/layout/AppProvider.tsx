@@ -171,7 +171,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setCurrency(settingsRes.data.currency as Currency);
         } else {
             // No settings found, create a default one for the new user
-            if (!user) throw new Error("User not available to create default settings.");
             const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
             if (error) throw error;
             if (data) {
@@ -487,7 +486,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     
     // Persist to Supabase
     const { error } = await supabase.from('store_settings').update({
-        user_id: user.id, // Explicitly set user_id on update
         store_name: settings.receiptSettings.storeName,
         logo_url: settings.receiptSettings.logoUrl,
         address: settings.receiptSettings.address,
@@ -574,3 +572,5 @@ export function useApp() {
   }
   return context;
 }
+
+    

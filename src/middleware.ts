@@ -18,6 +18,7 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is set, update the request's cookies.
           req.cookies.set({
             name,
             value,
@@ -28,6 +29,7 @@ export async function middleware(req: NextRequest) {
               headers: req.headers,
             },
           })
+          // Set the cookie on the response.
           response.cookies.set({
             name,
             value,
@@ -35,6 +37,7 @@ export async function middleware(req: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request's cookies.
           req.cookies.set({
             name,
             value: '',
@@ -45,6 +48,7 @@ export async function middleware(req: NextRequest) {
               headers: req.headers,
             },
           })
+          // Remove the cookie from the response.
           response.cookies.set({
             name,
             value: '',
@@ -55,6 +59,7 @@ export async function middleware(req: NextRequest) {
     }
   )
 
+  // This will refresh the session if it's expired.
   const {
     data: { user },
   } = await supabase.auth.getUser()

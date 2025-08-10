@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, ReactNode, useState } from 'react';
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -19,41 +19,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const supabaseClient = useSupabaseClient();
   const user = useUser();
   const router = useRouter();
-  const pathname = usePathname();
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        router.push('/');
-      } else if (event === 'SIGNED_OUT') {
-        router.push('/login');
-      }
-    });
-
-    // Initial check
-    const checkUser = async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user && pathname !== '/login') {
-        router.push('/login');
-      } else if (user && pathname === '/login') {
-        router.push('/');
-      }
+    if (user) {
       setLoading(false);
-    };
-
-    checkUser();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router, supabaseClient.auth, pathname]);
+    } else {
+        // If there's no user, we might be about to be redirected, or we are on the login page.
+        // We can consider loading finished in this case as well.
+        setLoading(false);
+    }
+  }, [user]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    // The onAuthStateChange listener will handle the redirect
+    // The middleware will handle the redirect to /login
+    router.push('/login');
+    router.refresh();
   };
 
   const value = {
@@ -64,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   if (loading) {
-    return null; // Or a loading spinner
+    return null; // Or a dedicated loading screen component
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

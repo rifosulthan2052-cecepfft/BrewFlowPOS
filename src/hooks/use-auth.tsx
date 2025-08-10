@@ -22,20 +22,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      // The router.refresh() is key to re-running the middleware
+      // and getting the correct user state on the server.
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        router.refresh();
+      }
       setLoading(false);
-    } else {
-        // If there's no user, we might be about to be redirected, or we are on the login page.
-        // We can consider loading finished in this case as well.
+    });
+
+    // Also set loading to false on initial load if user is already available
+    if(user) {
         setLoading(false);
     }
-  }, [user]);
+
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, supabaseClient.auth, router]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    // The middleware will handle the redirect to /login
-    router.push('/login');
-    router.refresh();
+    // No need to push, onAuthStateChange will handle it.
   };
 
   const value = {
@@ -46,7 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
   if (loading) {
-    return null; // Or a dedicated loading screen component
+    // You could return a global loading spinner here
+    return null;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

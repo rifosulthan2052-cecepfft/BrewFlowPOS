@@ -34,8 +34,8 @@ export default function LoginPage() {
         description: error.message,
       });
     } else {
-      // On success, refresh the page to let middleware handle the redirect
-      router.refresh();
+      // The AuthProvider's onAuthStateChange will handle the redirect
+      // by calling router.refresh(). No need to do it here.
     }
     setIsLoading(false);
   };

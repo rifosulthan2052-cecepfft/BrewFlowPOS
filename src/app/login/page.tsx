@@ -18,7 +18,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [authResponse, setAuthResponse] = useState<any>(null); // For debugging
   const supabase = useSupabaseClient();
   const router = useRouter();
   const { toast } = useToast();
@@ -26,18 +25,15 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setAuthResponse(null); // Clear previous response
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
-      setAuthResponse({ type: 'Error', ...error });
       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: error.message,
       });
     } else {
-      setAuthResponse({ type: 'Success', ...data });
       // On success, refresh the page to let middleware handle the redirect
       router.refresh();
     }
@@ -118,19 +114,6 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-
-        {authResponse && (
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Auth Debug Response</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto">
-                {JSON.stringify(authResponse, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

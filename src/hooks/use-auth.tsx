@@ -2,9 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import Cookies from 'js-cookie';
+import { User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
@@ -18,42 +17,51 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
-      if (user) {
-        const token = await user.getIdToken(true);
-        // Set cookie to be compatible with iframes
-        Cookies.set('firebaseIdToken', token, { expires: 1, sameSite: 'None', secure: true }); 
-        
-        if (pathname === '/login') {
-            router.push('/');
-        }
-      } else {
-        Cookies.remove('firebaseIdToken');
-      }
       setLoading(false);
+    };
+
+    getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_IN' && pathname === '/login') {
+        router.push('/');
+      }
+      if (event === 'SIGNED_OUT') {
+        router.push('/login');
+      }
     });
-    return () => unsubscribe();
-  }, [pathname, router]);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [pathname, router, supabase.auth]);
 
   const signInWithEmail = async (email: string, pass: string) => {
-    return signInWithEmailAndPassword(auth, email, pass);
+    return supabase.auth.signInWithPassword({ email, password: pass });
   };
 
   const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
-    window.location.href = '/login';
+    await supabase.auth.signOut();
   };
 
   const value = {
@@ -65,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   if (loading) {
+    // You can return a loader here if you want
     return null;
   }
 

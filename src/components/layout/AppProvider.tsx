@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
 import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings } from '@/types';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -98,6 +98,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const supabase = useMemo(() => createClient(), []);
   const [isLoading, setIsLoading] = useState(true);
   
   // Settings state with defaults
@@ -127,7 +128,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
     setIsLoading(true);
     try {
         const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes, settingsRes] = await Promise.all([
@@ -135,14 +135,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
             supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
-            supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
+            supabase.from('store_settings').select('*').single(),
         ]);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
-        if (membersRes.error) throw membersRes.error;
-        if (openBillsRes.error) throw openBillsRes.error;
-        if (completedOrdersRes.error) throw completedOrdersRes.error;
+        if (menuItemsRes.data) setMenuItems(menuItemsRes.data);
 
+        if (membersRes.error) throw membersRes.error;
+        if (membersRes.data) setMembers(membersRes.data);
+        
+        if (openBillsRes.error) throw openBillsRes.error;
+        if (openBillsRes.data) setOpenBills(openBillsRes.data);
+
+        if (completedOrdersRes.error) throw completedOrdersRes.error;
+        if (completedOrdersRes.data) setCompletedOrders(completedOrdersRes.data);
         
         if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error if no settings exist yet
             throw settingsRes.error;
@@ -159,8 +165,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setTaxRate(settingsRes.data.tax_rate);
             setCurrency(settingsRes.data.currency as Currency);
         } else {
-            // No settings found for this user, create a default one
-            const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
+            // No settings found, create a default one
+            const { data, error } = await supabase.from('store_settings').insert({}).select().single();
             if (error) throw error;
             if (data) {
                  setReceiptSettings({
@@ -180,11 +186,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
         setTimeout(() => setIsLoading(false), 500);
     }
-  }, [toast, user]);
+  }, [toast, supabase]);
   
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, user]);
 
 
   useEffect(() => {
@@ -561,5 +567,3 @@ export function useApp() {
   }
   return context;
 }
-
-    

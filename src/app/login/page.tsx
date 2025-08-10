@@ -1,14 +1,6 @@
 
 'use client';
 
-// DEV NOTE: Google Sign-In is currently not working as expected in this environment.
-// It opens a popup that redirects back to the login page instead of showing the
-// Google account selection screen. This is likely due to a misconfiguration
-// between the development environment's proxy/domain and the Google Cloud/Firebase
-// OAuth settings (Authorized Domains, API Key restrictions, or OAuth Consent Screen).
-// The `auth/popup-closed-by-user` error is a symptom of this.
-// Email/password login is working correctly.
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
@@ -31,10 +23,8 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await signInWithEmail(email, password);
-      // Redirection is now handled by the AuthProvider
-    } catch (error: any) {
+    const { error } = await signInWithEmail(email, password);
+    if (error) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
@@ -42,15 +32,13 @@ export default function LoginPage() {
       });
       setIsLoading(false);
     }
-    // Don't set loading to false on success, as the page will redirect
+    // On success, the AuthProvider will handle redirection.
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      // Redirection is now handled by the AuthProvider
-    } catch (error: any) {
+    const { error } = await signInWithGoogle();
+    if (error) {
       toast({
         variant: 'destructive',
         title: 'Google Login Failed',
@@ -58,7 +46,7 @@ export default function LoginPage() {
       });
       setIsGoogleLoading(false);
     }
-    // Don't set loading to false on success, as the page will redirect
+    // On success, Supabase handles redirection.
   };
 
   return (

@@ -7,8 +7,9 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AppProvider } from '@/components/layout/AppProvider';
 import { AuthProvider } from '@/hooks/use-auth';
-import { createClient } from '@/lib/supabase';
+import { createBrowserClient } from '@supabase/ssr';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import type { Database } from '@/types/supabase';
 
 
 // export const metadata: Metadata = {
@@ -21,7 +22,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [supabaseClient] = useState(() => createClient());
+  const [supabaseClient] = useState(() =>
+    createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   
   return (
     <html lang="en" suppressHydrationWarning>

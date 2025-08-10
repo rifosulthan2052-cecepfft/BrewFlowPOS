@@ -10,8 +10,6 @@ interface AuthContextType {
   user: User | null;
   supabaseClient: SupabaseClient;
   loading: boolean;
-  signInWithEmail: (email: string, pass: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -22,11 +20,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const user = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const loading = false; // auth-helpers manages loading state implicitly
+  const loading = user === null && pathname !== '/login'; // More accurate loading state
 
   useEffect(() => {
-    // This effect now simply handles redirection based on auth state.
-    // The `useUser` hook handles the state changes automatically.
     if (!user && pathname !== '/login') {
       router.push('/login');
     } else if (user && pathname === '/login') {
@@ -34,32 +30,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, pathname, router]);
 
-  const signInWithEmail = async (email: string, pass: string) => {
-    return supabaseClient.auth.signInWithPassword({ email, password: pass });
-  };
-
-  const signInWithGoogle = async () => {
-    return supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-  };
-
   const signOut = async () => {
     await supabaseClient.auth.signOut();
+    // The redirect to /login will be handled by the useEffect above
+    router.push('/login');
   };
 
   const value = {
     user,
-    supabaseClient, // Provide the client for other parts of the app
+    supabaseClient,
     loading,
-    signInWithEmail,
-    signInWithGoogle,
     signOut,
   };
   
+  // Render a loading state or null if the user state is not yet determined
+  // This prevents rendering pages that might rely on the user object before it's available
+  if (loading) {
+    return null; // Or a loading spinner component
+  }
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

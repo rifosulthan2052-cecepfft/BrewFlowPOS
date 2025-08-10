@@ -20,30 +20,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const user = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const loading = user === null && !['/login'].includes(pathname);
+  const [loading, setLoading] = React.useState(true);
 
   useEffect(() => {
-    if (user && pathname === '/login') {
-      router.push('/');
-    } else if (!user && pathname !== '/login') {
-      router.push('/login');
-    }
-  }, [user, pathname, router]);
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/');
+      } else if (event === 'SIGNED_OUT') {
+        router.push('/login');
+      }
+    });
+
+    // Initial check
+    const checkUser = async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user && pathname !== '/login') {
+        router.push('/login');
+      } else if (user && pathname === '/login') {
+        router.push('/');
+      }
+      setLoading(false);
+    };
+
+    checkUser();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router, supabaseClient.auth, pathname]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    router.push('/login');
+    // The onAuthStateChange listener will handle the redirect
   };
 
   const value = {
     user,
     supabaseClient,
-    loading: loading,
+    loading,
     signOut,
   };
   
   if (loading) {
-    return null;
+    return null; // Or a loading spinner
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

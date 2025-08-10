@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CurrentOrder from '@/components/cashier/CurrentOrder';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 
@@ -158,9 +158,10 @@ export default function OpenBillsPage() {
                         </CardHeader>
                         <CardContent>
                             {openBills.length === 0 ? (
-                                <div className="text-center text-muted-foreground py-16">
-                                    <p>No open bills.</p>
-                                    <p className="text-sm">Saved bills will appear here.</p>
+                                <div className="text-center py-16 text-muted-foreground">
+                                    <BookOpen className="mx-auto h-12 w-12" />
+                                    <h3 className="mt-4 text-lg font-semibold">No Open Bills</h3>
+                                    <p className="mt-2 text-sm">Saved bills will appear here.</p>
                                 </div>
                             ) : (
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

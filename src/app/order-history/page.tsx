@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Receipt from '@/components/cashier/Receipt';
-import { CreditCard, Wallet, List, Grid, Printer } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, Printer, History } from 'lucide-react';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency } = useApp();
@@ -134,9 +134,10 @@ export default function OrderHistoryPage() {
                         </CardHeader>
                         <CardContent>
                            {completedOrders.length === 0 ? (
-                                <div className="text-center text-muted-foreground py-16">
-                                    <p>No completed orders yet.</p>
-                                    <p className="text-sm">Paid orders will appear here.</p>
+                                <div className="text-center py-16 text-muted-foreground">
+                                    <History className="mx-auto h-12 w-12" />
+                                    <h3 className="mt-4 text-lg font-semibold">No Completed Orders</h3>
+                                    <p className="mt-2 text-sm">Paid orders will appear here after a transaction is completed.</p>
                                 </div>
                             ) : (
                                  <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>

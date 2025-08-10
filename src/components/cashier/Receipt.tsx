@@ -26,7 +26,7 @@ type ReceiptProps = {
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
-    const { orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue } = props;
+    const { orderItems, subtotal, tax, fees, total, memberId, customerName, cash_paid, change_due } = props;
     const { currency, receiptSettings, taxRate } = useApp();
 
     return (
@@ -36,8 +36,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                     <Image src={receiptSettings.logoUrl} alt="logo" width={80} height={80} className="mx-auto mb-2" />
                 ) : (
                     <div className="flex justify-center items-center gap-2">
-                        <CoffeeIcon className="h-6 w-6" />
-                        <h2 className="text-xl font-bold">Brew Flow</h2>
+                        <h2 className="text-xl font-bold">{receiptSettings.storeName}</h2>
                     </div>
                 )}
                 <p>{receiptSettings.address}</p>
@@ -80,17 +79,17 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                 <span>{formatCurrency(total, currency)}</span>
             </div>
 
-            {(cashPaid !== undefined && cashPaid !== null) && (
+            {(cash_paid !== undefined && cash_paid !== null) && (
                  <>
                     <Separator className="my-2" />
                     <div className="space-y-1">
                         <div className="flex justify-between">
                             <span>Cash Paid</span>
-                            <span>{formatCurrency(cashPaid, currency)}</span>
+                            <span>{formatCurrency(cash_paid, currency)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Change</span>
-                            <span>{formatCurrency(changeDue ?? 0, currency)}</span>
+                            <span>{formatCurrency(change_due ?? 0, currency)}</span>
                         </div>
                     </div>
                  </>

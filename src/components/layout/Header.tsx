@@ -16,10 +16,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, UserCircle, Menu, Settings } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
+import { useApp } from "./AppProvider";
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
   const { user, signOut } = useAuth();
+  const { receiptSettings } = useApp();
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -30,7 +32,7 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2">
           <CoffeeIcon className="h-8 w-8 text-primary" />
           <div className="flex flex-col -space-y-1">
-            <span className="text-2xl font-bold text-primary">BrewFlow</span>
+            <span className="text-2xl font-bold text-primary">{receiptSettings.storeName}</span>
             <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
           </div>
         </Link>

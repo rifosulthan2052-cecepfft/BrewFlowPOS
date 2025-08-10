@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 type Currency = 'USD' | 'IDR';
 
 type ReceiptSettings = {
+    storeName: string;
     logoUrl?: string;
     address: string;
     phoneNumber: string;
@@ -19,8 +20,8 @@ type StoreStatus = 'OPEN' | 'CLOSED';
 
 type PaymentDetails = {
   method: 'cash' | 'card';
-  cashPaid?: number;
-  changeDue?: number;
+  cash_paid?: number;
+  change_due?: number;
 }
 
 type AppContextType = {
@@ -103,8 +104,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>('IDR');
-  const [taxRate, setTaxRate] = useState<number>(0);
+  const [taxRate, setTaxRate] = useState<number>(0.11); // Default 11%
   const [receiptSettings, setReceiptSettings] = useState<ReceiptSettings>({
+      storeName: 'BrewFlow',
       address: '123 Coffee Lane, Brewville, CA 90210',
       phoneNumber: '(555) 123-4567',
       footerMessage: 'Thank you for your visit!',
@@ -149,7 +151,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error fetching data", description: error.message });
     } finally {
-        setIsLoading(false);
+        setTimeout(() => setIsLoading(false), 500); // Simulate loading
     }
   }, [toast]);
   
@@ -263,10 +265,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const { subtotal, totalFees, tax, total } = useMemo(() => {
     const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const totalFees = fees.reduce((acc, fee) => acc + fee.amount, 0);
+    const total_fees = fees.reduce((acc, fee) => acc + fee.amount, 0);
     const tax = subtotal * taxRate;
-    const total = subtotal + totalFees + tax;
-    return { subtotal, totalFees, tax, total };
+    const total = subtotal + total_fees + tax;
+    return { subtotal, totalFees: total_fees, tax, total };
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
@@ -280,8 +282,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       total,
       date: new Date().toISOString(),
       payment_method: paymentDetails.method,
-      cash_paid: paymentDetails.cashPaid,
-      change_due: paymentDetails.changeDue,
+      cash_paid: paymentDetails.cash_paid,
+      change_due: paymentDetails.change_due,
       member_id: memberId,
     };
     

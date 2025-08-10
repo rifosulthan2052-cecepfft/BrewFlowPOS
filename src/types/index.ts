@@ -40,7 +40,7 @@ export type Bill = {
   fees: Fee[];
   total: number;
   date: string;
-  member_id?: string;
+  member_id?: string | null;
   created_at: string;
 }
 
@@ -50,9 +50,18 @@ export type OpenBill = Bill & {
 
 export type CompletedOrder = Bill & {
   payment_method: 'cash' | 'card';
-  cash_paid?: number;
-  change_due?: number;
+  cash_paid?: number | null;
+  change_due?: number | null;
 };
 
 // For component props that might not have all fields from Supabase yet
 export type BillProps = Omit<Bill, 'id' | 'created_at'> & { id?: string };
+
+
+export type ReceiptSettings = {
+  storeName: string;
+  logoUrl?: string;
+  address: string;
+  phoneNumber: string;
+  footerMessage: string;
+}

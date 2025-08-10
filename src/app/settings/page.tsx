@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const settingsFormSchema = z.object({
+  storeName: z.string().min(1, 'Store name is required'),
   logoUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   address: z.string().min(1, 'Address is required'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
@@ -124,6 +125,19 @@ export default function SettingsPage() {
                                     <CardDescription>Set the branding and information for your printed receipts.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="storeName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Store Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g., The Daily Grind" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                     <FormField
                                         control={form.control}
                                         name="logoUrl"

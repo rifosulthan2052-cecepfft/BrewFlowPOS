@@ -69,7 +69,7 @@ type AppContextType = {
   addFeeToOrder: (fee: Fee) => void;
   resetOrder: () => void;
   saveAsOpenBill: () => void;
-  loadOrderFromBill: (bill: Partial<Bill>) => void;
+  loadOrderFromBill: (bill: Partial<OpenBill>) => void;
   removeOpenBill: (billId: string) => void;
   setEditingBillId: (billId: string | null) => void;
   activeOrderExists: boolean;
@@ -165,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, customerName, fees, memberId, editingBillId]);
 
   const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'>) => {
-    const { data, error } = await supabase.from('menu_items').insert(item).select().single();
+    const { data, error } = await supabase.from('menu_items').insert([item]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
     } else if (data) {
@@ -195,7 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addMember = async (memberData: Omit<Member, 'id' | 'created_at'>): Promise<Member | null> => {
-    const { data, error } = await supabase.from('members').insert(memberData).select().single();
+    const { data, error } = await supabase.from('members').insert([memberData]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
         return null;
@@ -285,7 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       member_id: memberId,
     };
     
-    const { data, error } = await supabase.from('completed_orders').insert(newCompletedOrder).select().single();
+    const { data, error } = await supabase.from('completed_orders').insert([newCompletedOrder]).select().single();
 
     if (error) {
         toast({ variant: 'destructive', title: 'Error completing order', description: error.message });
@@ -323,7 +323,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
     } else {
         // Create new bill
-        const { data, error } = await supabase.from('open_bills').insert(billPayload).select().single();
+        const { data, error } = await supabase.from('open_bills').insert([billPayload]).select().single();
         if (error) {
              toast({ variant: 'destructive', title: 'Error saving bill', description: error.message });
         } else if (data) {
@@ -333,11 +333,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loadOrderFromBill = (bill: Partial<Bill>) => {
+  const loadOrderFromBill = (bill: Partial<OpenBill>) => {
     setOrderItems(bill.items || []);
     setFees(bill.fees || []);
     setCustomerName(bill.customerName || '');
-    setMemberId(bill.memberId);
+    setMemberId(bill.member_id);
     setOrderStatus(bill.id ? 'open_bill' : 'pending');
     setEditingBillId(bill.id || null);
   };
@@ -429,7 +429,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalFees,
     tax,
     total
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup, fetchData, toast]);
 
   return (
     <AppContext.Provider value={value}>
@@ -445,3 +445,5 @@ export function useApp() {
   }
   return context;
 }
+
+    

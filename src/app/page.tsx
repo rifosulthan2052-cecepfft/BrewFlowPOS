@@ -73,7 +73,7 @@ export default function CashierPage() {
         addItemToOrder,
         updateItemQuantity,
         removeItemFromOrder,
-        customerName,
+        customer_name,
         setCustomerName,
         orderStatus,
         resetOrder,
@@ -167,7 +167,7 @@ export default function CashierPage() {
             <DialogContent className={cn("max-w-2xl p-0 gap-0 flex flex-col", orderStatus !== 'paid' && "h-[90vh]")}>
                 <CurrentOrder
                     items={orderItems}
-                    customerName={customerName}
+                    customer_name={customer_name}
                     orderStatus={orderStatus}
                     onUpdateQuantity={updateItemQuantity}
                     onRemoveItem={removeItemFromOrder}

@@ -42,12 +42,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { PlusCircle, Edit, Trash2, MoreVertical, Utensils } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreVertical, Utensils, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -91,8 +92,9 @@ function MenuListSkeleton() {
 }
 
 export default function MenuPage() {
-    const { menuItems, addMenuItem, updateMenuItem, removeMenuItem, currency, isLoading } = useApp();
+    const { menuItems, addMenuItem, updateMenuItem, removeMenuItem, currency, isLoading, uploadImage } = useApp();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isFormSubmitting, setIsFormSubmitting] = useState(false);
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
@@ -126,15 +128,17 @@ export default function MenuPage() {
         form.reset();
     };
 
-    const onSubmit = (values: MenuItemFormValues) => {
+    const onSubmit = async (values: MenuItemFormValues) => {
+        setIsFormSubmitting(true);
         if (editingItem) {
-            updateMenuItem({ ...editingItem, ...values });
+            await updateMenuItem({ ...editingItem, ...values });
         } else {
-            addMenuItem({
+            await addMenuItem({
                 "data-ai-hint": values.name.toLowerCase(),
                 ...values,
             });
         }
+        setIsFormSubmitting(false);
         handleCloseDialog();
     };
     
@@ -274,6 +278,23 @@ export default function MenuPage() {
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
                                 <FormField
                                     control={form.control}
+                                    name="image_url"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Image</FormLabel>
+                                            <FormControl>
+                                                <ImageUpload
+                                                    value={field.value}
+                                                    onChange={field.onChange}
+                                                    onUpload={(file) => uploadImage(file, 'menu-images')}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
@@ -314,26 +335,17 @@ export default function MenuPage() {
                                         </FormItem>
                                     )}
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="image_url"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Image URL (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="https://example.com/image.png" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                
                                 <DialogFooter>
                                     <DialogClose asChild>
                                         <Button type="button" variant="secondary" onClick={handleCloseDialog}>
                                             Cancel
                                         </Button>
                                     </DialogClose>
-                                    <Button type="submit">Save</Button>
+                                    <Button type="submit" disabled={isFormSubmitting}>
+                                        {isFormSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Save
+                                    </Button>
                                 </DialogFooter>
                             </form>
                         </Form>

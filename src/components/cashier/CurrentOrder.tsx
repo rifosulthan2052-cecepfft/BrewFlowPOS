@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React from 'react';
@@ -33,7 +34,7 @@ import { QRScanner } from './QRScanner';
 
 type CurrentOrderProps = {
   items: OrderItem[];
-  customerName: string;
+  customer_name: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
   onUpdateQuantity: (menuItemId: string, quantity: number) => void;
   onRemoveItem: (menuItemId: string) => void;
@@ -45,13 +46,13 @@ type CurrentOrderProps = {
 
 type PaymentDetails = {
   method: 'cash' | 'card';
-  cashPaid?: number;
-  changeDue?: number;
+  cash_paid?: number;
+  change_due?: number;
 }
 
 export default function CurrentOrder({
   items,
-  customerName,
+  customer_name,
   orderStatus,
   onUpdateQuantity,
   onRemoveItem,
@@ -61,10 +62,10 @@ export default function CurrentOrder({
   onClose,
 }: CurrentOrderProps) {
   const { 
-    currency, subtotal, tax, totalFees, fees, total, 
+    currency, subtotal, tax, total_fees, fees, total, 
     addFeeToOrder, taxRate, addOrderToHistory, saveAsOpenBill, 
     editingBillId, lastCompletedOrder,
-    memberId, setMemberId, getMemberById,
+    member_id, setMemberId, getMemberById,
     getMemberByLookup,
     resetOrder,
   } = useApp();
@@ -118,7 +119,7 @@ export default function CurrentOrder({
   }
   
   const handleLookupBlur = () => {
-    if (lookupValue && !memberId) { // Only lookup if no member is set yet
+    if (lookupValue && !member_id) { // Only lookup if no member is set yet
         const member = getMemberByLookup(lookupValue);
         if (member) {
             associateMember(member.id);
@@ -134,15 +135,15 @@ export default function CurrentOrder({
   }
 
   React.useEffect(() => {
-    if (memberId) {
-        const member = getMemberById(memberId);
+    if (member_id) {
+        const member = getMemberById(member_id);
         if (member) {
             setLookupValue(member.name || `Member ${member.id}`);
         }
     } else {
         setLookupValue('');
     }
-  }, [memberId, getMemberById]);
+  }, [member_id, getMemberById]);
   
   const handleScanSuccess = (result: string) => {
     if (associateMember(result)) {
@@ -170,9 +171,9 @@ export default function CurrentOrder({
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Total Paid</p>
                 <p className="text-4xl font-bold text-primary">{formatCurrency(lastCompletedOrder.total, currency)}</p>
-                <Badge variant={lastCompletedOrder.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 mt-2">
-                    {lastCompletedOrder.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
-                    Paid by {lastCompletedOrder.paymentMethod}
+                <Badge variant={lastCompletedOrder.payment_method === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2 mt-2">
+                    {lastCompletedOrder.payment_method === 'card' ? <CreditCard/> : <Wallet/>}
+                    Paid by {lastCompletedOrder.payment_method}
                 </Badge>
             </div>
              <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
@@ -188,14 +189,14 @@ export default function CurrentOrder({
                     </DialogHeader>
                     <Receipt
                         orderItems={lastCompletedOrder.items}
-                        customerName={lastCompletedOrder.customer_name}
+                        customer_name={lastCompletedOrder.customer_name}
                         subtotal={lastCompletedOrder.subtotal}
                         tax={lastCompletedOrder.tax}
                         fees={lastCompletedOrder.fees}
                         total={lastCompletedOrder.total}
-                        memberId={lastCompletedOrder.member_id}
-                        cashPaid={lastCompletedOrder.cash_paid}
-                        changeDue={lastCompletedOrder.change_due}
+                        member_id={lastCompletedOrder.member_id}
+                        cash_paid={lastCompletedOrder.cash_paid}
+                        change_due={lastCompletedOrder.change_due}
                     />
                 </DialogContent>
             </Dialog>
@@ -237,7 +238,7 @@ export default function CurrentOrder({
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Customer Name"
-                        value={customerName}
+                        value={customer_name}
                         onChange={(e) => onCustomerNameChange(e.target.value)}
                         className="pl-9"
                     />
@@ -250,7 +251,7 @@ export default function CurrentOrder({
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <DialogTitle>Are you sure?</DialogTitle>
                         <AlertDialogDescription>
                             This will clear all items from the current order. This action cannot be undone.
                         </AlertDialogDescription>
@@ -273,10 +274,10 @@ export default function CurrentOrder({
                         onChange={handleLookupChange}
                         onBlur={handleLookupBlur}
                         className="pl-9"
-                        disabled={!!memberId}
+                        disabled={!!member_id}
                     />
                 </div>
-                {memberId ? (
+                {member_id ? (
                      <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="outline" size="icon" onClick={handleClearMember}>

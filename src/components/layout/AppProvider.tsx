@@ -2,19 +2,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 type Currency = 'USD' | 'IDR';
-
-type ReceiptSettings = {
-    storeName: string;
-    logoUrl?: string;
-    address: string;
-    phoneNumber: string;
-    footerMessage: string;
-}
 
 type StoreStatus = 'OPEN' | 'CLOSED';
 
@@ -36,9 +28,9 @@ type AppContextType = {
   setReceiptSettings: (settings: ReceiptSettings) => void;
 
   menuItems: MenuItem[];
-  addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at'>) => void;
-  updateMenuItem: (item: MenuItem) => void;
-  removeMenuItem: (id: string) => void;
+  addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at'>) => Promise<void>;
+  updateMenuItem: (item: MenuItem) => Promise<void>;
+  removeMenuItem: (id: string) => Promise<void>;
 
   members: Member[];
   addMember: (member: Omit<Member, 'id' | 'created_at'>) => Promise<Member | null>;
@@ -47,8 +39,8 @@ type AppContextType = {
 
   orderItems: OrderItem[];
   fees: Fee[];
-  customerName: string;
-  memberId?: string;
+  customer_name: string;
+  member_id?: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
   openBills: OpenBill[];
   editingBillId: string | null;
@@ -71,7 +63,7 @@ type AppContextType = {
   resetOrder: () => void;
   saveAsOpenBill: () => void;
   loadOrderFromBill: (bill: Partial<OpenBill>) => void;
-  removeOpenBill: (billId: string) => void;
+  removeOpenBill: (billId: string) => Promise<void>;
   setEditingBillId: (billId: string | null) => void;
   activeOrderExists: boolean;
   
@@ -88,12 +80,13 @@ type AppContextType = {
     memberId?: string;
   }>>
 
-  addOrderToHistory: (paymentDetails: PaymentDetails) => void;
+  uploadImage: (file: File, bucket: 'menu-images' | 'logos') => Promise<string | null>;
+  addOrderToHistory: (paymentDetails: PaymentDetails) => Promise<void>;
   endDay: () => void;
   startNewDay: () => void;
 
   subtotal: number;
-  totalFees: number;
+  total_fees: number;
   tax: number;
   total: number;
 };
@@ -120,8 +113,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [memberId, setMemberId] = useState<string | undefined>();
+  const [customer_name, setCustomerName] = useState('');
+  const [member_id, setMemberId] = useState<string | undefined>();
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
@@ -162,9 +155,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!editingBillId) {
-        setUnsavedOrder({ items: orderItems, customerName: customerName, fees, memberId: memberId });
+        setUnsavedOrder({ items: orderItems, customerName: customer_name, fees, memberId: member_id });
     }
-  }, [orderItems, customerName, fees, memberId, editingBillId]);
+  }, [orderItems, customer_name, fees, member_id, editingBillId]);
 
   const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'>) => {
     const { data, error } = await supabase.from('menu_items').insert([item]).select().single();
@@ -263,28 +256,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLastCompletedOrder(null);
   }
 
-  const { subtotal, totalFees, tax, total } = useMemo(() => {
+  const { subtotal, total_fees, tax, total } = useMemo(() => {
     const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const total_fees = fees.reduce((acc, fee) => acc + fee.amount, 0);
+    const total_fees_calc = fees.reduce((acc, fee) => acc + fee.amount, 0);
     const tax = subtotal * taxRate;
-    const total = subtotal + total_fees + tax;
-    return { subtotal, totalFees: total_fees, tax, total };
+    const total = subtotal + total_fees_calc + tax;
+    return { subtotal, total_fees: total_fees_calc, tax, total };
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
     const newCompletedOrder = {
-      customer_name: customerName || 'Walk-in Customer',
+      customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
       subtotal,
       tax,
-      total_fees: totalFees,
+      total_fees,
       fees,
       total,
       date: new Date().toISOString(),
       payment_method: paymentDetails.method,
       cash_paid: paymentDetails.cash_paid,
       change_due: paymentDetails.change_due,
-      member_id: memberId,
+      member_id,
     };
     
     const { data, error } = await supabase.from('completed_orders').insert([newCompletedOrder]).select().single();
@@ -303,15 +296,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const saveAsOpenBill = async () => {
     const billPayload = {
-      customer_name: customerName || `Bill ${Date.now()}`,
+      customer_name: customer_name || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,
       tax,
-      total_fees: totalFees,
+      total_fees,
       fees,
       total,
       date: new Date().toISOString(),
-      member_id: memberId,
+      member_id,
     };
 
     if (editingBillId) {
@@ -380,6 +373,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }).format(amount);
   };
   
+  const uploadImage = async (file: File, bucket: 'menu-images' | 'logos'): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error } = await supabase.storage.from(bucket).upload(filePath, file);
+
+      if (error) {
+        throw error;
+      }
+      
+      const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+      if (!data.publicUrl) {
+          throw new Error("No public URL returned from Supabase.");
+      }
+      
+      return data.publicUrl;
+
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Image Upload Failed', description: error.message });
+        return null;
+    }
+  }
+  
   const value = useMemo(() => ({
     isLoading,
     currency,
@@ -399,8 +418,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     getMemberByLookup,
     orderItems,
     fees,
-    customerName: customerName,
-    memberId: memberId,
+    customer_name,
+    member_id,
     orderStatus,
     openBills,
     editingBillId,
@@ -428,10 +447,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     endDay,
     startNewDay,
     subtotal,
-    totalFees,
+    total_fees,
     tax,
-    total
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customerName, memberId, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, totalFees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup, fetchData, toast]);
+    total,
+    uploadImage,
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, addMember, getMemberById, getMemberByLookup, fetchData, toast]);
 
   return (
     <AppContext.Provider value={value}>

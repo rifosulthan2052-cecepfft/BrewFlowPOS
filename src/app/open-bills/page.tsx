@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState } from 'react';
@@ -66,7 +67,7 @@ function BillCardSkeleton() {
 
 export default function OpenBillsPage() {
     const { 
-        openBills, loadOrderFromBill, orderItems, customerName, orderStatus, 
+        openBills, loadOrderFromBill, orderItems, customer_name, orderStatus, 
         updateItemQuantity, removeItemFromOrder, setCustomerName, resetOrder, 
         removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder, isLoading
     } = useApp();
@@ -268,7 +269,7 @@ export default function OpenBillsPage() {
                     <DialogContent className={cn("max-w-2xl p-0 gap-0 flex flex-col", orderStatus !== 'paid' && "h-[90vh]")}>
                         <CurrentOrder
                             items={orderItems}
-                            customerName={customerName}
+                            customer_name={customer_name}
                             orderStatus={orderStatus}
                             onUpdateQuantity={updateItemQuantity}
                             onRemoveItem={removeItemFromOrder}

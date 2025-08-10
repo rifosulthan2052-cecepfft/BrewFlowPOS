@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -17,7 +18,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ReceiptToPrint } from '@/components/cashier/Receipt';
 import type { OrderItem, Fee } from '@/types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Eye } from 'lucide-react';
+import { Eye, Loader2 } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { useState } from 'react';
 
 const settingsFormSchema = z.object({
   storeName: z.string().min(1, 'Store name is required'),
@@ -52,7 +55,7 @@ function ReceiptPreview({ formData }: { formData: SettingsFormValues }) {
                 tax={mockTax}
                 fees={mockFees}
                 total={mockTotal}
-                customerName="Jane Doe"
+                customer_name="Jane Doe"
                 receiptSettings={{
                     storeName: formData.storeName,
                     logoUrl: formData.logoUrl,
@@ -68,8 +71,9 @@ function ReceiptPreview({ formData }: { formData: SettingsFormValues }) {
 }
 
 export default function SettingsPage() {
-    const { receiptSettings, setReceiptSettings, taxRate, setTaxRate, currency, setCurrency } = useApp();
+    const { receiptSettings, setReceiptSettings, taxRate, setTaxRate, currency, setCurrency, uploadImage } = useApp();
     const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(settingsFormSchema),
@@ -83,6 +87,7 @@ export default function SettingsPage() {
     const watchedValues = form.watch();
 
     const onSubmit = (values: SettingsFormValues) => {
+        setIsSubmitting(true);
         const { taxRate, currency, ...newReceiptSettings } = values;
         setReceiptSettings(newReceiptSettings);
         setTaxRate(taxRate / 100); // Store as decimal
@@ -91,6 +96,7 @@ export default function SettingsPage() {
             title: 'Settings Saved',
             description: 'Your settings have been updated successfully.',
         })
+        setIsSubmitting(false);
     };
 
     return (
@@ -184,6 +190,24 @@ export default function SettingsPage() {
                                     </Dialog>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
+                                     <FormField
+                                        control={form.control}
+                                        name="logoUrl"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Store Logo</FormLabel>
+                                                <FormControl>
+                                                     <ImageUpload
+                                                        value={field.value}
+                                                        onChange={field.onChange}
+                                                        onUpload={(file) => uploadImage(file, 'logos')}
+                                                        className="w-40 h-40"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                     <FormField
                                         control={form.control}
                                         name="storeName"
@@ -192,19 +216,6 @@ export default function SettingsPage() {
                                                 <FormLabel>Store Name</FormLabel>
                                                 <FormControl>
                                                     <Input placeholder="e.g., The Daily Grind" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="logoUrl"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Logo URL (Optional)</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="https://example.com/logo.png" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -253,7 +264,10 @@ export default function SettingsPage() {
                             </Card>
                             
                             <div className="flex justify-end">
-                                <Button type="submit">Save Settings</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Save Settings
+                                </Button>
                             </div>
                         </form>
                     </Form>

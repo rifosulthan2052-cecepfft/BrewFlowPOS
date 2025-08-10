@@ -135,7 +135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
             supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
-            supabase.from('store_settings').select('*').single(),
+            supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
         ]);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
@@ -143,12 +143,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (openBillsRes.error) throw openBillsRes.error;
         if (completedOrdersRes.error) throw completedOrdersRes.error;
 
-        setMenuItems(menuItemsRes.data || []);
-        setMembers(membersRes.data || []);
-        setOpenBills(openBillsRes.data || []);
-        setCompletedOrders(completedOrdersRes.data || []);
         
-        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error
+        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error if no settings exist yet
             throw settingsRes.error;
         }
 
@@ -163,8 +159,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setTaxRate(settingsRes.data.tax_rate);
             setCurrency(settingsRes.data.currency as Currency);
         } else {
-            // No settings found, create default one
-            const { data, error } = await supabase.from('store_settings').insert({}).select().single();
+            // No settings found for this user, create a default one
+            const { data, error } = await supabase.from('store_settings').insert({ user_id: user.id }).select().single();
             if (error) throw error;
             if (data) {
                  setReceiptSettings({
@@ -465,6 +461,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     taxRate: number;
     currency: Currency;
   }) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Authentication Error', description: 'You must be logged in to save settings.' });
+        return;
+    }
+      
     const oldLogoUrl = receiptSettings.logoUrl;
     
     // Update state immediately for responsiveness
@@ -481,7 +482,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         footer_message: settings.receiptSettings.footerMessage,
         tax_rate: settings.taxRate,
         currency: settings.currency,
-    }).eq('user_id', user!.id);
+    }).eq('user_id', user.id);
 
     if (error) {
         toast({ variant: 'destructive', title: "Error saving settings", description: error.message });
@@ -544,7 +545,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, toast, fetchData]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, toast, fetchData, user, updateStoreSettings]);
 
   return (
     <AppContext.Provider value={value}>
@@ -560,3 +561,5 @@ export function useApp() {
   }
   return context;
 }
+
+    

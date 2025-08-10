@@ -32,7 +32,7 @@ export type Member = {
 
 
 export type Bill = {
-  id: string;
+  id:string;
   customerName: string;
   items: OrderItem[];
   subtotal: number;
@@ -50,4 +50,6 @@ export type OpenBill = Bill & {
 
 export type CompletedOrder = Bill & {
   paymentMethod: 'cash' | 'card';
+  cashPaid?: number;
+  changeDue?: number;
 };

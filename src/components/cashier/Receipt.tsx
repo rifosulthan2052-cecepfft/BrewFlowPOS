@@ -21,10 +21,12 @@ type ReceiptProps = {
   total: number;
   memberId?: string;
   customerName?: string;
+  cashPaid?: number;
+  changeDue?: number;
 };
 
 const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'showPrintButton'>>((props, ref) => {
-    const { orderItems, subtotal, tax, fees, total, memberId, customerName } = props;
+    const { orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue } = props;
     const { currency, receiptSettings, taxRate } = useApp();
 
     return (
@@ -77,6 +79,23 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
                 <span>TOTAL</span>
                 <span>{formatCurrency(total, currency)}</span>
             </div>
+
+            {(cashPaid !== undefined && changeDue !== undefined) && (
+                 <>
+                    <Separator className="my-2" />
+                    <div className="space-y-1">
+                        <div className="flex justify-between">
+                            <span>Cash Paid</span>
+                            <span>{formatCurrency(cashPaid, currency)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Change</span>
+                            <span>{formatCurrency(changeDue, currency)}</span>
+                        </div>
+                    </div>
+                 </>
+            )}
+
             <div className="text-center mt-4">
                 <p>{receiptSettings.footerMessage}</p>
             </div>
@@ -86,7 +105,7 @@ const ReceiptToPrint = React.forwardRef<HTMLDivElement, Omit<ReceiptProps, 'show
 ReceiptToPrint.displayName = 'ReceiptToPrint';
 
 
-export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId, customerName }: ReceiptProps) {
+export default function Receipt({ orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue }: ReceiptProps) {
     const receiptRef = React.useRef<HTMLDivElement>(null);
 
     const handlePrint = () => {
@@ -121,7 +140,7 @@ export default function Receipt({ orderItems, subtotal, tax, fees, total, member
         <div className="flex flex-col h-full max-h-[70vh]">
              <div className="flex-1 min-h-0 border rounded-md">
                 <ScrollArea className="h-full">
-                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId, customerName}} />
+                    <ReceiptToPrint ref={receiptRef} {...{orderItems, subtotal, tax, fees, total, memberId, customerName, cashPaid, changeDue}} />
                 </ScrollArea>
              </div>
               <DialogFooter className="pt-4">

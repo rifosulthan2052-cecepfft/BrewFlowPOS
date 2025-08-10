@@ -5,9 +5,15 @@ import { Button } from '@/components/ui/button';
 import { ChangeCalculator } from './ChangeCalculator';
 import { CreditCard } from 'lucide-react';
 
+type PaymentDetails = {
+  method: 'cash' | 'card';
+  cashPaid?: number;
+  changeDue?: number;
+}
+
 type PaymentPanelProps = {
   totalAmount: number;
-  onPaymentSuccess: (paymentMethod: 'cash' | 'card') => void;
+  onPaymentSuccess: (paymentDetails: PaymentDetails) => void;
 };
 
 export default function PaymentPanel({
@@ -19,13 +25,13 @@ export default function PaymentPanel({
     <div className='w-full space-y-4 pt-4'>
         <ChangeCalculator 
             totalAmount={totalAmount} 
-            onPaymentSuccess={() => onPaymentSuccess('cash')}
+            onPaymentSuccess={(cashPaid, changeDue) => onPaymentSuccess({ method: 'cash', cashPaid, changeDue })}
         />
         <Button 
             size="lg" 
             variant="outline" 
             className="w-full bg-accent text-accent-foreground hover:bg-accent/90 hover:text-accent-foreground" 
-            onClick={() => onPaymentSuccess('card')}
+            onClick={() => onPaymentSuccess({ method: 'card' })}
         >
            <CreditCard className="mr-2 h-4 w-4" /> Pay with Card
         </Button>

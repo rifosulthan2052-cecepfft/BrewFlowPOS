@@ -228,6 +228,8 @@ export default function OrderHistoryPage() {
                                 fees={selectedOrder.fees}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.memberId}
+                                cashPaid={selectedOrder.cashPaid}
+                                changeDue={selectedOrder.changeDue}
                              />
                         )}
                     </DialogContent>

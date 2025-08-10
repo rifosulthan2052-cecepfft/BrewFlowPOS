@@ -11,10 +11,16 @@ import {
 } from '@/components/ui/dialog';
 import PaymentPanel from './PaymentPanel';
 
+type PaymentDetails = {
+  method: 'cash' | 'card';
+  cashPaid?: number;
+  changeDue?: number;
+}
+
 type PaymentDialogProps = {
   children: React.ReactNode;
   totalAmount: number;
-  onPaymentSuccess: (paymentMethod: 'cash' | 'card') => void;
+  onPaymentSuccess: (paymentDetails: PaymentDetails) => void;
   disabled?: boolean;
 };
 

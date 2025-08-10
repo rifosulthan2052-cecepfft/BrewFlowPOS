@@ -28,6 +28,12 @@ type ReceiptSettings = {
 
 type StoreStatus = 'OPEN' | 'CLOSED';
 
+type PaymentDetails = {
+  method: 'cash' | 'card';
+  cashPaid?: number;
+  changeDue?: number;
+}
+
 type AppContextType = {
   isLoading: boolean;
   currency: Currency;
@@ -92,7 +98,7 @@ type AppContextType = {
     memberId?: string;
   }>>
 
-  addOrderToHistory: (paymentMethod: 'cash' | 'card') => void;
+  addOrderToHistory: (paymentDetails: PaymentDetails) => void;
   endDay: () => void;
   startNewDay: () => void;
 
@@ -257,7 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { subtotal, totalFees, tax, total };
   }, [orderItems, fees, taxRate]);
 
-  const addOrderToHistory = (paymentMethod: 'cash' | 'card') => {
+  const addOrderToHistory = (paymentDetails: PaymentDetails) => {
     const orderId = `order-${Date.now()}`;
     const newCompletedOrder: CompletedOrder = {
       id: orderId,
@@ -269,8 +275,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fees,
       total,
       date: new Date().toISOString(),
-      paymentMethod,
-      memberId,
+      paymentMethod: paymentDetails.method,
+      cashPaid: paymentDetails.cashPaid,
+      changeDue: paymentDetails.changeDue,
     };
     setCompletedOrders(prev => [newCompletedOrder, ...prev]);
     setLastCompletedOrder(newCompletedOrder);

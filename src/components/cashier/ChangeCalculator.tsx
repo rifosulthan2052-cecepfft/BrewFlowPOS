@@ -19,7 +19,7 @@ const formSchema = z.object({
 
 type ChangeCalculatorProps = {
   totalAmount: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (amountPaid: number, changeDue: number) => void;
   disabled?: boolean;
 };
 
@@ -93,24 +93,22 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     }
 
     setIsLoading(true);
-    setChangeDue(null);
+    const calculatedChange = values.amountPaid - totalAmount;
+    setChangeDue(calculatedChange);
 
     // Simulate a short delay for UX
     await new Promise(resolve => setTimeout(resolve, 500));
-
-    if (values.amountPaid === totalAmount) {
-      setIsLoading(false);
-      onPaymentSuccess();
-      return;
-    }
-    
-    const calculatedChange = values.amountPaid - totalAmount;
-    setChangeDue(calculatedChange);
     setIsLoading(false);
 
-    setTimeout(() => {
-        onPaymentSuccess();
-    }, 3000); // Wait 3 seconds before closing the dialog
+    if (calculatedChange > 0) {
+        // If there's change, show it for a bit before finalizing
+        setTimeout(() => {
+            onPaymentSuccess(values.amountPaid, calculatedChange);
+        }, 3000);
+    } else {
+        // If no change or exact change, finalize immediately
+        onPaymentSuccess(values.amountPaid, 0);
+    }
   }
 
   const handleSuggestionClick = (amount: number) => {
@@ -171,7 +169,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
           </form>
         </Form>
         
-        {changeDue !== null && (
+        {changeDue !== null && changeDue > 0 && (
           <div className="mt-4 space-y-4 p-4 bg-background rounded-lg animate-in fade-in">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Change Due</p>

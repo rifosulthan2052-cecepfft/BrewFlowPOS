@@ -43,6 +43,12 @@ type CurrentOrderProps = {
   onClose: () => void;
 };
 
+type PaymentDetails = {
+  method: 'cash' | 'card';
+  cashPaid?: number;
+  changeDue?: number;
+}
+
 export default function CurrentOrder({
   items,
   customerName,
@@ -68,8 +74,8 @@ export default function CurrentOrder({
   const [lookupValue, setLookupValue] = React.useState('');
   const isOrderEmpty = items.length === 0;
 
-  const handlePaymentSuccess = (paymentMethod: 'cash' | 'card') => {
-    addOrderToHistory(paymentMethod);
+  const handlePaymentSuccess = (paymentDetails: PaymentDetails) => {
+    addOrderToHistory(paymentDetails);
   }
 
   const handleSaveOpenBill = () => {
@@ -188,6 +194,8 @@ export default function CurrentOrder({
                         fees={lastCompletedOrder.fees}
                         total={lastCompletedOrder.total}
                         memberId={lastCompletedOrder.memberId}
+                        cashPaid={lastCompletedOrder.cashPaid}
+                        changeDue={lastCompletedOrder.changeDue}
                     />
                 </DialogContent>
             </Dialog>

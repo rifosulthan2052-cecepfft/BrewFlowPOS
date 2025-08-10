@@ -28,9 +28,9 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
                             {new Date(order.date).toLocaleString()}
                         </CardDescription>
                     </div>
-                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2">
-                        {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
-                        {order.paymentMethod}
+                     <Badge variant={order.payment_method === 'card' ? 'default' : 'secondary'} className="capitalize flex gap-2">
+                        {order.payment_method === 'card' ? <CreditCard/> : <Wallet/>}
+                        {order.payment_method}
                     </Badge>
                 </div>
             </CardHeader>
@@ -52,7 +52,7 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
                         {order.fees.length > 0 && (
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Fees</span>
-                            <span className="font-mono">{formatCurrency(order.totalFees, currency)}</span>
+                            <span className="font-mono">{formatCurrency(order.total_fees, currency)}</span>
                         </div>
                         )}
                     <div className="flex justify-between">
@@ -83,9 +83,9 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
-                        {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
-                        {order.paymentMethod}
+                     <Badge variant={order.payment_method === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
+                        {order.payment_method === 'card' ? <CreditCard/> : <Wallet/>}
+                        {order.payment_method}
                     </Badge>
                     <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
                     <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>

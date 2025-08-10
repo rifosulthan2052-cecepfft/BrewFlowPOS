@@ -36,7 +36,7 @@ export type Bill = {
   items: OrderItem[];
   subtotal: number;
   tax: number;
-  totalFees: number;
+  total_fees: number;
   fees: Fee[];
   total: number;
   date: string;
@@ -49,7 +49,7 @@ export type OpenBill = Bill & {
 };
 
 export type CompletedOrder = Bill & {
-  paymentMethod: 'cash' | 'card';
+  payment_method: 'cash' | 'card';
   cash_paid?: number;
   change_due?: number;
 };

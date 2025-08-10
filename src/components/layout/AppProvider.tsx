@@ -160,7 +160,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!editingBillId) {
-        setUnsavedOrder({ items: orderItems, customerName, fees, memberId });
+        setUnsavedOrder({ items: orderItems, customerName: customerName, fees, memberId: memberId });
     }
   }, [orderItems, customerName, fees, memberId, editingBillId]);
 
@@ -270,16 +270,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
-    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
+    const newCompletedOrder = {
       customer_name: customerName || 'Walk-in Customer',
       items: orderItems,
       subtotal,
       tax,
-      totalFees,
+      total_fees: totalFees,
       fees,
       total,
       date: new Date().toISOString(),
-      paymentMethod: paymentDetails.method,
+      payment_method: paymentDetails.method,
       cash_paid: paymentDetails.cashPaid,
       change_due: paymentDetails.changeDue,
       member_id: memberId,
@@ -305,7 +305,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       items: orderItems,
       subtotal,
       tax,
-      totalFees,
+      total_fees: totalFees,
       fees,
       total,
       date: new Date().toISOString(),
@@ -397,8 +397,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     getMemberByLookup,
     orderItems,
     fees,
-    customerName,
-    memberId,
+    customerName: customerName,
+    memberId: memberId,
     orderStatus,
     openBills,
     editingBillId,

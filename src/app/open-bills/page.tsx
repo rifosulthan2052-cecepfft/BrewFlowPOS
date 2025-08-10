@@ -129,7 +129,7 @@ export default function OpenBillsPage() {
                 customer_name: unsavedOrder.customerName,
                 items: unsavedOrder.items,
                 fees: unsavedOrder.fees,
-                subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
+                subtotal: 0, tax: 0, total: 0, total_fees: 0, date: '',
                 member_id: unsavedOrder.memberId
              }
              loadOrderFromBill(unsavedBill);
@@ -163,7 +163,7 @@ export default function OpenBillsPage() {
             customer_name: unsavedOrder.customerName,
             items: unsavedOrder.items,
             fees: unsavedOrder.fees,
-            subtotal: 0, tax: 0, total: 0, totalFees: 0, date: '',
+            subtotal: 0, tax: 0, total: 0, total_fees: 0, date: '',
             member_id: unsavedOrder.memberId
         };
         loadOrderFromBill(unsavedBill);
@@ -228,7 +228,7 @@ export default function OpenBillsPage() {
                                                      {bill.fees.length > 0 && (
                                                         <div className="flex justify-between">
                                                             <span className="text-muted-foreground">Fees</span>
-                                                            <span className="font-mono">{formatCurrency(bill.totalFees, useApp().currency)}</span>
+                                                            <span className="font-mono">{formatCurrency(bill.total_fees, useApp().currency)}</span>
                                                         </div>
                                                      )}
                                                     <div className="flex justify-between">

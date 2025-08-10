@@ -54,9 +54,9 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
                     <p className="text-sm text-muted-foreground">{new Date(order.date).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-4 w-full md:w-auto">
-                     <Badge variant={order.paymentMethod === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
-                        {order.paymentMethod === 'card' ? <CreditCard/> : <Wallet/>}
-                        {order.paymentMethod}
+                     <Badge variant={order.payment_method === 'card' ? 'default' : 'secondary'} className="capitalize flex-none flex gap-2">
+                        {order.payment_method === 'card' ? <CreditCard/> : <Wallet/>}
+                        {order.payment_method}
                     </Badge>
                     <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
                     <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>
@@ -228,7 +228,7 @@ export default function DailySummaryPage() {
 
     const summary = useMemo(() => completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
-        if (order.paymentMethod === 'cash') {
+        if (order.payment_method === 'cash') {
             acc.cashTotal += order.total;
         } else {
             acc.cardTotal += order.total;
@@ -249,11 +249,11 @@ export default function DailySummaryPage() {
         };
 
         completedOrders.forEach(order => {
-            const target = sales[order.paymentMethod];
+            const target = sales[order.payment_method];
             order.items.forEach(item => {
                 target.items[item.name] = (target.items[item.name] || 0) + item.quantity;
             });
-            target.totalFees += order.totalFees;
+            target.totalFees += order.total_fees;
             target.totalTax += order.tax;
             target.totalSales += order.total;
         });

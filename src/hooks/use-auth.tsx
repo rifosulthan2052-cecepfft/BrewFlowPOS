@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase';
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 import { useRouter, usePathname } from 'next/navigation';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
+  supabaseClient: SupabaseClient;
   loading: boolean;
   signInWithEmail: (email: string, pass: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
@@ -17,48 +18,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const supabase = createClient();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const supabaseClient = useSupabaseClient();
+  const user = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const loading = false; // auth-helpers manages loading state implicitly
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      setLoading(false);
-
-      // This is the centralized place for handling redirects.
-      if (event === 'SIGNED_IN' && pathname !== '/') {
-        router.push('/');
-      }
-      if (event === 'SIGNED_OUT') {
-        router.push('/login');
-      }
-    });
-
-    // Check initial session
-    const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-        }
-        setLoading(false);
+    // This effect now simply handles redirection based on auth state.
+    // The `useUser` hook handles the state changes automatically.
+    if (!user && pathname !== '/login') {
+      router.push('/login');
+    } else if (user && pathname === '/login') {
+      router.push('/');
     }
-    checkUser();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [pathname, router, supabase.auth]);
+  }, [user, pathname, router]);
 
   const signInWithEmail = async (email: string, pass: string) => {
-    return supabase.auth.signInWithPassword({ email, password: pass });
+    return supabaseClient.auth.signInWithPassword({ email, password: pass });
   };
 
   const signInWithGoogle = async () => {
-    return supabase.auth.signInWithOAuth({
+    return supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -67,20 +48,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
   };
 
   const value = {
     user,
+    supabaseClient, // Provide the client for other parts of the app
     loading,
     signInWithEmail,
     signInWithGoogle,
     signOut,
   };
   
-  // Render children only after the initial loading is complete,
-  // to prevent rendering protected routes before auth state is known.
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

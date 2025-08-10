@@ -1,20 +1,28 @@
 
-import type {Metadata} from 'next';
+'use client';
+
+import { useState } from 'react';
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { AppProvider } from '@/components/layout/AppProvider';
 import { AuthProvider } from '@/hooks/use-auth';
+import { createClient } from '@/lib/supabase';
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
 
-export const metadata: Metadata = {
-  title: 'BrewFlow',
-  description: 'Coffee Shop POS by Firebase Studio',
-};
+
+// export const metadata: Metadata = {
+//   title: 'BrewFlow',
+//   description: 'Coffee Shop POS by Firebase Studio',
+// };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [supabaseClient] = useState(() => createClient());
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -23,12 +31,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-            <AppProvider>
-              {children}
-              <Toaster />
-            </AppProvider>
-        </AuthProvider>
+        <SessionContextProvider supabaseClient={supabaseClient}>
+          <AuthProvider>
+              <AppProvider>
+                {children}
+                <Toaster />
+              </AppProvider>
+          </AuthProvider>
+        </SessionContextProvider>
       </body>
     </html>
   );

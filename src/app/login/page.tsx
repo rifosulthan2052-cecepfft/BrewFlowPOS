@@ -2,7 +2,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,20 +11,21 @@ import { CoffeeIcon } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const supabase = useSupabaseClient();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signInWithEmail(email, password);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
       toast({
@@ -35,17 +35,29 @@ export default function LoginPage() {
       });
       setIsLoading(false);
     } else {
-      // On successful login, force a refresh.
-      // This ensures the page reloads and the middleware runs with the new session.
-      // The `useAuth` hook will then handle the redirect based on the updated auth state.
-      router.refresh();
+      // The useAuth hook will handle the redirect on state change.
+      // We can optionally refresh to ensure middleware re-runs if needed,
+      // but auth-helpers often makes this unnecessary.
+      router.refresh(); 
     }
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    await signInWithGoogle();
-    setIsGoogleLoading(false);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+     if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Login Failed',
+        description: error.message,
+      });
+      setIsGoogleLoading(false);
+    }
   };
 
   return (

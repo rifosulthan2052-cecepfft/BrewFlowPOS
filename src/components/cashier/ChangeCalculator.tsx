@@ -38,6 +38,8 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     },
   });
   
+  const amountPaid = form.watch('amountPaid');
+
   useEffect(() => {
     form.setValue('amountPaid', totalAmount > 0 ? totalAmount : 0)
     setResult(null);
@@ -49,22 +51,19 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     const denominations = [10000, 20000, 50000, 100000, 150000, 200000];
     const suggestions = new Set<number>();
     
-    // Suggest the exact amount if it's a common denomination
     if (denominations.includes(totalAmount)) {
       suggestions.add(totalAmount);
     }
     
-    // Find the next highest denomination
     const nextDenom = denominations.find(d => d > totalAmount);
     if (nextDenom) {
       suggestions.add(nextDenom);
     }
     
-    // Add a higher denomination
     if (totalAmount < 50000) {
       suggestions.add(50000);
-      suggestions.add(100000);
-    } else if (totalAmount < 100000) {
+    } 
+    if (totalAmount < 100000) {
       suggestions.add(100000);
     }
 
@@ -74,15 +73,13 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
         if(nextHundred + 50000 > totalAmount) suggestions.add(nextHundred + 50000);
     }
 
-
-    // Round up to nearest 50k or 100k
     const roundedUp50k = Math.ceil(totalAmount / 50000) * 50000;
     if (roundedUp50k > totalAmount) {
       suggestions.add(roundedUp50k);
     }
 
     const finalSuggestions = Array.from(suggestions)
-      .filter(s => s > 0)
+      .filter(s => s > 0 && s >= totalAmount)
       .sort((a, b) => a - b)
       .slice(0, 4);
 
@@ -100,11 +97,25 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     setError(null);
     setResult(null);
 
-    // Don't call the AI if exact change is given
     if (values.amountPaid === totalAmount) {
       setIsLoading(false);
       onPaymentSuccess();
       return;
+    }
+
+    // For non-IDR currencies, just do simple math.
+    if (currency !== 'IDR') {
+        const changeDue = values.amountPaid - totalAmount;
+        setResult({
+            changeDue,
+            optimalChange: { 'Change': changeDue },
+            calculationRationale: `Change calculated for ${currency}.`
+        });
+        setIsLoading(false);
+        setTimeout(() => {
+            onPaymentSuccess();
+        }, 3000);
+        return;
     }
 
     const response = await getChangeCalculation({
@@ -115,7 +126,6 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     setIsLoading(false);
     if (response.success) {
       setResult(response.data);
-      // Wait a moment for user to see change, then finalize.
       setTimeout(() => {
         onPaymentSuccess();
       }, 3000);
@@ -126,6 +136,13 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
 
   const handleSuggestionClick = (amount: number) => {
     form.setValue('amountPaid', amount, { shouldValidate: true });
+    // Trigger submission after setting value
+    setTimeout(() => form.handleSubmit(onSubmit)(), 0);
+  }
+
+  const getButtonText = () => {
+    if (amountPaid > totalAmount) return 'Calculate Change & Pay';
+    return 'Pay with Exact Change';
   }
 
   return (
@@ -161,7 +178,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
                     variant="outline" 
                     onClick={() => handleSuggestionClick(denom)}
                     className="text-xs"
-                    disabled={disabled}
+                    disabled={disabled || isLoading}
                   >
                     {formatCurrency(denom, currency)}
                   </Button>
@@ -170,7 +187,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
             )}
             <Button type="submit" className="w-full" disabled={isLoading || disabled}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {totalAmount > 0 && form.getValues('amountPaid') > totalAmount ? 'Calculate Change & Pay' : 'Pay with Exact Change'}
+              {getButtonText()}
             </Button>
           </form>
         </Form>
@@ -181,7 +198,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
           <div className="mt-4 space-y-4 p-4 bg-background rounded-lg animate-in fade-in">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Change Due</p>
-                <p className="text-3xl font-bold text-green-600">{formatCurrency(result.changeDue, currency)}</p>
+                <p className="text-3xl font-bold text-primary">{formatCurrency(result.changeDue, currency)}</p>
             </div>
 
             <div>
@@ -189,7 +206,7 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 {Object.entries(result.optimalChange).map(([denom, count]) => (
                   <li key={denom} className="flex justify-between">
-                    <span>{denom}:</span>
+                    <span>{denom.startsWith('Rp') || currency === 'USD' ? denom : `Rp ${denom}`}</span>
                     <span className="font-medium">{count}</span>
                   </li>
                 ))}
@@ -202,3 +219,5 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     </Card>
   );
 }
+
+    

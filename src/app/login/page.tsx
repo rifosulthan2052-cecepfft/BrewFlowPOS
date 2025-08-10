@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { CoffeeIcon } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -20,7 +19,6 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { signInWithEmail, signInWithGoogle } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +30,9 @@ export default function LoginPage() {
         title: 'Login Failed',
         description: error.message || 'An unexpected error occurred.',
       });
-      setIsLoading(false);
-    } else {
-      // On success, Supabase sets a cookie, and we can redirect.
-      // The auth provider and middleware will handle the session from here.
-      router.push('/');
     }
+    // The redirect will be handled by the useAuth hook's onAuthStateChange listener.
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {

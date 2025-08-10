@@ -97,7 +97,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -206,8 +206,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [toast, supabase, user]);
   
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    // We only want to fetch data when authentication is no longer loading and we have a user.
+    if (!authLoading && user) {
+      fetchData();
+    } else if (!authLoading && !user) {
+      // If auth is done and there's no user, we don't need to load app data.
+      setIsLoading(false);
+    }
+  }, [authLoading, user, fetchData]);
 
 
   useEffect(() => {

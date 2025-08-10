@@ -24,17 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
-
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (event === 'SIGNED_IN' && pathname === '/login') {
+      setLoading(false);
+
+      if (event === 'SIGNED_IN' && pathname !== '/') {
         router.push('/');
       }
       if (event === 'SIGNED_OUT') {
@@ -42,8 +36,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
+    // Check initial session
+    const checkUser = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        setLoading(false);
+    }
+    checkUser();
+
     return () => {
-      authListener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, [pathname, router, supabase.auth]);
 

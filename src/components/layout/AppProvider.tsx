@@ -551,7 +551,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, toast, fetchData, user, updateStoreSettings]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, fetchData, updateStoreSettings]);
 
   return (
     <AppContext.Provider value={value}>

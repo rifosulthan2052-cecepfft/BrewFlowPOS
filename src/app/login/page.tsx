@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [authResponse, setAuthResponse] = useState<any>(null); // For debugging
   const supabase = useSupabaseClient();
   const router = useRouter();
   const { toast } = useToast();
@@ -25,21 +26,22 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setAuthResponse(null); // Clear previous response
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
+      setAuthResponse({ type: 'Error', ...error });
       toast({
         variant: 'destructive',
         title: 'Login Failed',
         description: error.message,
       });
-      setIsLoading(false);
     } else {
-      // The useAuth hook will handle the redirect on state change.
-      // We can optionally refresh to ensure middleware re-runs if needed,
-      // but auth-helpers often makes this unnecessary.
-      router.refresh(); 
+      setAuthResponse({ type: 'Success', ...data });
+      // On success, refresh the page to let middleware handle the redirect
+      router.refresh();
     }
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -62,59 +64,74 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-sm mx-auto shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center items-center gap-2 mb-4">
-            <CoffeeIcon className="h-8 w-8 text-primary" />
-            <div className="flex flex-col items-start -space-y-1">
-              <span className="text-2xl font-bold text-primary">BrewFlow</span>
-              <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
-            </div>
-          </div>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline text-muted-foreground hover:text-primary">
-                  Forgot your password?
-                </Link>
+      <div className="w-full max-w-sm mx-auto">
+        <Card className="shadow-2xl">
+          <CardHeader className="text-center">
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <CoffeeIcon className="h-8 w-8 text-primary" />
+              <div className="flex flex-col items-start -space-y-1">
+                <span className="text-2xl font-bold text-primary">BrewFlow</span>
+                <span className="text-xs text-muted-foreground font-medium">by Sakato</span>
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading || isGoogleLoading}
-              />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login
-            </Button>
-            <Button variant="outline" className="w-full" type="button" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
-              {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login with Google
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>Enter your email below to login to your account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading || isGoogleLoading}
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="#" className="ml-auto inline-block text-sm underline text-muted-foreground hover:text-primary">
+                    Forgot your password?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading || isGoogleLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Login
+              </Button>
+              <Button variant="outline" className="w-full" type="button" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
+                {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Login with Google
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {authResponse && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Auth Debug Response</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto">
+                {JSON.stringify(authResponse, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

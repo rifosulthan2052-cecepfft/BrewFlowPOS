@@ -11,41 +11,35 @@ import { Label } from '@/components/ui/label';
 import { CoffeeIcon } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [loginResult, setLoginResult] = useState<any>(null); // State for debugging output
   const { signInWithEmail, signInWithGoogle } = useAuth();
-  const { toast } = useToast();
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await signInWithEmail(email, password);
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
-    }
-    // The redirect will be handled by the onAuthStateChange listener in useAuth
+    setLoginResult(null); // Clear previous results
+    const { data, error } = await signInWithEmail(email, password);
+    setLoginResult({ data, error }); // Store the result for display
     setIsLoading(false);
+
+    if (!error && data.user) {
+       // Although we are debugging, let's keep the intended redirect
+       // in case the session state catches up.
+       router.push('/');
+    }
   };
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Login Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
-    }
-    // On success, Supabase handles redirection via the callback URL.
+    await signInWithGoogle();
     setIsGoogleLoading(false);
   };
 
@@ -102,6 +96,27 @@ export default function LoginPage() {
               Login with Google
             </Button>
           </form>
+          {/* Debugging Output */}
+          {loginResult && (
+            <div className="mt-4 p-2 border rounded bg-muted">
+              <h4 className="font-bold text-sm">Login Attempt Result:</h4>
+              {loginResult.error && (
+                <pre className="mt-2 text-xs text-destructive whitespace-pre-wrap">
+                  {JSON.stringify(loginResult.error, null, 2)}
+                </pre>
+              )}
+              {loginResult.data?.user && (
+                 <pre className="mt-2 text-xs text-green-600 whitespace-pre-wrap">
+                  {JSON.stringify(loginResult.data, null, 2)}
+                </pre>
+              )}
+               {loginResult.data?.user === null && !loginResult.error && (
+                 <pre className="mt-2 text-xs text-amber-600 whitespace-pre-wrap">
+                  {`Login attempt returned no user and no error. This usually indicates incorrect credentials.`}
+                </pre>
+               )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

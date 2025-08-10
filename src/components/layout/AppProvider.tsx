@@ -137,12 +137,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true);
     try {
-        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes, settingsRes] = await Promise.all([
+        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes] = await Promise.all([
             supabase.from('menu_items').select('*').order('name'),
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
             supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
-            supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
+            // supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
         ]);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
@@ -157,48 +157,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (completedOrdersRes.error) throw completedOrdersRes.error;
         if (completedOrdersRes.data) setCompletedOrders(completedOrdersRes.data);
         
-        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error if no settings exist yet
-            throw settingsRes.error;
-        }
+        // Temporarily disabled to allow login
+        // if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error if no settings exist yet
+        //     throw settingsRes.error;
+        // }
 
-        if (settingsRes.data) {
-            setReceiptSettings({
-                storeName: settingsRes.data.store_name,
-                address: settingsRes.data.address,
-                phoneNumber: settingsRes.data.phone_number,
-                footerMessage: settingsRes.data.footer_message,
-                logoUrl: settingsRes.data.logo_url || '',
-            });
-            setTaxRate(settingsRes.data.tax_rate);
-            setCurrency(settingsRes.data.currency as Currency);
-        } else {
-            // No settings found, create a default one for the new user, explicitly including the user_id.
-            const defaultSettings = {
-              user_id: user.id, // This is the crucial fix.
-              store_name: 'BrewFlow',
-              address: '123 Coffee Lane, Brewville, CA 90210',
-              phone_number: '(555) 123-4567',
-              footer_message: 'Thank you for your visit!',
-              tax_rate: 0.11,
-              currency: 'IDR',
-              logo_url: ''
-            };
-            const { data, error } = await supabase.from('store_settings').insert(defaultSettings).select().single();
+        // if (settingsRes.data) {
+        //     setReceiptSettings({
+        //         storeName: settingsRes.data.store_name,
+        //         address: settingsRes.data.address,
+        //         phoneNumber: settingsRes.data.phone_number,
+        //         footerMessage: settingsRes.data.footer_message,
+        //         logoUrl: settingsRes.data.logo_url || '',
+        //     });
+        //     setTaxRate(settingsRes.data.tax_rate);
+        //     setCurrency(settingsRes.data.currency as Currency);
+        // } else {
+        //     // No settings found, create a default one for the new user.
+        //     const defaultSettings = {
+        //       user_id: user.id, // This is the crucial fix.
+        //       store_name: 'BrewFlow',
+        //       address: '123 Coffee Lane, Brewville, CA 90210',
+        //       phone_number: '(555) 123-4567',
+        //       footer_message: 'Thank you for your visit!',
+        //       tax_rate: 0.11,
+        //       currency: 'IDR',
+        //       logo_url: ''
+        //     };
+        //     const { data, error } = await supabase.from('store_settings').insert(defaultSettings).select().single();
 
-            if (error) throw error; // If this fails, the RLS policy is the problem.
+        //     if (error) throw error; // If this fails, the RLS policy is the problem.
             
-            if (data) {
-                 setReceiptSettings({
-                    storeName: data.store_name,
-                    address: data.address,
-                    phoneNumber: data.phone_number,
-                    footerMessage: data.footer_message,
-                    logoUrl: data.logo_url || '',
-                });
-                setTaxRate(data.tax_rate);
-                setCurrency(data.currency as Currency);
-            }
-        }
+        //     if (data) {
+        //          setReceiptSettings({
+        //             storeName: data.store_name,
+        //             address: data.address,
+        //             phoneNumber: data.phone_number,
+        //             footerMessage: data.footer_message,
+        //             logoUrl: data.logo_url || '',
+        //         });
+        //         setTaxRate(data.tax_rate);
+        //         setCurrency(data.currency as Currency);
+        //     }
+        // }
 
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error fetching data", description: error.message });

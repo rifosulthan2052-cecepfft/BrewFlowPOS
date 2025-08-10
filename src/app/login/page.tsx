@@ -30,9 +30,9 @@ export default function LoginPage() {
         title: 'Login Failed',
         description: error.message || 'An unexpected error occurred.',
       });
-      setIsLoading(false);
     }
     // On success, the AuthProvider will handle redirection.
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {

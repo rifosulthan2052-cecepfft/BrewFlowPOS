@@ -5,8 +5,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getChangeCalculation } from '@/lib/actions';
-import type { CalculateChangeOutput } from '@/ai/flows/calculate-change';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,8 +25,7 @@ type ChangeCalculatorProps = {
 
 export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = false }: ChangeCalculatorProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<CalculateChangeOutput | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [changeDue, setChangeDue] = useState<number | null>(null);
   const { currency } = useApp();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -42,13 +39,16 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
 
   useEffect(() => {
     form.setValue('amountPaid', totalAmount > 0 ? totalAmount : 0)
-    setResult(null);
+    setChangeDue(null);
   }, [totalAmount, form]);
   
   const suggestedDenominations = useMemo(() => {
-    if (currency !== 'IDR' || totalAmount <= 0) return [];
+    if (totalAmount <= 0) return [];
+
+    const denominations = currency === 'IDR' 
+      ? [10000, 20000, 50000, 100000, 150000, 200000]
+      : [10, 20, 50, 100];
     
-    const denominations = [10000, 20000, 50000, 100000, 150000, 200000];
     const suggestions = new Set<number>();
     
     if (denominations.includes(totalAmount)) {
@@ -59,24 +59,23 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     if (nextDenom) {
       suggestions.add(nextDenom);
     }
+
+    if (currency === 'IDR') {
+        if (totalAmount < 50000) suggestions.add(50000);
+        if (totalAmount < 100000) suggestions.add(100000);
+        
+        const roundedUp50k = Math.ceil(totalAmount / 50000) * 50000;
+        if (roundedUp50k > totalAmount) {
+            suggestions.add(roundedUp50k);
+        }
+    } else {
+        const roundedUp10 = Math.ceil(totalAmount / 10) * 10;
+        if (roundedUp10 > totalAmount) suggestions.add(roundedUp10);
+
+        const roundedUp20 = Math.ceil(totalAmount / 20) * 20;
+        if (roundedUp20 > totalAmount) suggestions.add(roundedUp20);
+    }
     
-    if (totalAmount < 50000) {
-      suggestions.add(50000);
-    } 
-    if (totalAmount < 100000) {
-      suggestions.add(100000);
-    }
-
-    if (totalAmount > 100000) {
-        const nextHundred = Math.ceil(totalAmount / 100000) * 100000;
-        if(nextHundred > totalAmount) suggestions.add(nextHundred);
-        if(nextHundred + 50000 > totalAmount) suggestions.add(nextHundred + 50000);
-    }
-
-    const roundedUp50k = Math.ceil(totalAmount / 50000) * 50000;
-    if (roundedUp50k > totalAmount) {
-      suggestions.add(roundedUp50k);
-    }
 
     const finalSuggestions = Array.from(suggestions)
       .filter(s => s > 0 && s >= totalAmount)
@@ -94,44 +93,24 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
     }
 
     setIsLoading(true);
-    setError(null);
-    setResult(null);
+    setChangeDue(null);
+
+    // Simulate a short delay for UX
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (values.amountPaid === totalAmount) {
       setIsLoading(false);
       onPaymentSuccess();
       return;
     }
-
-    // For non-IDR currencies, just do simple math.
-    if (currency !== 'IDR') {
-        const changeDue = values.amountPaid - totalAmount;
-        setResult({
-            changeDue,
-            optimalChange: { 'Change': changeDue },
-            calculationRationale: `Change calculated for ${currency}.`
-        });
-        setIsLoading(false);
-        setTimeout(() => {
-            onPaymentSuccess();
-        }, 3000);
-        return;
-    }
-
-    const response = await getChangeCalculation({
-      totalAmount,
-      amountPaid: values.amountPaid,
-    });
-
+    
+    const calculatedChange = values.amountPaid - totalAmount;
+    setChangeDue(calculatedChange);
     setIsLoading(false);
-    if (response.success) {
-      setResult(response.data);
-      setTimeout(() => {
+
+    setTimeout(() => {
         onPaymentSuccess();
-      }, 3000);
-    } else {
-      setError(response.error);
-    }
+    }, 3000); // Wait 3 seconds before closing the dialog
   }
 
   const handleSuggestionClick = (amount: number) => {
@@ -192,32 +171,15 @@ export function ChangeCalculator({ totalAmount, onPaymentSuccess, disabled = fal
           </form>
         </Form>
         
-        {error && <p className="text-destructive text-sm mt-4">{error}</p>}
-
-        {result && (
+        {changeDue !== null && (
           <div className="mt-4 space-y-4 p-4 bg-background rounded-lg animate-in fade-in">
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">Change Due</p>
-                <p className="text-3xl font-bold text-primary">{formatCurrency(result.changeDue, currency)}</p>
+                <p className="text-3xl font-bold text-primary">{formatCurrency(changeDue, currency)}</p>
             </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">Optimal Change:</h4>
-              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                {Object.entries(result.optimalChange).map(([denom, count]) => (
-                  <li key={denom} className="flex justify-between">
-                    <span>{denom.startsWith('Rp') || currency === 'USD' ? denom : `Rp ${denom}`}</span>
-                    <span className="font-medium">{count}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <p className="text-xs text-muted-foreground italic mt-2">{result.calculationRationale}</p>
           </div>
         )}
       </CardContent>
     </Card>
   );
 }
-
-    

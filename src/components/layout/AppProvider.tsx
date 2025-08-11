@@ -151,16 +151,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     try {
         // Step 1: Determine the user's shop.
-        let currentShop: Shop;
         const { data: memberEntries, error: memberError } = await supabase.from('shop_members').select('*, shops(*)').eq('user_id', user.id).limit(1);
         if (memberError) throw memberError;
         
+        let currentShop: Shop | null = null;
         if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
             currentShop = memberEntries[0].shops as Shop;
-            setShop(currentShop);
         } else {
             // This user is not part of any shop. Let's create one for them.
+            // This is the line that fixes the bug. It explicitly sets the owner_id.
             const { data: newShop, error: newShopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
+
             if (newShopError) throw newShopError;
             if (!newShop) throw new Error("Shop creation succeeded but returned no data.");
 
@@ -169,12 +170,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             if (newMemberError) throw newMemberError;
             
             currentShop = newShop;
-            setShop(currentShop);
         }
         
         if (!currentShop) {
             throw new Error("Could not establish shop context for the user.");
         }
+        setShop(currentShop);
         
         // Step 2: Fetch all data for the determined shop_id
         let currentStoreStatus: StoreStatus;

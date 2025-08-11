@@ -69,21 +69,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  // Allow access to /update-password for logged-in users
-  if (user && pathname === '/update-password') {
+  // Allow access to auth callback without a user
+  if (pathname === '/auth/callback') {
     return response;
   }
-
+  
   if (!user && pathname !== '/login') {
-    // Allow access to auth callback without a user
-    if (pathname === '/auth/callback') return response;
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // If user is just invited and has no password, redirect to update-password
-  if (user && user.app_metadata.provider === 'email' && !user.user_metadata.password_set) {
-    if (pathname !== '/update-password') {
-      return NextResponse.redirect(new URL('/update-password', req.url));
+  if (user) {
+    const passwordIsSet = user.user_metadata?.password_set ?? false;
+
+    // If user needs to set a password and is not on the correct page, redirect them.
+    if (user.app_metadata.provider === 'email' && !passwordIsSet) {
+      if (pathname !== '/update-password') {
+        return NextResponse.redirect(new URL('/update-password', req.url));
+      }
+    } else if (passwordIsSet && pathname === '/update-password') {
+      // If user has set a password but is still on the update page, redirect them away.
+      return NextResponse.redirect(new URL('/', req.url));
     }
   }
 

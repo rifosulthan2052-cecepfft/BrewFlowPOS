@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { CompletedOrder } from '@/types';
 import { AppLayout } from "@/components/layout/AppLayout";
 import Header from "@/components/layout/Header";
@@ -15,9 +15,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import Receipt from '@/components/cashier/Receipt';
 import { CreditCard, Wallet, List, Grid, Printer, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { startOfToday, startOfYesterday, subDays } from 'date-fns';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
-    const { currency } = useApp();
+    const { currency, taxRate } = useApp();
     return (
         <Card className="flex flex-col">
             <CardHeader>
@@ -56,7 +57,7 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
                         </div>
                         )}
                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tax ({useApp().taxRate * 100}%)</span>
+                        <span className="text-muted-foreground">Tax ({taxRate * 100}%)</span>
                         <span className="font-mono">{formatCurrency(order.tax, currency)}</span>
                     </div>
                     <Separator className="my-2" />
@@ -141,11 +142,46 @@ function HistoryCompactSkeleton() {
     )
 }
 
+type Period = 'today' | 'yesterday' | 'week' | 'month';
 
 export default function OrderHistoryPage() {
     const { allCompletedOrders, isLoading } = useApp();
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
     const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
+    const [period, setPeriod] = useState<Period>('today');
+
+    const filteredOrders = useMemo(() => {
+        const now = new Date();
+        let startDate: Date;
+
+        switch (period) {
+            case 'today':
+                startDate = startOfToday();
+                break;
+            case 'yesterday':
+                startDate = startOfYesterday();
+                break;
+            case 'week':
+                startDate = subDays(startOfToday(), 7);
+                break;
+            case 'month':
+                startDate = subDays(startOfToday(), 30);
+                break;
+            default:
+                startDate = new Date(0); // Should not happen
+        }
+
+        if (period === 'yesterday') {
+            const yesterdayStart = startOfYesterday();
+            const yesterdayEnd = startOfToday();
+            return allCompletedOrders.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate >= yesterdayStart && orderDate < yesterdayEnd;
+            });
+        }
+        
+        return allCompletedOrders.filter(order => new Date(order.date) >= startDate);
+    }, [allCompletedOrders, period]);
 
     const handleSelectOrder = (order: CompletedOrder) => {
         setSelectedOrder(order);
@@ -154,6 +190,13 @@ export default function OrderHistoryPage() {
     const handleCloseDialog = () => {
         setSelectedOrder(null);
     }
+    
+    const periodLabels: { [key in Period]: string } = {
+        today: 'today',
+        yesterday: 'yesterday',
+        week: 'in the last 7 days',
+        month: 'in the last 30 days',
+    };
 
     const renderSkeletons = () => {
         const skeletons = Array.from({ length: 4 }).map((_, index) =>
@@ -165,6 +208,13 @@ export default function OrderHistoryPage() {
             </div>
         )
     };
+    
+    const periodFilters: {label: string, value: Period}[] = [
+        { label: 'Today', value: 'today' },
+        { label: 'Yesterday', value: 'yesterday' },
+        { label: 'Last 7 Days', value: 'week' },
+        { label: 'Last 30 Days', value: 'month' },
+    ];
 
     return (
         <AppLayout>
@@ -189,19 +239,26 @@ export default function OrderHistoryPage() {
                                      </Button>
                                 </div>
                             </div>
+                            <div className="flex items-center gap-2 pt-4">
+                                {periodFilters.map(filter => (
+                                    <Button key={filter.value} variant={period === filter.value ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(filter.value)}>
+                                        {filter.label}
+                                    </Button>
+                                ))}
+                            </div>
                         </CardHeader>
                         <CardContent>
                            {isLoading ? (
                                 renderSkeletons()
-                           ) : allCompletedOrders.length === 0 ? (
+                           ) : filteredOrders.length === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <History className="mx-auto h-12 w-12" />
                                     <h3 className="mt-4 text-lg font-semibold">No Completed Orders</h3>
-                                    <p className="mt-2 text-sm">Paid orders will appear here after a transaction is completed.</p>
+                                    <p className="mt-2 text-sm">No transactions were found for {periodLabels[period]}.</p>
                                 </div>
                             ) : (
                                  <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                                    {allCompletedOrders.map(order => 
+                                    {filteredOrders.map(order => 
                                         viewMode === 'card' ? (
                                             <OrderHistoryCard key={order.id} order={order} onSelect={handleSelectOrder}/>
                                         ) : (
@@ -225,7 +282,7 @@ export default function OrderHistoryPage() {
                                 customerName={selectedOrder.customer_name}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
-                                fees={selectedOrder.fees as Fee[]}
+                                fees={selected.fees as Fee[]}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cash_paid}
@@ -239,3 +296,5 @@ export default function OrderHistoryPage() {
         </AppLayout>
     )
 }
+
+    

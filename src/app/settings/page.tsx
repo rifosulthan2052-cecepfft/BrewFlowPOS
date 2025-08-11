@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -18,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ReceiptToPrint } from '@/components/cashier/Receipt';
 import type { OrderItem, Fee, ShopMember } from '@/types';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Eye, Loader2, UserPlus, Trash2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { useState, useEffect } from 'react';
@@ -411,5 +410,3 @@ export default function SettingsPage() {
         </AppLayout>
     );
 }
-
-    

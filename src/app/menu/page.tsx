@@ -50,6 +50,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Combobox } from '@/components/ui/combobox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const variantSchema = z.object({
   name: z.string().min(1, 'Variant name is required'),

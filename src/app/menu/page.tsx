@@ -49,7 +49,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -101,8 +101,8 @@ export default function MenuPage() {
     const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
 
     const existingCategories = useMemo(() => {
-        const categories = new Set(menuItems.map(item => item.category).filter(Boolean));
-        return Array.from(categories) as string[];
+        const categories = new Set(menuItems.map(item => item.category).filter(Boolean) as string[]);
+        return Array.from(categories).map(cat => ({ value: cat, label: cat }));
     }, [menuItems]);
 
     const form = useForm<MenuItemFormValues>({
@@ -332,22 +332,15 @@ export default function MenuPage() {
                                     control={form.control}
                                     name="category"
                                     render={({ field }) => (
-                                        <FormItem>
+                                        <FormItem className="flex flex-col">
                                             <FormLabel>Category (Optional)</FormLabel>
-                                             <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select a category" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {existingCategories.map((category) => (
-                                                        <SelectItem key={category} value={category}>
-                                                            {category}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <FormControl>
+                                                <Input
+                                                  placeholder="e.g., Coffee, Pastry"
+                                                  {...field}
+                                                  value={field.value || ''}
+                                                />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )}

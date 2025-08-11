@@ -145,29 +145,32 @@ export default function CashierPage() {
                 <div className="absolute inset-0 bg-background/50 z-10" />
             )}
             <Tabs defaultValue="All" className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <TabsList>
-                    {isLoading ? (
-                        <div className="flex gap-2">
-                            <Skeleton className="h-8 w-16 rounded-md" />
-                            <Skeleton className="h-8 w-20 rounded-md" />
-                            <Skeleton className="h-8 w-16 rounded-md" />
-                        </div>
-                    ) : (
-                        categories.map(category => (
-                            <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                        ))
-                    )}
-                  </TabsList>
-                  <div className="relative flex-1">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                          placeholder="Search menu..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-8 w-full md:w-[300px]"
-                      />
-                  </div>
+                <div className="flex flex-col items-start gap-4">
+                    <div className="relative w-full md:w-[300px]">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search menu..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-8 w-full"
+                        />
+                    </div>
+                    <ScrollArea className="w-full">
+                        <TabsList>
+                            {isLoading ? (
+                                <div className="flex gap-2">
+                                    <Skeleton className="h-8 w-16 rounded-md" />
+                                    <Skeleton className="h-8 w-20 rounded-md" />
+                                    <Skeleton className="h-8 w-16 rounded-md" />
+                                </div>
+                            ) : (
+                                categories.map(category => (
+                                    <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                                ))
+                            )}
+                        </TabsList>
+                        <ScrollBar orientation="horizontal" className="invisible" />
+                    </ScrollArea>
                 </div>
                {isLoading ? (
                     <MenuListSkeleton />

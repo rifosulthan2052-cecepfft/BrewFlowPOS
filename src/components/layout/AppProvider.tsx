@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -156,13 +155,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { data: memberEntries, error: memberError } = await supabase.from('shop_members').select('*, shops(*)').eq('user_id', user.id).limit(1);
         if (memberError) throw memberError;
         
-        if (memberEntries && memberEntries.length > 0) {
+        if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
             currentShop = memberEntries[0].shops as Shop;
             setShop(currentShop);
         } else {
             // This user is not part of any shop. Let's create one for them.
             const { data: newShop, error: newShopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
             if (newShopError) throw newShopError;
+            if (!newShop) throw new Error("Shop creation succeeded but returned no data.");
 
             // Add the owner as the first member of the new shop.
             const { error: newMemberError } = await supabase.from('shop_members').insert({ shop_id: newShop.id, user_id: user.id });
@@ -709,5 +709,3 @@ export function useApp() {
   }
   return context;
 }
-
-    

@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -49,6 +49,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const menuItemSchema = z.object({
   id: z.string().optional(),
@@ -98,6 +99,11 @@ export default function MenuPage() {
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
+
+    const existingCategories = useMemo(() => {
+        const categories = new Set(menuItems.map(item => item.category).filter(Boolean));
+        return Array.from(categories) as string[];
+    }, [menuItems]);
 
     const form = useForm<MenuItemFormValues>({
         resolver: zodResolver(menuItemSchema),
@@ -328,9 +334,23 @@ export default function MenuPage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Category (Optional)</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g., Coffee, Pastry" {...field} />
-                                            </FormControl>
+                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select a category" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="">
+                                                        <em>None</em>
+                                                    </SelectItem>
+                                                    {existingCategories.map((category) => (
+                                                        <SelectItem key={category} value={category}>
+                                                            {category}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -372,3 +392,4 @@ export default function MenuPage() {
         </AppLayout>
     )
 }
+

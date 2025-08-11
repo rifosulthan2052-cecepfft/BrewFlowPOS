@@ -22,11 +22,11 @@ export type Database = {
           items: Json
           member_id: string | null
           payment_method: string
+          shop_id: string
           subtotal: number
           tax: number
           total: number
           total_fees: number
-          user_id: string
         }
         Insert: {
           cash_paid?: number | null
@@ -39,11 +39,11 @@ export type Database = {
           items: Json
           member_id?: string | null
           payment_method: string
+          shop_id: string
           subtotal: number
           tax: number
           total: number
           total_fees: number
-          user_id: string
         }
         Update: {
           cash_paid?: number | null
@@ -56,11 +56,11 @@ export type Database = {
           items?: Json
           member_id?: string | null
           payment_method?: string
+          shop_id?: string
           subtotal?: number
           tax?: number
           total?: number
           total_fees?: number
-          user_id?: string
         }
         Relationships: [
           {
@@ -71,10 +71,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "completed_orders_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "completed_orders_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -86,7 +86,7 @@ export type Database = {
           id: string
           name: string | null
           phone: string | null
-          user_id: string
+          shop_id: string
         }
         Insert: {
           created_at?: string
@@ -94,7 +94,7 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
-          user_id: string
+          shop_id: string
         }
         Update: {
           created_at?: string
@@ -102,14 +102,14 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
-          user_id?: string
+          shop_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "members_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "members_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -123,7 +123,7 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
-          user_id: string
+          shop_id: string
         }
         Insert: {
           category?: string | null
@@ -133,7 +133,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price: number
-          user_id: string
+          shop_id: string
         }
         Update: {
           category?: string | null
@@ -143,14 +143,14 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
-          user_id?: string
+          shop_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "menu_items_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "menu_items_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -164,11 +164,11 @@ export type Database = {
           id: string
           items: Json
           member_id: string | null
+          shop_id: string
           subtotal: number
           tax: number
           total: number
           total_fees: number
-          user_id: string
         }
         Insert: {
           created_at?: string
@@ -178,11 +178,11 @@ export type Database = {
           id?: string
           items: Json
           member_id?: string | null
+          shop_id: string
           subtotal: number
           tax: number
           total: number
           total_fees: number
-          user_id: string
         }
         Update: {
           created_at?: string
@@ -192,11 +192,11 @@ export type Database = {
           id?: string
           items?: Json
           member_id?: string | null
+          shop_id?: string
           subtotal?: number
           tax?: number
           total?: number
           total_fees?: number
-          user_id?: string
         }
         Relationships: [
           {
@@ -207,8 +207,67 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "open_bills_user_id_fkey"
+            foreignKeyName: "open_bills_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_members: {
+        Row: {
+          created_at: string
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_members_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shops_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -224,9 +283,9 @@ export type Database = {
           id: string
           logo_url: string | null
           phone_number: string
+          shop_id: string
           store_name: string
           tax_rate: number
-          user_id: string
         }
         Insert: {
           address: string
@@ -236,9 +295,9 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone_number: string
+          shop_id: string
           store_name: string
           tax_rate: number
-          user_id: string
         }
         Update: {
           address?: string
@@ -248,16 +307,16 @@ export type Database = {
           id?: string
           logo_url?: string | null
           phone_number?: string
+          shop_id?: string
           store_name?: string
           tax_rate?: number
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "store_settings_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "store_settings_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -266,27 +325,27 @@ export type Database = {
         Row: {
           day_started_at: string
           id: number
+          shop_id: string | null
           status: string
-          user_id: string
         }
         Insert: {
           day_started_at?: string
           id?: number
+          shop_id?: string | null
           status?: string
-          user_id: string
         }
         Update: {
           day_started_at?: string
           id?: number
+          shop_id?: string | null
           status?: string
-          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "store_status_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "store_status_shop_id_fkey"
+            columns: ["shop_id"]
             isOneToOne: true
-            referencedRelation: "users"
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -388,5 +447,7 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
+
+    
 
     

@@ -8,7 +8,7 @@ export type MenuItem = {
   image_url?: string;
   "data-ai-hint"?: string;
   created_at: string;
-  user_id: string;
+  shop_id: string;
 };
 
 export type OrderItem = {
@@ -30,7 +30,7 @@ export type Member = {
   email?: string | null;
   phone?: string | null;
   created_at: string;
-  user_id: string;
+  shop_id: string;
 };
 
 export type Bill = {
@@ -45,7 +45,7 @@ export type Bill = {
   date: string;
   member_id?: string | null;
   created_at: string;
-  user_id: string;
+  shop_id: string;
 }
 
 export type OpenBill = Bill & {
@@ -59,7 +59,7 @@ export type CompletedOrder = Bill & {
 };
 
 // For component props that might not have all fields from Supabase yet
-export type BillProps = Omit<Bill, 'id' | 'created_at' | 'user_id'> & { id?: string };
+export type BillProps = Omit<Bill, 'id' | 'created_at' | 'shop_id'> & { id?: string };
 
 
 export type ReceiptSettings = {
@@ -72,7 +72,28 @@ export type ReceiptSettings = {
 
 export type StoreStatus = {
   id: number;
-  user_id: string;
+  shop_id: string;
   status: 'OPEN' | 'CLOSED';
   day_started_at: string;
 };
+
+export type Shop = {
+  id: string;
+  owner_id: string;
+  created_at: string;
+};
+
+export type ShopMember = {
+  shop_id: string;
+  user_id: string;
+  created_at: string;
+  users?: {
+    email?: string;
+    raw_user_meta_data?: {
+        full_name?: string;
+        avatar_url?: string;
+    }
+  } | null
+};
+
+    

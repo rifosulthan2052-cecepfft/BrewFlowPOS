@@ -1,5 +1,6 @@
 
 
+
 'use client'
 
 import { useState, useMemo } from 'react';
@@ -48,6 +49,7 @@ import { Badge } from '@/components/ui/badge';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { Combobox } from '@/components/ui/combobox';
 
 
 const menuItemSchema = z.object({
@@ -99,6 +101,11 @@ export default function MenuPage() {
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
+    
+    const categories = useMemo(() => {
+        const uniqueCategories = new Set(menuItems.map(item => item.category).filter(Boolean));
+        return Array.from(uniqueCategories).map(cat => ({ value: cat!, label: cat! }));
+    }, [menuItems]);
 
     const form = useForm<MenuItemFormValues>({
         resolver: zodResolver(menuItemSchema),
@@ -290,7 +297,12 @@ export default function MenuPage() {
                                         <FormItem>
                                             <FormLabel>Category</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g., Coffee, Pastry" {...field} />
+                                               <Combobox
+                                                    options={categories}
+                                                    value={field.value ?? ''}
+                                                    onChange={field.onChange}
+                                                    placeholder="Select or create a category..."
+                                                />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -332,5 +344,7 @@ export default function MenuPage() {
         </AppLayout>
     )
 }
+
+    
 
     

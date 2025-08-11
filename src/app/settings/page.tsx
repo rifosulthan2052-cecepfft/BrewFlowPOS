@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -16,11 +17,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ReceiptToPrint } from '@/components/cashier/Receipt';
-import type { OrderItem, Fee } from '@/types';
+import type { OrderItem, Fee, ShopMember } from '@/types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, Loader2, UserPlus, Trash2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { useState, useEffect } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/hooks/use-auth';
 
 const settingsFormSchema = z.object({
   storeName: z.string().min(1, 'Store name is required'),
@@ -70,6 +74,129 @@ function ReceiptPreview({ formData }: { formData: SettingsFormValues }) {
     );
 }
 
+const inviteFormSchema = z.object({
+    email: z.string().email('Please enter a valid email address.'),
+});
+
+function InviteMemberDialog() {
+    const { inviteMember } = useApp();
+    const [isOpen, setIsOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const form = useForm<{email: string}>({
+        resolver: zodResolver(inviteFormSchema),
+        defaultValues: { email: '' },
+    });
+
+    const onSubmit = async ({ email }: { email: string }) => {
+        setIsSubmitting(true);
+        await inviteMember(email);
+        setIsSubmitting(false);
+        setIsOpen(false);
+        form.reset();
+    };
+    
+    return (
+         <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <UserPlus className="mr-2 h-4 w-4" /> Invite Member
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Invite Team Member</DialogTitle>
+                    <DialogDescription>
+                        Enter the email of the person you want to invite. They will receive an email with instructions to join your shop.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email Address</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="employee@example.com" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <DialogFooter>
+                            <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
+                            <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Send Invitation
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+function TeamMembersCard() {
+    const { user } = useAuth();
+    const { shopMembers, isShopOwner, removeMember } = useApp();
+    const [memberToRemove, setMemberToRemove] = useState<ShopMember | null>(null);
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Team Management</CardTitle>
+                    <CardDescription>Invite and manage your shop's team members.</CardDescription>
+                </div>
+                {isShopOwner && <InviteMemberDialog />}
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {shopMembers.map(member => (
+                        <div key={member.user_id} className="flex items-center justify-between">
+                             <div className="flex items-center gap-4">
+                                <Avatar>
+                                    <AvatarImage src={member.users?.raw_user_meta_data?.avatar_url} />
+                                    <AvatarFallback>{member.users?.email?.[0].toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium">{member.users?.raw_user_meta_data?.full_name || member.users?.email}</p>
+                                    <p className="text-sm text-muted-foreground">{member.users?.email}</p>
+                                </div>
+                            </div>
+                            {isShopOwner && member.user_id !== user?.id && (
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => setMemberToRemove(member)}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+            <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                           This will remove <span className="font-bold">{memberToRemove?.users?.email}</span> from your shop. They will no longer have access to any of the shop's data. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => memberToRemove && removeMember(memberToRemove.user_id)} className="bg-destructive hover:bg-destructive/90">
+                            Yes, Remove Member
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </Card>
+    )
+}
+
 export default function SettingsPage() {
     const { receiptSettings, taxRate, currency, uploadImage, updateStoreSettings } = useApp();
     const { toast } = useToast();
@@ -112,9 +239,10 @@ export default function SettingsPage() {
                 <Header />
             </AppLayout.Header>
             <AppLayout.Content>
-                <div className="p-4 md:p-6">
+                <div className="p-4 md:p-6 space-y-6">
                      <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                             <TeamMembersCard />
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Store Settings</CardTitle>
@@ -283,3 +411,5 @@ export default function SettingsPage() {
         </AppLayout>
     );
 }
+
+    

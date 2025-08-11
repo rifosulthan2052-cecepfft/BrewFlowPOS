@@ -46,6 +46,7 @@ type AppContextType = {
   editingBillId: string | null;
 
   completedOrders: CompletedOrder[];
+  allCompletedOrders: CompletedOrder[];
   lastCompletedOrder: CompletedOrder | null;
 
   storeStatus: StoreStatus | null;
@@ -115,6 +116,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [openBills, setOpenBills] = useState<OpenBill[]>([]);
   const [completedOrders, setCompletedOrders] = useState<CompletedOrder[]>([]);
+  const [allCompletedOrders, setAllCompletedOrders] = useState<CompletedOrder[]>([]);
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
@@ -154,21 +156,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('members').select('*'),
             supabase.from('open_bills').select('*'),
             supabase.from('store_settings').select('*').single(),
+            supabase.from('completed_orders').select('*').order('date', { ascending: false }), // Fetch all for history
         ];
         
-        // Only fetch completed orders if the day has started
-        if (currentStoreStatus?.day_started_at) {
-            fetchPromises.push(
-                supabase.from('completed_orders')
-                    .select('*')
-                    .gte('created_at', currentStoreStatus.day_started_at)
-                    .order('date', { ascending: false })
-            );
-        } else {
-            fetchPromises.push(Promise.resolve({ data: [], error: null })); // Placeholder
-        }
 
-        const [menuItemsRes, membersRes, openBillsRes, settingsRes, completedOrdersRes] = await Promise.all(fetchPromises);
+        const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes] = await Promise.all(fetchPromises);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
         if (menuItemsRes.data) setMenuItems(menuItemsRes.data as MenuItem[]);
@@ -178,9 +170,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         
         if (openBillsRes.error) throw openBillsRes.error;
         if (openBillsRes.data) setOpenBills(openBillsRes.data as OpenBill[]);
-
-        if (completedOrdersRes.error) throw completedOrdersRes.error;
-        if (completedOrdersRes.data) setCompletedOrders(completedOrdersRes.data as CompletedOrder[]);
+        
+        if (allCompletedOrdersRes.error) throw allCompletedOrdersRes.error;
+        if (allCompletedOrdersRes.data) {
+            const allOrders = allCompletedOrdersRes.data as CompletedOrder[];
+            setAllCompletedOrders(allOrders);
+            // Filter for daily summary
+            if(currentStoreStatus?.day_started_at) {
+                const dailyOrders = allOrders.filter(order => new Date(order.created_at) >= new Date(currentStoreStatus.day_started_at));
+                setCompletedOrders(dailyOrders);
+            } else {
+                setCompletedOrders([]);
+            }
+        }
         
         if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error
             throw settingsRes.error;
@@ -242,7 +244,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'| 'user_id'>) => {
     if(!user) return;
-    const { data, error } = await supabase.from('menu_items').insert([{ ...item }]).select().single();
+    const { data, error } = await supabase.from('menu_items').insert([{ ...item, user_id: user.id }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
     } else if (data) {
@@ -286,7 +288,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'user_id'>): Promise<Member | null> => {
     if(!user) return null;
-    const { data, error } = await supabase.from('members').insert([{ ...memberData }]).select().single();
+    const { data, error } = await supabase.from('members').insert([{ ...memberData, user_id: user.id }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
         return null;
@@ -383,8 +385,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (error) {
         toast({ variant: 'destructive', title: 'Error completing order', description: error.message });
     } else if(data) {
-        setCompletedOrders(prev => [data, ...prev]);
-        setLastCompletedOrder(data);
+        const newOrder = data as CompletedOrder;
+        setAllCompletedOrders(prev => [newOrder, ...prev]);
+        setCompletedOrders(prev => [newOrder, ...prev]);
+        setLastCompletedOrder(newOrder);
         setOrderStatus('paid');
         if (editingBillId) {
             await removeOpenBill(editingBillId);
@@ -587,6 +591,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     openBills,
     editingBillId,
     completedOrders,
+    allCompletedOrders,
     lastCompletedOrder,
     storeStatus,
     setOrderItems,
@@ -615,7 +620,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage]);
+  }), [isLoading, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, allCompletedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage]);
 
   return (
     <AppContext.Provider value={value}>

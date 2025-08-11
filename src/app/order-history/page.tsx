@@ -36,7 +36,7 @@ function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect
             </CardHeader>
             <CardContent className="flex-1">
                  <ul className="text-sm space-y-1">
-                    {order.items.map(item => (
+                    {(order.items as any[]).map(item => (
                         <li key={item.menuItemId} className="flex justify-between">
                             <span>{item.quantity}x {item.name}</span>
                             <span className="font-mono">{formatCurrency(item.price * item.quantity, currency)}</span>
@@ -143,7 +143,7 @@ function HistoryCompactSkeleton() {
 
 
 export default function OrderHistoryPage() {
-    const { completedOrders, isLoading } = useApp();
+    const { allCompletedOrders, isLoading } = useApp();
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
     const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
 
@@ -177,8 +177,8 @@ export default function OrderHistoryPage() {
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <CardTitle>Order History</CardTitle>
-                                    <CardDescription>Review past transactions.</CardDescription>
+                                    <CardTitle>Transaction History</CardTitle>
+                                    <CardDescription>Review all past transactions.</CardDescription>
                                 </div>
                                 <div className="flex items-center gap-2">
                                      <Button variant={viewMode === 'card' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('card')}>
@@ -193,7 +193,7 @@ export default function OrderHistoryPage() {
                         <CardContent>
                            {isLoading ? (
                                 renderSkeletons()
-                           ) : completedOrders.length === 0 ? (
+                           ) : allCompletedOrders.length === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <History className="mx-auto h-12 w-12" />
                                     <h3 className="mt-4 text-lg font-semibold">No Completed Orders</h3>
@@ -201,7 +201,7 @@ export default function OrderHistoryPage() {
                                 </div>
                             ) : (
                                  <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                                    {completedOrders.map(order => 
+                                    {allCompletedOrders.map(order => 
                                         viewMode === 'card' ? (
                                             <OrderHistoryCard key={order.id} order={order} onSelect={handleSelectOrder}/>
                                         ) : (
@@ -221,11 +221,11 @@ export default function OrderHistoryPage() {
                         </DialogHeader>
                         {selectedOrder && (
                              <Receipt 
-                                orderItems={selectedOrder.items}
+                                orderItems={selectedOrder.items as OrderItem[]}
                                 customerName={selectedOrder.customer_name}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
-                                fees={selectedOrder.fees}
+                                fees={selectedOrder.fees as Fee[]}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cash_paid}

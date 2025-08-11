@@ -142,7 +142,7 @@ function HistoryCompactSkeleton() {
     )
 }
 
-type Period = 'today' | 'yesterday' | 'week' | 'month';
+type Period = 'today' | 'yesterday' | 'week' | 'month' | '90days';
 
 export default function OrderHistoryPage() {
     const { allCompletedOrders, isLoading } = useApp();
@@ -166,6 +166,9 @@ export default function OrderHistoryPage() {
                 break;
             case 'month':
                 startDate = subDays(startOfToday(), 30);
+                break;
+            case '90days':
+                startDate = subDays(startOfToday(), 90);
                 break;
             default:
                 startDate = new Date(0); // Should not happen
@@ -196,6 +199,7 @@ export default function OrderHistoryPage() {
         yesterday: 'yesterday',
         week: 'in the last 7 days',
         month: 'in the last 30 days',
+        '90days': 'in the last 90 days',
     };
 
     const renderSkeletons = () => {
@@ -214,6 +218,7 @@ export default function OrderHistoryPage() {
         { label: 'Yesterday', value: 'yesterday' },
         { label: 'Last 7 Days', value: 'week' },
         { label: 'Last 30 Days', value: 'month' },
+        { label: 'Last 90 Days', value: '90days' },
     ];
 
     return (
@@ -239,9 +244,9 @@ export default function OrderHistoryPage() {
                                      </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 pt-4">
+                            <div className="flex items-center gap-2 pt-4 overflow-x-auto pb-2">
                                 {periodFilters.map(filter => (
-                                    <Button key={filter.value} variant={period === filter.value ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(filter.value)}>
+                                    <Button key={filter.value} variant={period === filter.value ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(filter.value)} className="flex-shrink-0">
                                         {filter.label}
                                     </Button>
                                 ))}
@@ -278,11 +283,11 @@ export default function OrderHistoryPage() {
                         </DialogHeader>
                         {selectedOrder && (
                              <Receipt 
-                                orderItems={selectedOrder.items as OrderItem[]}
+                                orderItems={selectedOrder.items as any[]}
                                 customerName={selectedOrder.customer_name}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
-                                fees={selected.fees as Fee[]}
+                                fees={selectedOrder.fees as any[]}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cash_paid}
@@ -296,5 +301,3 @@ export default function OrderHistoryPage() {
         </AppLayout>
     )
 }
-
-    

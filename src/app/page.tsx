@@ -10,7 +10,7 @@ import CurrentOrder from '@/components/cashier/CurrentOrder';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useApp } from '@/components/layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
-import { ChevronUp, ShoppingCart, PlayCircle } from 'lucide-react';
+import { ChevronUp, ShoppingCart, PlayCircle, Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -83,6 +84,7 @@ export default function CashierPage() {
         isLoading,
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
 
     const categories = useMemo(() => {
@@ -94,6 +96,16 @@ export default function CashierPage() {
         });
         return ['All', ...Array.from(cats)];
     }, [menuItems]);
+    
+    const filteredMenuItems = useMemo(() => {
+        if (!searchTerm) {
+            return menuItems;
+        }
+        return menuItems.filter(item => 
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [menuItems, searchTerm]);
+
     
     const handleNewOrder = () => {
         resetOrder();
@@ -133,29 +145,41 @@ export default function CashierPage() {
                 <div className="absolute inset-0 bg-background/50 z-10" />
             )}
             <Tabs defaultValue="All" className="space-y-4">
-              <TabsList>
-                {isLoading ? (
-                    <div className="flex gap-2">
-                        <Skeleton className="h-8 w-16 rounded-md" />
-                        <Skeleton className="h-8 w-20 rounded-md" />
-                        <Skeleton className="h-8 w-16 rounded-md" />
-                    </div>
-                ) : (
-                    categories.map(category => (
-                        <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                    ))
-                )}
-              </TabsList>
+                <div className="flex items-center gap-4">
+                  <TabsList>
+                    {isLoading ? (
+                        <div className="flex gap-2">
+                            <Skeleton className="h-8 w-16 rounded-md" />
+                            <Skeleton className="h-8 w-20 rounded-md" />
+                            <Skeleton className="h-8 w-16 rounded-md" />
+                        </div>
+                    ) : (
+                        categories.map(category => (
+                            <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                        ))
+                    )}
+                  </TabsList>
+                  <div className="relative flex-1">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                          placeholder="Search menu..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-8 w-full md:w-[300px]"
+                      />
+                  </div>
+                </div>
                {isLoading ? (
                     <MenuListSkeleton />
                ) : (
                     categories.map(category => (
                         <TabsContent key={category} value={category}>
                         <MenuList 
-                                menuItems={category === 'All' ? menuItems : menuItems.filter(item => item.category === category)} 
+                                menuItems={category === 'All' ? filteredMenuItems : filteredMenuItems.filter(item => item.category === category)} 
                                 orderItems={orderItems} 
                                 onAddItem={addItemToOrder}
                                 onUpdateQuantity={updateItemQuantity}
+                                searchTerm={searchTerm}
                             />
                         </TabsContent>
                     ))

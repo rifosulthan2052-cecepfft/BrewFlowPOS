@@ -195,7 +195,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('open_bills').select('*').eq('shop_id', currentShop.id),
             supabase.from('store_settings').select('*').eq('shop_id', currentShop.id).single(),
             supabase.from('completed_orders').select('*').eq('shop_id', currentShop.id).order('date', { ascending: false }),
-            supabase.from('shop_members').select('*, users(email, raw_user_meta_data)').eq('shop_id', currentShop.id),
+            supabase.from('shop_members').select('*, users!inner(*)').eq('shop_id', currentShop.id),
         ];
         
         const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes, shopMembersRes] = await Promise.all(fetchPromises);

@@ -2,14 +2,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings, StoreStatus } from '@/types';
 import { createClient } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
 type Currency = 'USD' | 'IDR';
-
-type StoreStatus = 'OPEN' | 'CLOSED';
 
 type PaymentDetails = {
   method: 'cash' | 'card';
@@ -29,12 +27,12 @@ type AppContextType = {
   }) => Promise<void>;
 
   menuItems: MenuItem[];
-  addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at'>) => Promise<void>;
+  addMenuItem: (item: Omit<MenuItem, 'id' | 'created_at' | 'user_id'>) => Promise<void>;
   updateMenuItem: (item: MenuItem) => Promise<void>;
   removeMenuItem: (id: string) => Promise<void>;
 
   members: Member[];
-  addMember: (member: Omit<Member, 'id' | 'created_at'>) => Promise<Member | null>;
+  addMember: (member: Omit<Member, 'id' | 'created_at' | 'user_id'>) => Promise<Member | null>;
   getMemberById: (id: string) => Member | undefined;
   getMemberByLookup: (lookup: string) => Member | undefined;
 
@@ -49,7 +47,7 @@ type AppContextType = {
   completedOrders: CompletedOrder[];
   lastCompletedOrder: CompletedOrder | null;
 
-  storeStatus: StoreStatus;
+  storeStatus: StoreStatus | null;
 
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   setFees: React.Dispatch<React.SetStateAction<Fee[]>>;
@@ -84,8 +82,8 @@ type AppContextType = {
   uploadImage: (file: File, bucket: 'menu-images' | 'logos') => Promise<string | null>;
   removeImage: (imageUrl: string, bucket: 'menu-images' | 'logos') => Promise<void>;
   addOrderToHistory: (paymentDetails: PaymentDetails) => Promise<void>;
-  endDay: () => void;
-  startNewDay: () => void;
+  endDay: () => Promise<void>;
+  startNewDay: () => Promise<void>;
 
   subtotal: number;
   total_fees: number;
@@ -124,7 +122,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orderStatus, setOrderStatus] = useState<'pending' | 'paid' | 'open_bill'>('pending');
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [lastCompletedOrder, setLastCompletedOrder] = useState<CompletedOrder | null>(null);
-  const [storeStatus, setStoreStatus] = useState<StoreStatus>('OPEN');
+  const [storeStatus, setStoreStatus] = useState<StoreStatus | null>(null);
   const [unsavedOrder, setUnsavedOrder] = useState({ items: [] as OrderItem[], customerName: '', fees: [] as Fee[], memberId: undefined as string | undefined });
 
   const fetchData = useCallback(async () => {
@@ -135,27 +133,56 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true);
     try {
-        const [menuItemsRes, membersRes, openBillsRes, completedOrdersRes, settingsRes] = await Promise.all([
-            supabase.from('menu_items').select('*').order('name'),
-            supabase.from('members').select('*'),
-            supabase.from('open_bills').select('*'),
-            supabase.from('completed_orders').select('*').limit(100).order('date', { ascending: false }),
+        let currentStoreStatus: StoreStatus;
+
+        const statusRes = await supabase.from('store_status').select('*').eq('user_id', user.id).single();
+        if (statusRes.error && statusRes.error.code !== 'PGRST116') throw statusRes.error;
+        if (statusRes.data) {
+            currentStoreStatus = statusRes.data;
+            setStoreStatus(statusRes.data);
+        } else {
+            // First time user, create a status for them
+            const { data, error } = await supabase.from('store_status').insert({ user_id: user.id, status: 'OPEN' }).select().single();
+            if (error) throw error;
+            currentStoreStatus = data;
+            setStoreStatus(data);
+        }
+
+        const fetchPromises = [
+            supabase.from('menu_items').select('*').eq('user_id', user.id).order('name'),
+            supabase.from('members').select('*').eq('user_id', user.id),
+            supabase.from('open_bills').select('*').eq('user_id', user.id),
             supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
-        ]);
+        ];
+        
+        // Only fetch completed orders if the day has started
+        if (currentStoreStatus?.day_started_at) {
+            fetchPromises.push(
+                supabase.from('completed_orders')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .gte('created_at', currentStoreStatus.day_started_at)
+                    .order('date', { ascending: false })
+            );
+        } else {
+            fetchPromises.push(Promise.resolve({ data: [], error: null })); // Placeholder
+        }
+
+        const [menuItemsRes, membersRes, openBillsRes, settingsRes, completedOrdersRes] = await Promise.all(fetchPromises);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
-        if (menuItemsRes.data) setMenuItems(menuItemsRes.data);
+        if (menuItemsRes.data) setMenuItems(menuItemsRes.data as MenuItem[]);
 
         if (membersRes.error) throw membersRes.error;
-        if (membersRes.data) setMembers(membersRes.data);
+        if (membersRes.data) setMembers(membersRes.data as Member[]);
         
         if (openBillsRes.error) throw openBillsRes.error;
-        if (openBillsRes.data) setOpenBills(openBillsRes.data);
+        if (openBillsRes.data) setOpenBills(openBillsRes.data as OpenBill[]);
 
         if (completedOrdersRes.error) throw completedOrdersRes.error;
-        if (completedOrdersRes.data) setCompletedOrders(completedOrdersRes.data);
+        if (completedOrdersRes.data) setCompletedOrders(completedOrdersRes.data as CompletedOrder[]);
         
-        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error if no settings exist yet
+        if (settingsRes.error && settingsRes.error.code !== 'PGRST116') { // Ignore 'exact one row' error
             throw settingsRes.error;
         }
 
@@ -169,7 +196,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             });
             setTaxRate(settingsRes.data.tax_rate);
             setCurrency(settingsRes.data.currency as Currency);
-        } else if (user) {
+        } else {
             // No settings found, create a default one for the new user.
             const defaultSettings = {
               user_id: user.id, 
@@ -178,13 +205,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               phone_number: '(555) 123-4567',
               footer_message: 'Thank you for your visit!',
               tax_rate: 0.11,
-              currency: 'IDR',
+              currency: 'IDR' as Currency,
               logo_url: ''
             };
             const { data, error } = await supabase.from('store_settings').insert(defaultSettings).select().single();
-
             if (error) throw error;
-            
             if (data) {
                  setReceiptSettings({
                     storeName: data.store_name,
@@ -197,7 +222,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 setCurrency(data.currency as Currency);
             }
         }
-
     } catch (error: any) {
         toast({ variant: 'destructive', title: "Error fetching data", description: error.message });
     } finally {
@@ -216,8 +240,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [orderItems, customer_name, fees, member_id, editingBillId]);
 
-  const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'>) => {
-    const { data, error } = await supabase.from('menu_items').insert([item]).select().single();
+  const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'| 'user_id'>) => {
+    if(!user) return;
+    const { data, error } = await supabase.from('menu_items').insert([{ ...item, user_id: user.id }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
     } else if (data) {
@@ -259,8 +284,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addMember = async (memberData: Omit<Member, 'id' | 'created_at'>): Promise<Member | null> => {
-    const { data, error } = await supabase.from('members').insert([memberData]).select().single();
+  const addMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'user_id'>): Promise<Member | null> => {
+    if(!user) return null;
+    const { data, error } = await supabase.from('members').insert([{ ...memberData, user_id: user.id }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
         return null;
@@ -335,7 +361,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [orderItems, fees, taxRate]);
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
+    if (!user) return;
     const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
+      user_id: user.id,
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -365,7 +393,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const saveAsOpenBill = async () => {
+    if (!user) return;
     const billPayload = {
+      user_id: user.id,
       customer_name: customer_name || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,
@@ -417,16 +447,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const endDay = () => {
-    setStoreStatus('CLOSED');
+  const endDay = async () => {
+    if(!user) return;
+    const { data, error } = await supabase.from('store_status')
+        .update({ status: 'CLOSED' })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+    if(error) {
+        toast({ variant: 'destructive', title: 'Error ending day', description: error.message });
+    } else {
+        setStoreStatus(data);
+    }
   }
 
   const startNewDay = async () => {
-    // In a real app, you might archive old orders, but here we'll just clear them from state.
-    // The data remains in Supabase.
-    setCompletedOrders([]);
-    setStoreStatus('OPEN');
-    await fetchData();
+    if(!user) return;
+    const { data, error } = await supabase.from('store_status')
+        .update({ status: 'OPEN', day_started_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+    if(error) {
+        toast({ variant: 'destructive', title: 'Error starting new day', description: error.message });
+    } else {
+        setStoreStatus(data);
+        setCompletedOrders([]); // Clear local state immediately
+    }
   }
 
   const activeOrderExists = useMemo(() => {

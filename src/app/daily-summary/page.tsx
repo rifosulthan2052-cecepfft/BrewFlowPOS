@@ -249,8 +249,9 @@ export default function DailySummaryPage() {
         };
 
         completedOrders.forEach(order => {
-            const target = sales[order.payment_method];
-            order.items.forEach(item => {
+            const target = sales[order.payment_method as 'cash' | 'card'];
+            if (!target) return;
+            (order.items as any[]).forEach(item => {
                 target.items[item.name] = (target.items[item.name] || 0) + item.quantity;
             });
             target.totalFees += order.total_fees;
@@ -262,16 +263,16 @@ export default function DailySummaryPage() {
     }, [completedOrders]);
 
 
-    const handleEndDay = () => {
-        endDay();
+    const handleEndDay = async () => {
+        await endDay();
         toast({
             title: "Day Ended",
             description: "Daily sales have been finalized. You can review the summary until you start a new day.",
         });
     }
     
-    const handleStartNewDay = () => {
-        startNewDay();
+    const handleStartNewDay = async () => {
+        await startNewDay();
         toast({
             title: "New Day Started",
             description: "Previous day's summary has been cleared. Ready for new sales.",
@@ -304,14 +305,14 @@ export default function DailySummaryPage() {
                              <div>
                                 <CardTitle>Daily Summary</CardTitle>
                                 <CardDescription>
-                                    {storeStatus === 'OPEN' ? "Review of today's sales activity." : "Store is closed. Review the summary before starting a new day."}
+                                    {storeStatus?.status === 'OPEN' ? "Review of today's sales activity." : "Store is closed. Review the summary before starting a new day."}
                                 </CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)} disabled={isTodaySummaryEmpty}>
                                     <Printer className="mr-2 h-4 w-4" /> Print
                                 </Button>
-                                {storeStatus === 'OPEN' ? (
+                                {storeStatus?.status === 'OPEN' ? (
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="destructive" disabled={isTodaySummaryEmpty}>
@@ -420,11 +421,11 @@ export default function DailySummaryPage() {
                         </DialogHeader>
                         {selectedOrder && (
                              <Receipt 
-                                orderItems={selectedOrder.items}
+                                orderItems={selectedOrder.items as OrderItem[]}
                                 customerName={selectedOrder.customer_name}
                                 subtotal={selectedOrder.subtotal}
                                 tax={selectedOrder.tax}
-                                fees={selectedOrder.fees}
+                                fees={selectedOrder.fees as Fee[]}
                                 total={selectedOrder.total}
                                 memberId={selectedOrder.member_id}
                                 cashPaid={selectedOrder.cash_paid}

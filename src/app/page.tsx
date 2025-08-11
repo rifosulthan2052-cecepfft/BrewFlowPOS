@@ -113,8 +113,8 @@ export default function CashierPage() {
         }
     }
     
-    const handleStartNewDay = () => {
-        startNewDay();
+    const handleStartNewDay = async () => {
+        await startNewDay();
         toast({
             title: "New Day Started",
             description: "Ready for new sales.",
@@ -129,7 +129,7 @@ export default function CashierPage() {
       </AppLayout.Header>
       <AppLayout.Content>
        <div className="relative p-4 md:p-6 pb-24">
-            {storeStatus === 'CLOSED' && (
+            {storeStatus?.status === 'CLOSED' && (
                 <div className="absolute inset-0 bg-background/50 z-10" />
             )}
             <Tabs defaultValue="All" className="space-y-4">
@@ -183,7 +183,7 @@ export default function CashierPage() {
                 />
             </DialogContent>
         </Dialog>
-         <Dialog open={storeStatus === 'CLOSED' && !isLoading} onOpenChange={() => {}}>
+         <Dialog open={!isLoading && storeStatus?.status === 'CLOSED'} onOpenChange={() => {}}>
             <DialogContent className="sm:max-w-md" hideCloseButton>
                 <DialogHeader>
                     <DialogTitle>Store is Closed</DialogTitle>

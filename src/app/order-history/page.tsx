@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Receipt from '@/components/cashier/Receipt';
-import { CreditCard, Wallet, List, Grid, Printer, History } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, Printer, History, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { startOfToday, startOfYesterday, subDays } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 function OrderHistoryCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
     const { currency, taxRate } = useApp();
@@ -149,6 +150,7 @@ export default function OrderHistoryPage() {
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
     const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
     const [period, setPeriod] = useState<Period>('today');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const filteredOrders = useMemo(() => {
         const now = new Date();
@@ -173,18 +175,31 @@ export default function OrderHistoryPage() {
             default:
                 startDate = new Date(0); // Should not happen
         }
+        
+        let ordersInPeriod;
 
         if (period === 'yesterday') {
             const yesterdayStart = startOfYesterday();
             const yesterdayEnd = startOfToday();
-            return allCompletedOrders.filter(order => {
+            ordersInPeriod = allCompletedOrders.filter(order => {
                 const orderDate = new Date(order.date);
                 return orderDate >= yesterdayStart && orderDate < yesterdayEnd;
             });
+        } else {
+            ordersInPeriod = allCompletedOrders.filter(order => new Date(order.date) >= startDate);
         }
-        
-        return allCompletedOrders.filter(order => new Date(order.date) >= startDate);
-    }, [allCompletedOrders, period]);
+
+        if (!searchTerm) {
+            return ordersInPeriod;
+        }
+
+        const lowercasedTerm = searchTerm.toLowerCase();
+        return ordersInPeriod.filter(order => 
+            order.customer_name.toLowerCase().includes(lowercasedTerm) ||
+            order.id.toLowerCase().includes(lowercasedTerm)
+        );
+
+    }, [allCompletedOrders, period, searchTerm]);
 
     const handleSelectOrder = (order: CompletedOrder) => {
         setSelectedOrder(order);
@@ -230,7 +245,7 @@ export default function OrderHistoryPage() {
                 <div className="p-4 md:p-6">
                     <Card>
                         <CardHeader>
-                            <div className="flex justify-between items-center">
+                            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                                 <div>
                                     <CardTitle>Transaction History</CardTitle>
                                     <CardDescription>Review all past transactions.</CardDescription>
@@ -244,12 +259,23 @@ export default function OrderHistoryPage() {
                                      </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 pt-4 overflow-x-auto pb-2">
-                                {periodFilters.map(filter => (
-                                    <Button key={filter.value} variant={period === filter.value ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(filter.value)} className="flex-shrink-0">
-                                        {filter.label}
-                                    </Button>
-                                ))}
+                             <div className="flex flex-col md:flex-row items-center gap-2 pt-4">
+                                <div className="flex items-center gap-2 pb-2 overflow-x-auto w-full md:w-auto">
+                                    {periodFilters.map(filter => (
+                                        <Button key={filter.value} variant={period === filter.value ? 'default' : 'outline'} size="sm" onClick={() => setPeriod(filter.value)} className="flex-shrink-0">
+                                            {filter.label}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <div className="relative w-full md:flex-1 md:max-w-xs">
+                                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                     <Input 
+                                        placeholder="Search by customer name or order ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8"
+                                     />
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -258,8 +284,10 @@ export default function OrderHistoryPage() {
                            ) : filteredOrders.length === 0 ? (
                                 <div className="text-center py-16 text-muted-foreground">
                                     <History className="mx-auto h-12 w-12" />
-                                    <h3 className="mt-4 text-lg font-semibold">No Completed Orders</h3>
-                                    <p className="mt-2 text-sm">No transactions were found for {periodLabels[period]}.</p>
+                                    <h3 className="mt-4 text-lg font-semibold">No Completed Orders Found</h3>
+                                    <p className="mt-2 text-sm">
+                                        {searchTerm ? `No transactions matched your search for "${searchTerm}".` : `No transactions were found for ${periodLabels[period]}.`}
+                                    </p>
                                 </div>
                             ) : (
                                  <div className={`grid gap-4 ${viewMode === 'card' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
@@ -301,3 +329,5 @@ export default function OrderHistoryPage() {
         </AppLayout>
     )
 }
+
+    

@@ -193,20 +193,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         const { data: shopMembersData, error: shopMembersError } = await supabase.rpc('get_shop_members', { p_shop_id: currentShopId });
         if (shopMembersError) throw shopMembersError;
-
-        const transformedMembers = shopMembersData.map(m => ({
-          shop_id: m.shop_id,
-          user_id: m.user_id,
-          created_at: m.created_at,
-          users: {
-            email: m.email,
-            raw_user_meta_data: {
-              full_name: m.full_name,
-              avatar_url: m.avatar_url
-            }
-          }
-        }));
-        setShopMembers(transformedMembers as ShopMember[]);
+        setShopMembers(shopMembersData as ShopMember[] || []);
 
         const fetchPromises = [
             supabase.from('menu_items').select('*').eq('shop_id', currentShopId).order('name'),
@@ -338,7 +325,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'shop_id'>): Promise<Member | null> => {
     if(!shop) return null;
-    const { data, error } = await supabase.from('members').insert([{ ...memberData, shop_id: shop.id }]).select().single();
+    
+    // Convert empty string email to null to avoid unique constraint violations
+    const payload = {
+      ...memberData,
+      email: memberData.email === '' ? null : memberData.email,
+      shop_id: shop.id
+    };
+
+    const { data, error } = await supabase.from('members').insert([payload]).select().single();
+    
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
         return null;

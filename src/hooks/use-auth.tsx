@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
       // The router.refresh() is key to re-running the middleware
       // and getting the correct user state on the server.
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         router.refresh();
       }
       setLoading(false);

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient } from "@supabase/supabase-js";
@@ -26,7 +27,7 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
 
         // Invite the user by email
         const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            data: { shop_id: shop_id } // You can pass metadata here if needed
+            data: { shop_id: shop_id, password_set: false } // Mark password as not set
         });
 
         if (inviteError) {

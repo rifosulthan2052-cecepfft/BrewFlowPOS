@@ -8,6 +8,7 @@ import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, Receip
 import { createClient } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { inviteUser } from '@/lib/actions';
 
 type Currency = 'USD' | 'IDR';
 
@@ -617,11 +618,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const inviteMember = async (email: string) => {
     if (!shop) return;
-    const { data, error } = await supabase.functions.invoke('invite-user', {
-        body: { email, shop_id: shop.id },
-    });
+    const { error } = await inviteUser({ email, shop_id: shop.id });
     if (error) {
-        toast({ variant: 'destructive', title: 'Error inviting member', description: error.message });
+        toast({ variant: 'destructive', title: 'Error inviting member', description: error });
     } else {
         toast({ title: 'Invitation sent', description: `An invitation has been sent to ${email}.` });
     }

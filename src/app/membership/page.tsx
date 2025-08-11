@@ -109,8 +109,25 @@ export default function MembershipPage() {
         resolver: zodResolver(memberFormSchema),
         defaultValues: { name: '', email: '', phone: '' },
     });
+    
+    const isValueInUse = (field: 'email' | 'phone', value: string | undefined | null) => {
+        if (!value) return false;
+        return members.some(member => member[field] === value);
+    }
 
     const onSubmit = async (values: MemberFormValues) => {
+        let hasError = false;
+        if (values.email && isValueInUse('email', values.email)) {
+            form.setError('email', { type: 'manual', message: 'This email is already in use.' });
+            hasError = true;
+        }
+        if (values.phone && isValueInUse('phone', values.phone)) {
+            form.setError('phone', { type: 'manual', message: 'This phone number is already in use.' });
+            hasError = true;
+        }
+
+        if (hasError) return;
+
         const newMember = await addMember(values);
         if (newMember) {
             setSelectedMember(newMember);

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -361,7 +362,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
     if (!user) return;
-    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at' | 'user_id'> = {
+    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
+      user_id: user.id,
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -393,6 +395,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveAsOpenBill = async () => {
     if (!user) return;
     const billPayload = {
+      user_id: user.id,
       customer_name: customer_name || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,

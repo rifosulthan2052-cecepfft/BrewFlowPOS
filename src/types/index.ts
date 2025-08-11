@@ -1,6 +1,3 @@
-
-
-
 export type MenuItem = {
   id: string;
   name: string;
@@ -96,5 +93,3 @@ export type ShopMember = {
     }
   } | null
 };
-
-    

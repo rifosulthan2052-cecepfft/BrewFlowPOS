@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -150,30 +148,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-        // Step 1: Determine the user's shop.
-        const { data: memberEntries, error: memberError } = await supabase.from('shop_members').select('*, shops(*)').eq('user_id', user.id).limit(1);
-        if (memberError) throw memberError;
-        
-        let currentShop: Shop | null = null;
-        if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
-            currentShop = memberEntries[0].shops as Shop;
-        } else {
-            // This user is not part of any shop. Let's create one for them.
-             const { data: newShop, error: newShopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
-            if (newShopError) throw newShopError;
-            if (!newShop) throw new Error("Shop creation succeeded but returned no data.");
+      // Step 1: Find the user's shop.
+      const { data: memberEntries, error: memberError } = await supabase.from('shop_members').select('*, shops(*)').eq('user_id', user.id).limit(1);
+      if (memberError) throw memberError;
 
-            // Add the owner as the first member of the new shop.
-            const { error: newMemberError } = await supabase.from('shop_members').insert({ shop_id: newShop.id, user_id: user.id });
-            if (newMemberError) throw newMemberError;
-            
-            currentShop = newShop;
-        }
-        
-        if (!currentShop) {
-            throw new Error("Could not establish shop context for the user.");
-        }
-        setShop(currentShop);
+      let currentShop: Shop | null = null;
+      if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
+          currentShop = memberEntries[0].shops as Shop;
+      } else {
+        // If user is not a member of any shop, we assume they should have one created.
+        // This is a fallback and shouldn't happen if users are added correctly.
+        toast({
+            variant: 'destructive',
+            title: "No shop assigned",
+            description: "Your user account is not assigned to any shop. Please contact your administrator.",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!currentShop) {
+          throw new Error("Could not establish shop context for the user.");
+      }
+      setShop(currentShop);
         
         // Step 2: Fetch all data for the determined shop_id
         let currentStoreStatus: StoreStatus;
@@ -622,6 +619,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toast({ variant: 'destructive', title: 'Error inviting member', description: error });
     } else {
         toast({ title: 'Invitation sent', description: `An invitation has been sent to ${email}.` });
+        fetchData(); // Refresh shop members list
     }
   };
 

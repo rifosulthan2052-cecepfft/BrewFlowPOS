@@ -1,4 +1,3 @@
-
 'use server';
 
 import { createClient } from "@supabase/supabase-js";
@@ -56,5 +55,3 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
         return { success: false, error: error.message };
     }
 }
-
-    

@@ -159,7 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             currentShop = memberEntries[0].shops as Shop;
         } else {
             // This user is not part of any shop. Let's create one for them.
-            const { data: newShop, error: newShopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
+             const { data: newShop, error: newShopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
             if (newShopError) throw newShopError;
             if (!newShop) throw new Error("Shop creation succeeded but returned no data.");
 
@@ -708,5 +708,3 @@ export function useApp() {
   }
   return context;
 }
-
-

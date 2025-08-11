@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
@@ -31,9 +32,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import CurrentOrder from '@/components/cashier/CurrentOrder';
-import { MoreVertical, BookOpen } from 'lucide-react';
+import { MoreVertical, BookOpen, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 
 function BillCardSkeleton() {
@@ -72,9 +74,12 @@ export default function OpenBillsPage() {
         removeOpenBill, setEditingBillId, activeOrderExists, unsavedOrder, isLoading
     } = useApp();
     const router = useRouter();
+    const { toast } = useToast();
     const [isSettleDialogOpen, setIsSettleDialogOpen] = useState(false);
     const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+    const [isRemoveAlertOpen, setIsRemoveAlertOpen] = useState(false);
     const [selectedBill, setSelectedBill] = useState<OpenBill | null>(null);
+    const [billToRemove, setBillToRemove] = useState<OpenBill | null>(null);
     const [actionToConfirm, setActionToConfirm] = useState<'addToBill' | 'settleBill' | null>(null);
 
     const handleSettleClick = (bill: OpenBill) => {
@@ -87,6 +92,23 @@ export default function OpenBillsPage() {
         } else {
             proceedToSettleBill();
         }
+    };
+    
+    const handleRemoveClick = (bill: OpenBill) => {
+        setBillToRemove(bill);
+        setIsRemoveAlertOpen(true);
+    };
+    
+    const handleConfirmRemove = async () => {
+        if (billToRemove) {
+            await removeOpenBill(billToRemove.id);
+            toast({
+                title: 'Bill Canceled',
+                description: `The bill for ${billToRemove.customer_name} has been removed.`,
+            });
+        }
+        setIsRemoveAlertOpen(false);
+        setBillToRemove(null);
     };
 
     const handleAddToBillClick = (bill: OpenBill) => {
@@ -255,6 +277,11 @@ export default function OpenBillsPage() {
                                                         <DropdownMenuItem onClick={() => handleSettleClick(bill)}>
                                                             Settle Bill
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuItem onClick={() => handleRemoveClick(bill)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Cancel Bill
+                                                        </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </CardFooter>
@@ -292,6 +319,23 @@ export default function OpenBillsPage() {
                         <AlertDialogFooter>
                             <AlertDialogCancel onClick={handleCancelWarning}>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleConfirmWarning}>Discard and Proceed</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
+                 <AlertDialog open={isRemoveAlertOpen} onOpenChange={setIsRemoveAlertOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently cancel the bill for "{billToRemove?.customer_name}". This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleConfirmRemove} className="bg-destructive hover:bg-destructive/90">
+                                Yes, Cancel Bill
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

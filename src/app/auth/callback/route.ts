@@ -9,29 +9,25 @@ export async function GET(req: NextRequest) {
   const next = searchParams.get('next') ?? '/';
 
   if (code) {
+    let cookies: Partial<{ [key: string]: string }> = {};
+    const allCookies = req.cookies.getAll()
+    allCookies.forEach(cookie => {
+        cookies[cookie.name] = cookie.value;
+    });
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return req.cookies.get(name)?.value
+            return cookies[name]
           },
           set(name: string, value: string, options: CookieOptions) {
-            const newResponse = NextResponse.redirect(new URL(next, origin));
-            newResponse.cookies.set({
-              name,
-              value,
-              ...options,
-            })
+            cookies[name] = value;
           },
           remove(name: string, options: CookieOptions) {
-            const newResponse = NextResponse.redirect(new URL(next, origin));
-            newResponse.cookies.set({
-              name,
-              value: '',
-              ...options,
-            })
+            delete cookies[name];
           },
         },
         cookieOptions: {
@@ -42,7 +38,18 @@ export async function GET(req: NextRequest) {
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(next, origin));
+      const response = NextResponse.redirect(new URL(next, origin));
+      // Manually set all cookies from the session on the response
+      for (const name in cookies) {
+        if(cookies[name]){
+             response.cookies.set({
+                name,
+                value: cookies[name]!,
+                path: '/',
+            });
+        }
+      }
+      return response;
     }
   }
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -141,45 +142,45 @@ function TeamMembersCard() {
     const [memberToRemove, setMemberToRemove] = useState<ShopMember | null>(null);
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Team Management</CardTitle>
-                    <CardDescription>Invite and manage your shop's team members.</CardDescription>
-                </div>
-                {isShopOwner && <InviteMemberDialog />}
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {shopMembers.map(member => (
-                        <div key={member.user_id} className="flex items-center justify-between">
-                             <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={member.users?.raw_user_meta_data?.avatar_url} />
-                                    <AvatarFallback>{member.users?.email?.[0].toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p className="font-medium">{member.users?.raw_user_meta_data?.full_name || member.users?.email}</p>
-                                    <p className="text-sm text-muted-foreground">{member.users?.email}</p>
+        <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Team Management</CardTitle>
+                        <CardDescription>Invite and manage your shop's team members.</CardDescription>
+                    </div>
+                    {isShopOwner && <InviteMemberDialog />}
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {shopMembers.map(member => (
+                            <div key={member.user_id} className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <Avatar>
+                                        <AvatarImage src={member.avatar_url ?? undefined} />
+                                        <AvatarFallback>{member.email?.[0].toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-medium">{member.full_name || member.email}</p>
+                                        <p className="text-sm text-muted-foreground">{member.email}</p>
+                                    </div>
                                 </div>
+                                {isShopOwner && member.user_id !== user?.id && (
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setMemberToRemove(member)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                )}
                             </div>
-                            {isShopOwner && member.user_id !== user?.id && (
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setMemberToRemove(member)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-            <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+                        ))}
+                    </div>
+                </CardContent>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                           This will remove <span className="font-bold">{memberToRemove?.users?.email}</span> from your shop. They will no longer have access to any of the shop's data. This action cannot be undone.
+                        This will remove <span className="font-bold">{memberToRemove?.email}</span> from your shop. They will no longer have access to any of the shop's data. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -189,8 +190,8 @@ function TeamMembersCard() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog>
-        </Card>
+            </Card>
+        </AlertDialog>
     )
 }
 
@@ -408,3 +409,4 @@ export default function SettingsPage() {
         </AppLayout>
     );
 }
+

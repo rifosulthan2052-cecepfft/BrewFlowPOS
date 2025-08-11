@@ -152,44 +152,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: memberEntries, error: memberError } = await supabase
         .from('shop_members')
-        .select('*, shops(*)')
+        .select('shop_id')
         .eq('user_id', user.id)
         .limit(1);
         
       if (memberError) throw memberError;
 
-      let currentShop: Shop | null = null;
-      if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
-          currentShop = Array.isArray(memberEntries[0].shops) ? memberEntries[0].shops[0] : memberEntries[0].shops;
+      let currentShopId: string | null = null;
+      if (memberEntries && memberEntries.length > 0) {
+          currentShopId = memberEntries[0].shop_id
       } else {
         const { data: shopData, error: shopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
         if (shopError) throw shopError;
-        currentShop = shopData;
-
-        const { error: newMemberError } = await supabase.from('shop_members').insert({ shop_id: currentShop.id, user_id: user.id });
+        
+        const { error: newMemberError } = await supabase.from('shop_members').insert({ shop_id: shopData.id, user_id: user.id });
         if(newMemberError) throw newMemberError;
+        currentShopId = shopData.id;
       }
       
-      if (!currentShop) {
+      if (!currentShopId) {
           throw new Error("Could not establish shop context for the user.");
       }
-      setShop(currentShop);
+
+      const { data: currentShopData, error: shopDetailsError } = await supabase.from('shops').select('*').eq('id', currentShopId).single();
+      if(shopDetailsError) throw shopDetailsError;
+      setShop(currentShopData);
         
         let currentStoreStatus: StoreStatus;
-        const statusRes = await supabase.from('store_status').select('*').eq('shop_id', currentShop.id).single();
+        const statusRes = await supabase.from('store_status').select('*').eq('shop_id', currentShopId).single();
         if (statusRes.error && statusRes.error.code !== 'PGRST116') throw statusRes.error;
         if (statusRes.data) {
             currentStoreStatus = statusRes.data;
             setStoreStatus(statusRes.data);
         } else {
-            const { data, error } = await supabase.from('store_status').insert({ shop_id: currentShop.id, status: 'OPEN' }).select().single();
+            const { data, error } = await supabase.from('store_status').insert({ shop_id: currentShopId, status: 'OPEN' }).select().single();
             if (error) throw error;
             currentStoreStatus = data!;
             setStoreStatus(data!);
         }
 
-        const { data: shopMembersData, error: shopMembersError } = await supabase.rpc('get_shop_members', { p_shop_id: currentShop.id });
-
+        const { data: shopMembersData, error: shopMembersError } = await supabase.rpc('get_shop_members', { p_shop_id: currentShopId });
         if (shopMembersError) throw shopMembersError;
 
         const transformedMembers = shopMembersData.map(m => ({
@@ -207,11 +209,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setShopMembers(transformedMembers as ShopMember[]);
 
         const fetchPromises = [
-            supabase.from('menu_items').select('*').eq('shop_id', currentShop.id).order('name'),
-            supabase.from('members').select('*').eq('shop_id', currentShop.id),
-            supabase.from('open_bills').select('*').eq('shop_id', currentShop.id),
-            supabase.from('store_settings').select('*').eq('shop_id', currentShop.id).single(),
-            supabase.from('completed_orders').select('*').eq('shop_id', currentShop.id).order('date', { ascending: false }),
+            supabase.from('menu_items').select('*').eq('shop_id', currentShopId).order('name'),
+            supabase.from('members').select('*').eq('shop_id', currentShopId),
+            supabase.from('open_bills').select('*').eq('shop_id', currentShopId),
+            supabase.from('store_settings').select('*').eq('shop_id', currentShopId).single(),
+            supabase.from('completed_orders').select('*').eq('shop_id', currentShopId).order('date', { ascending: false }),
         ];
         
         const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes] = await Promise.all(fetchPromises);
@@ -248,7 +250,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             setCurrency(settingsRes.data.currency as Currency);
         } else {
              const defaultSettings = {
-              shop_id: currentShop.id,
+              shop_id: currentShopId,
               store_name: 'BrewFlow',
               address: '123 Coffee Lane, Brewville, CA 90210',
               phone_number: '(555) 123-4567',

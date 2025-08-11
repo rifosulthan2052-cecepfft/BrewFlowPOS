@@ -149,10 +149,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         const fetchPromises = [
-            supabase.from('menu_items').select('*').eq('user_id', user.id).order('name'),
-            supabase.from('members').select('*').eq('user_id', user.id),
-            supabase.from('open_bills').select('*').eq('user_id', user.id),
-            supabase.from('store_settings').select('*').eq('user_id', user.id).single(),
+            supabase.from('menu_items').select('*').order('name'),
+            supabase.from('members').select('*'),
+            supabase.from('open_bills').select('*'),
+            supabase.from('store_settings').select('*').single(),
         ];
         
         // Only fetch completed orders if the day has started
@@ -160,7 +160,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             fetchPromises.push(
                 supabase.from('completed_orders')
                     .select('*')
-                    .eq('user_id', user.id)
                     .gte('created_at', currentStoreStatus.day_started_at)
                     .order('date', { ascending: false })
             );
@@ -242,7 +241,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMenuItem = async (item: Omit<MenuItem, 'id' | 'created_at'| 'user_id'>) => {
     if(!user) return;
-    const { data, error } = await supabase.from('menu_items').insert([{ ...item, user_id: user.id }]).select().single();
+    const { data, error } = await supabase.from('menu_items').insert([{ ...item }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
     } else if (data) {
@@ -286,7 +285,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMember = async (memberData: Omit<Member, 'id' | 'created_at' | 'user_id'>): Promise<Member | null> => {
     if(!user) return null;
-    const { data, error } = await supabase.from('members').insert([{ ...memberData, user_id: user.id }]).select().single();
+    const { data, error } = await supabase.from('members').insert([{ ...memberData }]).select().single();
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding member', description: error.message });
         return null;
@@ -362,8 +361,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
     if (!user) return;
-    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
-      user_id: user.id,
+    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at' | 'user_id'> = {
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
       subtotal,
@@ -395,7 +393,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const saveAsOpenBill = async () => {
     if (!user) return;
     const billPayload = {
-      user_id: user.id,
       customer_name: customer_name || `Bill ${Date.now()}`,
       items: orderItems,
       subtotal,

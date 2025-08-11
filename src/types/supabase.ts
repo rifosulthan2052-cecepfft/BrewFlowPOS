@@ -42,7 +42,7 @@ export type Database = {
           tax: number
           total: number
           total_fees: number
-          user_id?: string
+          user_id: string
         }
         Update: {
           cash_paid?: number | null
@@ -93,7 +93,7 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
-          user_id?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -115,34 +115,37 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          base_price: number
           category: string | null
           created_at: string
           "data-ai-hint": string | null
           id: string
           image_url: string | null
           name: string
-          price: number
           user_id: string
+          variants: Json
         }
         Insert: {
+          base_price: number
           category?: string | null
           created_at?: string
           "data-ai-hint"?: string | null
           id?: string
           image_url?: string | null
           name: string
-          price: number
-          user_id?: string
+          user_id: string
+          variants?: Json
         }
         Update: {
+          base_price?: number
           category?: string | null
           created_at?: string
           "data-ai-hint"?: string | null
           id?: string
           image_url?: string | null
           name?: string
-          price?: number
           user_id?: string
+          variants?: Json
         }
         Relationships: [
           {
@@ -181,7 +184,7 @@ export type Database = {
           tax: number
           total: number
           total_fees: number
-          user_id?: string
+          user_id: string
         }
         Update: {
           created_at?: string

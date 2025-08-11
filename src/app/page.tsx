@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { MenuItem } from '@/types';
+import type { MenuItem, Variant } from '@/types';
 import Header from '@/components/layout/Header';
 import MenuList from '@/components/cashier/MenuList';
 import CurrentOrder from '@/components/cashier/CurrentOrder';
@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { VariantSelectorDialog } from '@/components/cashier/VariantSelectorDialog';
 
 
 function OrderSummaryBar({ onOpen }: { onOpen: () => void }) {
@@ -85,6 +86,7 @@ export default function CashierPage() {
     } = useApp();
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
     const { toast } = useToast();
 
     const categories = useMemo(() => {
@@ -111,6 +113,21 @@ export default function CashierPage() {
         resetOrder();
         setIsOrderOpen(false);
     }
+
+    const handleSelectMenuItem = (menuItem: MenuItem) => {
+      if (menuItem.variants && menuItem.variants.length > 0) {
+        setSelectedMenuItem(menuItem);
+      } else {
+        addItemToOrder({ menuItem });
+      }
+    };
+    
+    const handleVariantSelected = (variant: Variant) => {
+      if (selectedMenuItem) {
+        addItemToOrder({ menuItem: selectedMenuItem, variant });
+      }
+      setSelectedMenuItem(null);
+    };
     
     const handleOpenChange = (open: boolean) => {
         if (!open) {
@@ -179,9 +196,7 @@ export default function CashierPage() {
                         <TabsContent key={category} value={category}>
                         <MenuList 
                                 menuItems={category === 'All' ? filteredMenuItems : filteredMenuItems.filter(item => item.category === category)} 
-                                orderItems={orderItems} 
-                                onAddItem={addItemToOrder}
-                                onUpdateQuantity={updateItemQuantity}
+                                onSelectMenuItem={handleSelectMenuItem}
                                 searchTerm={searchTerm}
                             />
                         </TabsContent>
@@ -190,6 +205,13 @@ export default function CashierPage() {
             </Tabs>
         </div>
         <OrderSummaryBar onOpen={() => setIsOrderOpen(true)} />
+
+        <VariantSelectorDialog 
+          menuItem={selectedMenuItem}
+          onSelectVariant={handleVariantSelected}
+          onClose={() => setSelectedMenuItem(null)}
+        />
+
         <Dialog open={isOrderOpen} onOpenChange={handleOpenChange}>
             <DialogContent className={cn("max-w-2xl p-0 gap-0 flex flex-col", orderStatus !== 'paid' && "h-[90vh]")}>
                 <CurrentOrder

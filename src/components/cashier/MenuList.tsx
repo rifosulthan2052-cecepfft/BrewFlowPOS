@@ -9,17 +9,11 @@ import { SearchX } from 'lucide-react';
 
 type MenuListProps = {
   menuItems: MenuItem[];
-  orderItems: OrderItem[];
-  onAddItem: (item: MenuItem) => void;
-  onUpdateQuantity: (menuItemId: string, quantity: number) => void;
+  onSelectMenuItem: (item: MenuItem) => void;
   searchTerm: string;
 };
 
-export default function MenuList({ menuItems, orderItems, onAddItem, onUpdateQuantity, searchTerm }: MenuListProps) {
-  const getQuantity = (menuItemId: string) => {
-    const item = orderItems.find(item => item.menuItemId === menuItemId);
-    return item ? item.quantity : 0;
-  }
+export default function MenuList({ menuItems, onSelectMenuItem, searchTerm }: MenuListProps) {
 
   if (menuItems.length === 0 && searchTerm) {
     return (
@@ -37,9 +31,7 @@ export default function MenuList({ menuItems, orderItems, onAddItem, onUpdateQua
             <MenuItemCard 
               key={item.id} 
               item={item} 
-              quantity={getQuantity(item.id)}
-              onAddItem={onAddItem}
-              onUpdateQuantity={onUpdateQuantity}
+              onSelect={() => onSelectMenuItem(item)}
             />
           ))}
         </div>

@@ -1,11 +1,17 @@
 
+export type Variant = {
+  name: string;
+  price: number;
+};
+
 export type MenuItem = {
   id: string;
   name: string;
-  price: number;
+  base_price: number;
   category?: string;
   image_url?: string;
   "data-ai-hint"?: string;
+  variants: Variant[];
   created_at: string;
   user_id: string;
 };
@@ -15,6 +21,10 @@ export type OrderItem = {
   name: string;
   price: number;
   quantity: number;
+  variant?: {
+    name: string;
+    price: number;
+  };
 };
 
 export type Fee = {

@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
-import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings, StoreStatus } from '@/types';
+import type { OrderItem, Fee, MenuItem, OpenBill, CompletedOrder, Member, ReceiptSettings, StoreStatus, Variant } from '@/types';
 import { createClient } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -15,6 +15,11 @@ type PaymentDetails = {
   cash_paid?: number;
   change_due?: number;
 }
+
+type AddToOrderPayload = {
+  menuItem: MenuItem;
+  variant?: Variant;
+};
 
 type AppContextType = {
   isLoading: boolean;
@@ -57,9 +62,9 @@ type AppContextType = {
   setMemberId: React.Dispatch<React.SetStateAction<string | undefined>>;
   setOrderStatus: React.Dispatch<React.SetStateAction<'pending' | 'paid' | 'open_bill'>>;
   
-  addItemToOrder: (item: MenuItem) => void;
-  updateItemQuantity: (menuItemId: string, quantity: number) => void;
-  removeItemFromOrder: (menuItemId: string) => void;
+  addItemToOrder: (payload: AddToOrderPayload) => void;
+  updateItemQuantity: (menuItemId: string, quantity: number, variantName?: string) => void;
+  removeItemFromOrder: (menuItemId: string, variantName?: string) => void;
   addFeeToOrder: (fee: Fee) => void;
   resetOrder: () => void;
   saveAsOpenBill: () => void;
@@ -163,7 +168,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes] = await Promise.all(fetchPromises);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
-        if (menuItemsRes.data) setMenuItems(menuItemsRes.data as MenuItem[]);
+        if (menuItemsRes.data) setMenuItems(menuItemsRes.data as unknown as MenuItem[]);
 
         if (membersRes.error) throw membersRes.error;
         if (membersRes.data) setMembers(membersRes.data as Member[]);
@@ -248,7 +253,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (error) {
         toast({ variant: 'destructive', title: 'Error adding item', description: error.message });
     } else if (data) {
-        setMenuItems(prev => [...prev, data]);
+        setMenuItems(prev => [...prev, data as unknown as MenuItem]);
         toast({ title: 'Menu item added' });
     }
   };
@@ -261,7 +266,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
      if (error) {
         toast({ variant: 'destructive', title: 'Error updating item', description: error.message });
     } else if (data) {
-        setMenuItems(prev => prev.map(i => i.id === item.id ? data : i));
+        setMenuItems(prev => prev.map(i => i.id === item.id ? data as unknown as MenuItem : i));
         toast({ title: 'Menu item updated' });
 
         if (oldImageUrl && oldImageUrl !== data.image_url) {
@@ -312,33 +317,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const addItemToOrder = (item: MenuItem) => {
+  const addItemToOrder = ({ menuItem, variant }: AddToOrderPayload) => {
     setOrderItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.menuItemId === item.id);
+      const price = variant ? variant.price : menuItem.base_price;
+      const name = variant ? `${menuItem.name} (${variant.name})` : menuItem.name;
+      
+      const existingItem = prevItems.find((i) => i.menuItemId === menuItem.id && i.variant?.name === variant?.name);
+      
       if (existingItem) {
         return prevItems.map((i) =>
-          i.menuItemId === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.menuItemId === menuItem.id && i.variant?.name === variant?.name
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
         );
       }
-      return [...prevItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
+      return [...prevItems, { 
+          menuItemId: menuItem.id, 
+          name: name,
+          price: price, 
+          quantity: 1,
+          variant: variant ? { name: variant.name, price: variant.price } : undefined,
+      }];
     });
   };
 
-  const updateItemQuantity = (menuItemId: string, quantity: number) => {
+  const updateItemQuantity = (menuItemId: string, quantity: number, variantName?: string) => {
     if (quantity <= 0) {
-      removeItemFromOrder(menuItemId);
+      removeItemFromOrder(menuItemId, variantName);
     } else {
       setOrderItems((prevItems) =>
         prevItems.map((i) =>
-          i.menuItemId === menuItemId ? { ...i, quantity } : i
+          i.menuItemId === menuItemId && i.variant?.name === variantName
+            ? { ...i, quantity }
+            : i
         )
       );
     }
   };
   
-  const removeItemFromOrder = (menuItemId: string) => {
-    setOrderItems((prevItems) => prevItems.filter((i) => i.menuItemId !== menuItemId));
+  const removeItemFromOrder = (menuItemId: string, variantName?: string) => {
+    setOrderItems((prevItems) => prevItems.filter((i) => !(i.menuItemId === menuItemId && i.variant?.name === variantName)));
   };
+
 
   const addFeeToOrder = (fee: Fee) => {
     setFees((prevFees) => [...prevFees, fee]);
@@ -364,7 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addOrderToHistory = async (paymentDetails: PaymentDetails) => {
     if (!user) return;
-    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at'> = {
+    const newCompletedOrder: Omit<CompletedOrder, 'id' | 'created_at' | 'user_id'> = {
       user_id: user.id,
       customer_name: customer_name || 'Walk-in Customer',
       items: orderItems,
@@ -417,7 +437,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (error) {
              toast({ variant: 'destructive', title: 'Error updating bill', description: error.message });
         } else if (data) {
-            setOpenBills(prev => prev.map(b => b.id === editingBillId ? data : b));
+            setOpenBills(prev => prev.map(b => b.id === editingBillId ? data as OpenBill : b));
             toast({ title: 'Bill updated' });
         }
     } else {
@@ -426,7 +446,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (error) {
              toast({ variant: 'destructive', title: 'Error saving bill', description: error.message });
         } else if (data) {
-            setOpenBills(prev => [...prev, data]);
+            setOpenBills(prev => [...prev, data as OpenBill]);
             toast({ title: 'Bill saved' });
         }
     }

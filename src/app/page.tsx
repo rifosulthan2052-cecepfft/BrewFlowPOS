@@ -180,6 +180,8 @@ export default function CashierPage() {
                         <MenuList 
                                 menuItems={category === 'All' ? filteredMenuItems : filteredMenuItems.filter(item => item.category === category)} 
                                 onSelectMenuItem={addItemToOrder}
+                                onUpdateQuantity={updateItemQuantity}
+                                orderItems={orderItems}
                                 searchTerm={searchTerm}
                             />
                         </TabsContent>
@@ -228,5 +230,3 @@ export default function CashierPage() {
     </AppLayout>
   );
 }
-
-    

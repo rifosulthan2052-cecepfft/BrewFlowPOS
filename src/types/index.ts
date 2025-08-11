@@ -76,5 +76,3 @@ export type StoreStatus = {
   status: 'OPEN' | 'CLOSED';
   day_started_at: string;
 };
-
-    

@@ -2,17 +2,19 @@
 
 'use client';
 
-import type { MenuItem } from '@/types';
+import type { MenuItem, OrderItem } from '@/types';
 import MenuItemCard from './MenuItemCard';
 import { SearchX } from 'lucide-react';
 
 type MenuListProps = {
   menuItems: MenuItem[];
+  orderItems: OrderItem[];
   onSelectMenuItem: (item: MenuItem) => void;
+  onUpdateQuantity: (menuItemId: string, quantity: number) => void;
   searchTerm: string;
 };
 
-export default function MenuList({ menuItems, onSelectMenuItem, searchTerm }: MenuListProps) {
+export default function MenuList({ menuItems, orderItems, onSelectMenuItem, onUpdateQuantity, searchTerm }: MenuListProps) {
 
   if (menuItems.length === 0 && searchTerm) {
     return (
@@ -26,15 +28,18 @@ export default function MenuList({ menuItems, onSelectMenuItem, searchTerm }: Me
 
   return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {menuItems.map((item) => (
-            <MenuItemCard 
-              key={item.id} 
-              item={item} 
-              onSelect={onSelectMenuItem}
-            />
-          ))}
+          {menuItems.map((item) => {
+             const orderItem = orderItems.find(oi => oi.menuItemId === item.id);
+             return (
+                <MenuItemCard 
+                  key={item.id} 
+                  item={item} 
+                  onSelect={onSelectMenuItem}
+                  onUpdateQuantity={onUpdateQuantity}
+                  orderItem={orderItem}
+                />
+             )
+          })}
         </div>
   );
 }
-
-    

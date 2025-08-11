@@ -148,23 +148,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      // Step 1: Find the user's shop.
-      const { data: memberEntries, error: memberError } = await supabase.from('shop_members').select('*, shops(*)').eq('user_id', user.id).limit(1);
+      // Step 1: Find the user's shop membership entry.
+      const { data: memberEntries, error: memberError } = await supabase
+        .from('shop_members')
+        .select('*, shops(*)')
+        .eq('user_id', user.id)
+        .limit(1);
+        
       if (memberError) throw memberError;
 
       let currentShop: Shop | null = null;
       if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
           currentShop = memberEntries[0].shops as Shop;
       } else {
-        // If user is not a member of any shop, we assume they should have one created.
-        // This is a fallback and shouldn't happen if users are added correctly.
-        toast({
-            variant: 'destructive',
-            title: "No shop assigned",
-            description: "Your user account is not assigned to any shop. Please contact your administrator.",
-        });
-        setIsLoading(false);
-        return;
+        const { data: shopData, error: shopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
+        if (shopError) throw shopError;
+        currentShop = shopData;
+
+        const { error: newMemberError } = await supabase.from('shop_members').insert({ shop_id: currentShop.id, user_id: user.id });
+        if(newMemberError) throw newMemberError;
       }
       
       if (!currentShop) {

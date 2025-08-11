@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/utils';
 
 type MenuItemCardProps = {
   item: MenuItem;
-  onSelect: () => void;
+  onSelect: (item: MenuItem) => void;
 };
 
 function getHintFromItemName(name: string): string {
@@ -30,24 +30,11 @@ function getInitials(name: string): string {
 export default function MenuItemCard({ item, onSelect }: MenuItemCardProps) {
   const { currency } = useApp();
   const hint = item.name ? getHintFromItemName(item.name) : '';
-  
-  const displayPrice = () => {
-    if (item.variants?.length > 0) {
-      const prices = item.variants.map(v => v.price);
-      const min = Math.min(...prices);
-      const max = Math.max(...prices);
-      if (min === max) {
-        return formatCurrency(min, currency);
-      }
-      return `${formatCurrency(min, currency)} - ${formatCurrency(max, currency)}`;
-    }
-    return formatCurrency(item.base_price, currency);
-  };
 
   return (
     <Card
       className="cursor-pointer hover:shadow-accent/20 hover:shadow-lg transition-shadow duration-300 overflow-hidden relative"
-      onClick={onSelect}
+      onClick={() => onSelect(item)}
       aria-label={`Add ${item.name} to order`}
     >
       <CardContent className="p-0 flex flex-col items-center text-center">
@@ -67,9 +54,11 @@ export default function MenuItemCard({ item, onSelect }: MenuItemCardProps) {
         </div>
         <div className="p-2 w-full">
           <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-          <p className="text-sm text-muted-foreground">{displayPrice()}</p>
+          <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
         </div>
       </CardContent>
     </Card>
   );
 }
+
+    

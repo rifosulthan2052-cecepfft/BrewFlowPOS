@@ -6,7 +6,7 @@ import React from 'react';
 import type { OrderItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX, CheckCircle } from 'lucide-react';
+import { Plus, Minus, User, Wallet, PlusCircle, Trash2, FileText, CreditCard, ChevronUp, Save, ScanLine, QrCode, UserX } from 'lucide-react';
 import { useApp } from '../layout/AppProvider';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -36,8 +36,8 @@ type CurrentOrderProps = {
   items: OrderItem[];
   customer_name: string;
   orderStatus: 'pending' | 'paid' | 'open_bill';
-  onUpdateQuantity: (menuItemId: string, quantity: number, variantName?: string) => void;
-  onRemoveItem: (menuItemId: string, variantName?: string) => void;
+  onUpdateQuantity: (menuItemId: string, quantity: number) => void;
+  onRemoveItem: (menuItemId: string) => void;
   onCustomerNameChange: (name: string) => void;
   onNewOrder: () => void;
   onClearOrder: () => void;
@@ -87,6 +87,7 @@ export default function CurrentOrder({
 
   const handleDoneClick = () => {
     handleSaveOpenBill();
+    onClose();
   }
   
   const associateMember = (memberId: string) => {
@@ -327,30 +328,30 @@ export default function CurrentOrder({
                     ) : (
                     <ul className="space-y-4 pr-4 py-4">
                         {items.map((item) => (
-                        <li key={`${item.menuItemId}-${item.variant?.name}`} className="flex items-center gap-4 animate-in fade-in">
+                        <li key={item.menuItemId} className="flex items-center gap-4 animate-in fade-in">
                             <div className="flex-1">
                             <p className="font-semibold">{item.name}</p>
                             <p className="text-sm text-muted-foreground">{formatCurrency(item.price, currency)}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1, item.variant?.name)}>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity - 1)}>
                                 <Minus className="h-4 w-4" />
                             </Button>
                             <Input
                                 type="number"
                                 className="h-8 w-12 text-center"
                                 value={item.quantity}
-                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0, item.variant?.name)}
+                                onChange={(e) => onUpdateQuantity(item.menuItemId, parseInt(e.target.value) || 0)}
                                 aria-label={`${item.name} quantity`}
                             />
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1, item.variant?.name)}>
+                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => onUpdateQuantity(item.menuItemId, item.quantity + 1)}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                             </div>
                             <p className="w-24 text-right font-medium">
                             {formatCurrency(item.price * item.quantity, currency)}
                             </p>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId, item.variant?.name)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onRemoveItem(item.menuItemId)}>
                             <Trash2 className="h-4 w-4" />
                             </Button>
                         </li>
@@ -399,8 +400,7 @@ export default function CurrentOrder({
             <div className='w-full space-y-2 mt-4'>
                  { editingBillId ? (
                     <div className='grid grid-cols-2 gap-2'>
-                       <Button size="lg" onClick={handleDoneClick}>
-                            <CheckCircle className="mr-2 h-4 w-4" />
+                        <Button size="lg" onClick={handleDoneClick}>
                             Done
                         </Button>
                         <PaymentDialog 
@@ -437,3 +437,5 @@ export default function CurrentOrder({
     </TooltipProvider>
   );
 }
+
+    

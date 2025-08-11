@@ -1,17 +1,12 @@
 
-export type Variant = {
-  name: string;
-  price: number;
-};
 
 export type MenuItem = {
   id: string;
   name: string;
-  base_price: number;
+  price: number;
   category?: string;
   image_url?: string;
   "data-ai-hint"?: string;
-  variants: Variant[];
   created_at: string;
   user_id: string;
 };
@@ -21,10 +16,6 @@ export type OrderItem = {
   name: string;
   price: number;
   quantity: number;
-  variant?: {
-    name: string;
-    price: number;
-  };
 };
 
 export type Fee = {
@@ -85,3 +76,5 @@ export type StoreStatus = {
   status: 'OPEN' | 'CLOSED';
   day_started_at: string;
 };
+
+    

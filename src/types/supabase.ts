@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -115,37 +116,34 @@ export type Database = {
       }
       menu_items: {
         Row: {
-          base_price: number
           category: string | null
           created_at: string
           "data-ai-hint": string | null
           id: string
           image_url: string | null
           name: string
+          price: number
           user_id: string
-          variants: Json
         }
         Insert: {
-          base_price: number
           category?: string | null
           created_at?: string
           "data-ai-hint"?: string | null
           id?: string
           image_url?: string | null
           name: string
+          price: number
           user_id: string
-          variants?: Json
         }
         Update: {
-          base_price?: number
           category?: string | null
           created_at?: string
           "data-ai-hint"?: string | null
           id?: string
           image_url?: string | null
           name?: string
+          price?: number
           user_id?: string
-          variants?: Json
         }
         Relationships: [
           {
@@ -390,3 +388,5 @@ export type Enums<
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
+
+    

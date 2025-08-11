@@ -2,8 +2,7 @@
 
 'use client';
 
-import type { MenuItem, OrderItem } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
+import type { MenuItem } from '@/types';
 import MenuItemCard from './MenuItemCard';
 import { SearchX } from 'lucide-react';
 
@@ -31,9 +30,11 @@ export default function MenuList({ menuItems, onSelectMenuItem, searchTerm }: Me
             <MenuItemCard 
               key={item.id} 
               item={item} 
-              onSelect={() => onSelectMenuItem(item)}
+              onSelect={onSelectMenuItem}
             />
           ))}
         </div>
   );
 }
+
+    

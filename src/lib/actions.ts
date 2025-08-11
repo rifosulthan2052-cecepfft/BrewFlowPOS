@@ -27,7 +27,8 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
 
         // Invite the user by email
         const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            data: { shop_id: shop_id, password_set: false } // Mark password as not set
+            data: { shop_id: shop_id, password_set: false }, // Mark password as not set
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
         });
 
         if (inviteError) {

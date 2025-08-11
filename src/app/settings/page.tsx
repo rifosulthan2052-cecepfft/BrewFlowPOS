@@ -138,7 +138,7 @@ function InviteMemberDialog() {
 
 function TeamMembersCard() {
     const { user } = useAuth();
-    const { shopMembers, isShopOwner, removeMember } = useApp();
+    const { shopMembers, isShopOwner, removeShopMember } = useApp();
     const [memberToRemove, setMemberToRemove] = useState<ShopMember | null>(null);
 
     return (
@@ -185,7 +185,7 @@ function TeamMembersCard() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => memberToRemove && removeMember(memberToRemove.user_id)} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => memberToRemove && removeShopMember(memberToRemove.user_id)} className="bg-destructive hover:bg-destructive/90">
                             Yes, Remove Member
                         </AlertDialogAction>
                     </AlertDialogFooter>

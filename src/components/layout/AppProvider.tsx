@@ -22,7 +22,7 @@ type AppContextType = {
   shop: Shop | null;
   shopMembers: ShopMember[];
   inviteMember: (email: string) => Promise<void>;
-  removeMember: (userId: string) => Promise<void>;
+  removeShopMember: (userId: string) => Promise<void>;
   isShopOwner: boolean;
 
   currency: Currency;
@@ -41,6 +41,8 @@ type AppContextType = {
 
   members: Member[];
   addMember: (member: Omit<Member, 'id' | 'created_at' | 'shop_id'>) => Promise<Member | null>;
+  updateMember: (member: Omit<Member, 'created_at' | 'shop_id'>) => Promise<void>;
+  removeCustomerMember: (id: string) => Promise<void>;
   getMemberById: (id: string) => Member | undefined;
   getMemberByLookup: (lookup: string) => Member | undefined;
 
@@ -192,7 +194,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         const { data: shopMembersData, error: shopMembersError } = await supabase.rpc('get_shop_members', { p_shop_id: currentShopId });
-        if (shopMembersError) throw shopMembersError;
+        if (shopMembersError) {
+          console.error("Error fetching shop members via RPC:", shopMembersError);
+          // Fallback or retry logic can be placed here if necessary
+          throw shopMembersError;
+        }
         setShopMembers(shopMembersData as ShopMember[] || []);
 
         const fetchPromises = [
@@ -344,6 +350,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return data;
     }
     return null;
+  };
+  
+  const updateMember = async (memberData: Omit<Member, 'created_at' | 'shop_id'>) => {
+    const { id, ...updateData } = memberData;
+    const payload = {
+        ...updateData,
+        email: updateData.email === '' ? null : updateData.email,
+    };
+    const { data, error } = await supabase.from('members').update(payload).eq('id', id).select().single();
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error updating member', description: error.message });
+    } else if (data) {
+        setMembers(prev => prev.map(m => m.id === id ? data : m));
+        toast({ title: 'Member updated' });
+    }
+  };
+
+  const removeCustomerMember = async (id: string) => {
+    const { error } = await supabase.from('members').delete().eq('id', id);
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error removing member', description: error.message });
+    } else {
+        setMembers(prev => prev.filter(m => m.id !== id));
+        toast({ title: 'Member removed' });
+    }
   };
 
   const getMemberById = (id: string) => {
@@ -636,7 +667,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const removeMember = async (userId: string) => {
+  const removeShopMember = async (userId: string) => {
     if (!shop) return;
     const { error } = await supabase.from('shop_members').delete().eq('shop_id', shop.id).eq('user_id', userId);
     if (error) {
@@ -652,7 +683,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     shop,
     shopMembers,
     inviteMember,
-    removeMember,
+    removeShopMember,
     isShopOwner,
     currency,
     taxRate,
@@ -664,6 +695,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removeMenuItem,
     members,
     addMember,
+    updateMember,
+    removeCustomerMember,
     getMemberById,
     getMemberByLookup,
     orderItems,
@@ -703,7 +736,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, shop, shopMembers, isShopOwner, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, allCompletedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage, inviteMember, removeMember]);
+  }), [isLoading, shop, shopMembers, isShopOwner, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, allCompletedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage, inviteMember, removeShopMember, updateMember, removeCustomerMember]);
 
   return (
     <AppContext.Provider value={value}>

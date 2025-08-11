@@ -15,14 +15,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { PlusCircle, Printer, QrCode } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { PlusCircle, Printer, QrCode, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { CoffeeIcon } from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 const memberFormSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1, "Name is required."),
   email: z.string().email({ message: "Invalid email address." }).optional().or(z.literal('')),
   phone: z.string().optional(),
@@ -95,8 +113,10 @@ function MemberListSkeleton() {
 
 
 export default function MembershipPage() {
-    const { members, addMember, isLoading } = useApp();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const { members, addMember, updateMember, removeCustomerMember, isLoading } = useApp();
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingMember, setEditingMember] = useState<Member | null>(null);
+    const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
     const cardPrintRef = useRef<HTMLDivElement>(null);
@@ -110,29 +130,37 @@ export default function MembershipPage() {
         defaultValues: { name: '', email: '', phone: '' },
     });
     
-    const isValueInUse = (field: 'email' | 'phone', value: string | undefined | null) => {
+    const isValueInUse = (field: 'email' | 'phone', value: string | undefined | null, memberId?: string) => {
         if (!value) return false;
-        return members.some(member => member[field] === value);
+        return members.some(member => member.id !== memberId && member[field] === value);
     }
 
     const onSubmit = async (values: MemberFormValues) => {
         let hasError = false;
-        if (values.email && isValueInUse('email', values.email)) {
+        const memberId = editingMember?.id;
+
+        if (values.email && isValueInUse('email', values.email, memberId)) {
             form.setError('email', { type: 'manual', message: 'This email is already in use.' });
             hasError = true;
         }
-        if (values.phone && isValueInUse('phone', values.phone)) {
+        if (values.phone && isValueInUse('phone', values.phone, memberId)) {
             form.setError('phone', { type: 'manual', message: 'This phone number is already in use.' });
             hasError = true;
         }
 
         if (hasError) return;
 
-        const newMember = await addMember(values);
-        if (newMember) {
-            setSelectedMember(newMember);
+        if (editingMember) {
+            await updateMember({ ...editingMember, ...values });
+        } else {
+            const newMember = await addMember(values);
+            if (newMember) {
+                setSelectedMember(newMember); // Open card view for new member
+            }
         }
-        setIsDialogOpen(false);
+        
+        setIsFormOpen(false);
+        setEditingMember(null);
         form.reset();
     };
 
@@ -142,6 +170,28 @@ export default function MembershipPage() {
     
     const handleCloseCardView = () => {
         setSelectedMember(null);
+    }
+    
+    const handleOpenForm = (member: Member | null = null) => {
+        setEditingMember(member);
+        if (member) {
+            form.reset({
+                id: member.id,
+                name: member.name || '',
+                email: member.email || '',
+                phone: member.phone || '',
+            });
+        } else {
+            form.reset({ name: '', email: '', phone: '' });
+        }
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = () => {
+        if (memberToDelete) {
+            removeCustomerMember(memberToDelete.id);
+            setMemberToDelete(null);
+        }
     }
 
     return (
@@ -157,7 +207,7 @@ export default function MembershipPage() {
                                 <CardTitle>Membership</CardTitle>
                                 <CardDescription>Manage your customer members.</CardDescription>
                             </div>
-                            <Button onClick={() => setIsDialogOpen(true)}>
+                            <Button onClick={() => handleOpenForm()}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Member
                             </Button>
@@ -174,9 +224,28 @@ export default function MembershipPage() {
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {members.map(member => (
                                         <Card key={member.id}>
-                                            <CardHeader>
-                                                <CardTitle>{member.name || 'Valued Member'}</CardTitle>
-                                                <CardDescription>{member.id}</CardDescription>
+                                            <CardHeader className="flex flex-row items-center justify-between">
+                                                <div className="flex-1">
+                                                    <CardTitle>{member.name || 'Valued Member'}</CardTitle>
+                                                    <CardDescription>{member.id}</CardDescription>
+                                                </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleOpenForm(member)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setMemberToDelete(member)} className="text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </CardHeader>
                                             <CardContent>
                                                 <p className="text-sm text-muted-foreground">{member.email}</p>
@@ -196,10 +265,10 @@ export default function MembershipPage() {
                     </Card>
                 </div>
 
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Add New Member</DialogTitle>
+                            <DialogTitle>{editingMember ? 'Edit Member' : 'Add New Member'}</DialogTitle>
                         </DialogHeader>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -243,8 +312,10 @@ export default function MembershipPage() {
                                     )}
                                 />
                                 <DialogFooter>
-                                    <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                                    <Button type="submit">Create Member</Button>
+                                    <DialogClose asChild>
+                                        <Button type="button" variant="secondary">Cancel</Button>
+                                    </DialogClose>
+                                    <Button type="submit">{editingMember ? 'Save Changes' : 'Create Member'}</Button>
                                 </DialogFooter>
                             </form>
                         </Form>
@@ -268,9 +339,24 @@ export default function MembershipPage() {
                     </DialogContent>
                 </Dialog>
 
+                <AlertDialog open={!!memberToDelete} onOpenChange={(open) => !open && setMemberToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete the member "{memberToDelete?.name}". This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                                Delete
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
             </AppLayout.Content>
         </AppLayout>
     );
 }
-
-    

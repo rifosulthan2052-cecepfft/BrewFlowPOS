@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { createContext, useContext, useState, useMemo, useEffect, useCallback } from 'react';
@@ -149,7 +150,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
-      // Step 1: Find the user's shop membership entry.
       const { data: memberEntries, error: memberError } = await supabase
         .from('shop_members')
         .select('*, shops(*)')
@@ -160,7 +160,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       let currentShop: Shop | null = null;
       if (memberEntries && memberEntries.length > 0 && memberEntries[0].shops) {
-          currentShop = memberEntries[0].shops as Shop;
+          currentShop = Array.isArray(memberEntries[0].shops) ? memberEntries[0].shops[0] : memberEntries[0].shops;
       } else {
         const { data: shopData, error: shopError } = await supabase.from('shops').insert({ owner_id: user.id }).select().single();
         if (shopError) throw shopError;
@@ -175,7 +175,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setShop(currentShop);
         
-        // Step 2: Fetch all data for the determined shop_id
         let currentStoreStatus: StoreStatus;
         const statusRes = await supabase.from('store_status').select('*').eq('shop_id', currentShop.id).single();
         if (statusRes.error && statusRes.error.code !== 'PGRST116') throw statusRes.error;
@@ -183,12 +182,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             currentStoreStatus = statusRes.data;
             setStoreStatus(statusRes.data);
         } else {
-            // First time this shop is used, create a status for them
             const { data, error } = await supabase.from('store_status').insert({ shop_id: currentShop.id, status: 'OPEN' }).select().single();
             if (error) throw error;
             currentStoreStatus = data!;
             setStoreStatus(data!);
         }
+
+        const { data: shopMembersData, error: shopMembersError } = await supabase.rpc('get_shop_members', { p_shop_id: currentShop.id });
+
+        if (shopMembersError) throw shopMembersError;
+
+        const transformedMembers = shopMembersData.map(m => ({
+          shop_id: m.shop_id,
+          user_id: m.user_id,
+          created_at: m.created_at,
+          users: {
+            email: m.email,
+            raw_user_meta_data: {
+              full_name: m.full_name,
+              avatar_url: m.avatar_url
+            }
+          }
+        }));
+        setShopMembers(transformedMembers as ShopMember[]);
 
         const fetchPromises = [
             supabase.from('menu_items').select('*').eq('shop_id', currentShop.id).order('name'),
@@ -196,10 +212,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             supabase.from('open_bills').select('*').eq('shop_id', currentShop.id),
             supabase.from('store_settings').select('*').eq('shop_id', currentShop.id).single(),
             supabase.from('completed_orders').select('*').eq('shop_id', currentShop.id).order('date', { ascending: false }),
-            supabase.from('shop_members').select('*, users!shop_members_user_id_fkey(*)').eq('shop_id', currentShop.id),
         ];
         
-        const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes, shopMembersRes] = await Promise.all(fetchPromises);
+        const [menuItemsRes, membersRes, openBillsRes, settingsRes, allCompletedOrdersRes] = await Promise.all(fetchPromises);
 
         if (menuItemsRes.error) throw menuItemsRes.error;
         setMenuItems(menuItemsRes.data as MenuItem[] || []);
@@ -219,9 +234,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         } else {
             setCompletedOrders([]);
         }
-
-        if (shopMembersRes.error) throw shopMembersRes.error;
-        setShopMembers(shopMembersRes.data as ShopMember[] || []);
 
         if (settingsRes.error && settingsRes.error.code !== 'PGRST116') throw settingsRes.error;
         if (settingsRes.data) {

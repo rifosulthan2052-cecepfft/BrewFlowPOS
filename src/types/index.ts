@@ -86,10 +86,10 @@ export type ShopMember = {
   user_id: string;
   created_at: string;
   users?: {
-    email?: string;
+    email?: string | null;
     raw_user_meta_data?: {
-        full_name?: string;
-        avatar_url?: string;
-    }
+        full_name?: string | null;
+        avatar_url?: string | null;
+    } | null
   } | null
 };

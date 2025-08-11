@@ -142,8 +142,8 @@ function TeamMembersCard() {
     const [memberToRemove, setMemberToRemove] = useState<ShopMember | null>(null);
 
     return (
-        <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
-            <Card>
+        <Card>
+            <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                         <CardTitle>Team Management</CardTitle>
@@ -190,8 +190,8 @@ function TeamMembersCard() {
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </Card>
-        </AlertDialog>
+            </AlertDialog>
+        </Card>
     )
 }
 
@@ -409,4 +409,3 @@ export default function SettingsPage() {
         </AppLayout>
     );
 }
-

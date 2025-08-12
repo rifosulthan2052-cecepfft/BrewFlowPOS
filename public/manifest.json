@@ -1,7 +1,12 @@
+
 {
-  "name": "Brew Flow",
+  "name": "BrewFlow",
   "short_name": "BrewFlow",
   "description": "Coffee Shop POS by Firebase Studio",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F5DC",
+  "theme_color": "#6F4E37",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -13,10 +18,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#795e4a",
-  "background_color": "#f7f5f2",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

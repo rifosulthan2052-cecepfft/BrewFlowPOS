@@ -29,8 +29,8 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
         // Supabase will use the Site URL from your project's auth settings
         // to construct the magic link.
         const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`, // Redirect to root, not /login
-            data: { shop_id: shop_id, password_set: false }, // Mark password as not set
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`, // Correctly redirect to the root of the site
+            data: { password_set: false }, // Mark password as not set
         });
 
         if (inviteError) {

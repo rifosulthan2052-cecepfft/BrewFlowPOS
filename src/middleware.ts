@@ -63,19 +63,27 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname, searchParams } = req.nextUrl
+  const { pathname } = req.nextUrl
   
-  // If the user is coming from an auth link, the session is not yet established.
-  // The access_token is in the URL hash, which is not available on the server.
-  // The client-side Supabase script needs to run to establish the session.
-  // We can check for the presence of the `type` search param which Supabase adds
-  // for email link authentication. If it's present, let the client handle it.
-  if (searchParams.has('type')) {
+  // This is a temporary fix to allow the client to handle auth redirects
+  // without the middleware interfering. A more robust solution would be
+  // to check for a specific query param or header.
+  if (!user && req.headers.get('referer')?.includes('#access_token')) {
+    return response;
+  }
+  
+  // If the user is coming from an email link, the session is established on the client.
+  // The client will then refresh the page, and the middleware will run again.
+  // We need to allow the client to handle the initial redirect.
+  // The 'type' query param is present on email magic links.
+   if (req.nextUrl.searchParams.has('type')) {
     return response;
   }
 
-  // If the user is not logged in and not on the login page, redirect them.
-  if (!user && pathname !== '/login') {
+
+  // If the user is not logged in and not on a public page, redirect them to login.
+  const publicPaths = ['/login', '/auth/callback', '/update-password'];
+  if (!user && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
   
@@ -83,14 +91,9 @@ export async function middleware(req: NextRequest) {
   if (user && pathname === '/login') {
     return NextResponse.redirect(new URL('/', req.url))
   }
-
-  // Allow access to auth callback without a user session (it's creating it)
-  if (pathname === '/auth/callback') {
-    return response;
-  }
   
   if (user) {
-    const passwordIsSet = user.user_metadata?.password_set ?? false;
+    const passwordIsSet = user.user_metadata?.password_set;
 
     // This logic handles users who signed up via email invitation.
     if (user.app_metadata.provider === 'email' && !passwordIsSet) {

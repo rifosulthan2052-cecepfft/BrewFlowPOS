@@ -3,8 +3,9 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+  const { searchParams, origin } = new URL(req.url);
   const code = searchParams.get('code');
+  // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/';
 
   if (code) {
@@ -33,24 +34,9 @@ export async function GET(req: NextRequest) {
         },
       }
     );
-
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Create a response object to redirect the user and set the cookies.
-      const response = NextResponse.redirect(new URL(next, req.url));
-      // Get the cookies from the Supabase client and set them on the response.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        response.cookies.set({
-          name: 'my-session',
-          value: JSON.stringify(session),
-          httpOnly: true,
-          sameSite: 'lax',
-        });
-      }
-      return response;
+      return NextResponse.redirect(`${origin}${next}`);
     }
   }
 

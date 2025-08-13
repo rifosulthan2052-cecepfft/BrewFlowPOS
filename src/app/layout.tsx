@@ -1,8 +1,7 @@
 // src/app/layout.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppProvider } from '@/components/layout/AppProvider';
@@ -28,27 +27,6 @@ export default function RootLayout({
       }
     )
   );
-  const router = useRouter();
-
-  useEffect(() => {
-    console.log('Layout - URL:', window.location.href);
-    console.log('Layout - Hash:', window.location.hash);
-    const { data: authListener } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      console.log('Layout - Auth Event:', event, 'Session:', session);
-      if (event === 'SIGNED_IN' && session) {
-        console.log('Layout - Checking metadata');
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user?.user_metadata?.password_set === false && window.location.pathname !== '/update-password') {
-          console.log('Layout - No password, redirecting to /update-password');
-          router.push('/update-password');
-        }
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
 
   return (
     <html lang="en" suppressHydrationWarning>

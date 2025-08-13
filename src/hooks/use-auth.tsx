@@ -22,47 +22,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthProvider - Initial user:', user);
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
       console.log('AuthProvider - Event:', event, 'Session:', session);
       if (event === 'SIGNED_IN' && session) {
         console.log('AuthProvider - Checking metadata');
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user?.user_metadata?.password_set === false && window.location.pathname !== '/update-password') {
+        const { data: { user }, error } = await supabaseClient.auth.getUser();
+        if (error) {
+          console.log('AuthProvider - Error fetching user:', error.message);
+          setLoading(false);
+          return;
+        }
+        console.log('AuthProvider - User metadata:', user?.user_metadata);
+        if (user && !user.user_metadata?.password_set && window.location.pathname !== '/update-password') {
           console.log('AuthProvider - No password, redirecting to /update-password');
           router.push('/update-password');
         } else {
           console.log('AuthProvider - Refreshing for SIGNED_IN');
           router.refresh();
         }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('AuthProvider - Refreshing for SIGNED_OUT');
-        router.refresh();
-      } else if (event === 'USER_UPDATED') {
-        console.log('AuthProvider - Refreshing for USER_UPDATED');
-        router.refresh();
-      } else if (!session && !window.location.hash.includes('access_token')) {
+      } else if (event === 'SIGNED_OUT' || (!session && !window.location.hash.includes('access_token'))) {
         console.log('AuthProvider - No session, redirecting to /login');
         router.push('/login');
       }
       setLoading(false);
     });
 
-    // Set loading to false if user is already available
-    if (user) {
-      console.log('AuthProvider - Initial user:', user);
+    // Check initial session
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthProvider - Initial session:', session);
       setLoading(false);
-    }
+    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [user, supabaseClient.auth, router]);
+  }, [supabaseClient.auth, router]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    // No need to push, onAuthStateChange will handle it
   };
 
   const value = {
@@ -73,8 +73,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   if (loading) {
-    console.log('AuthProvider - Loading, showing null');
-    return null; // Could return a spinner here
+    console.log('AuthProvider - Loading, showing spinner');
+    return <div>Loading...</div>; // Replace null with spinner
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

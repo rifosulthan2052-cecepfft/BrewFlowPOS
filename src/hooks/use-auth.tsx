@@ -23,6 +23,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     console.log('AuthProvider - Initial user:', user);
+    const initializeSession = async () => {
+      // Check for access_token in URL hash
+      const hash = window.location.hash;
+      if (hash.includes('access_token')) {
+        console.log('AuthProvider - Found access_token, attempting to set session');
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) {
+          console.log('AuthProvider - Session error:', error.message);
+        } else if (session) {
+          console.log('AuthProvider - Session set:', session);
+        }
+      }
+      setLoading(false);
+    };
+
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
@@ -50,11 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    // Check initial session
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthProvider - Initial session:', session);
-      setLoading(false);
-    });
+    initializeSession();
 
     return () => {
       subscription.unsubscribe();
@@ -74,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   if (loading) {
     console.log('AuthProvider - Loading, showing spinner');
-    return <div>Loading...</div>; // Replace null with spinner
+    return <div>Loading...</div>;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

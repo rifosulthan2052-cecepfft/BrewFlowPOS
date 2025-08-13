@@ -1,14 +1,12 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CoffeeIcon } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +26,7 @@ type FormValues = z.infer<typeof updatePasswordSchema>;
 
 export default function UpdatePasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true); // NEW
   const supabase = useSupabaseClient();
   const router = useRouter();
   const { toast } = useToast();
@@ -40,13 +39,31 @@ export default function UpdatePasswordPage() {
     },
   });
 
+  // Wait for Supabase to hydrate session from #access_token
+  useEffect(() => {
+    const init = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace('/login');
+        return;
+      }
+
+      setCheckingSession(false);
+    };
+
+    init();
+  }, [supabase, router]);
+
   const handleUpdatePassword = async (values: FormValues) => {
     setIsLoading(true);
-    const { error } = await supabase.auth.updateUser({ 
+    const { error } = await supabase.auth.updateUser({
       password: values.password,
-      data: { password_set: true } 
+      data: { password_set: true }
     });
-    
+
     if (error) {
       toast({
         variant: 'destructive',
@@ -58,11 +75,19 @@ export default function UpdatePasswordPage() {
         title: 'Password Updated',
         description: 'Your password has been successfully updated. You will be redirected shortly.',
       });
-      // The middleware will handle the redirect after router.refresh()
       router.refresh();
     }
     setIsLoading(false);
   };
+
+  // Show loading while session is hydrating
+  if (checkingSession) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -89,30 +114,20 @@ export default function UpdatePasswordPage() {
                     <FormItem>
                       <FormLabel>New Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          required
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input type="password" required disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                 <FormField
+                <FormField
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Confirm New Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          required
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input type="password" required disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

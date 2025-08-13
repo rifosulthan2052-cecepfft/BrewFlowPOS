@@ -1,4 +1,3 @@
-
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -64,62 +63,57 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getUser()
 
   const { pathname } = req.nextUrl
-  
-  // This is a temporary fix to allow the client to handle auth redirects
-  // without the middleware interfering. A more robust solution would be
-  // to check for a specific query param or header.
-  if (!user && req.headers.get('referer')?.includes('#access_token')) {
-    return response;
-  }
-  
-  // If the user is coming from an email link, the session is established on the client.
-  // The client will then refresh the page, and the middleware will run again.
-  // We need to allow the client to handle the initial redirect.
-  // The 'type' query param is present on email magic links.
-   if (req.nextUrl.searchParams.has('type')) {
-    return response;
+
+  const publicPaths = ['/login', '/auth/callback', '/update-password']
+
+  /**
+   * --- Step 1: Allow public pages ---
+   * Special case: If we're on /update-password and user is not logged in yet,
+   * allow client to process the #access_token and set session
+   */
+  if (!user && pathname === '/update-password') {
+    return response
   }
 
+  // Also skip for any other explicitly public paths
+  if (!user && publicPaths.includes(pathname)) {
+    return response
+  }
 
-  // If the user is not logged in and not on a public page, redirect them to login.
-  const publicPaths = ['/login', '/auth/callback', '/update-password'];
+  /**
+   * --- Step 2: Protect private pages ---
+   */
   if (!user && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
-  
-  // If the user is logged in and tries to access the login page, redirect them to the root.
+
+  /**
+   * --- Step 3: Logged-in redirects ---
+   */
   if (user && pathname === '/login') {
     return NextResponse.redirect(new URL('/', req.url))
   }
-  
-  if (user) {
-    const passwordIsSet = user.user_metadata?.password_set;
 
-    // This logic handles users who signed up via email invitation.
+  /**
+   * --- Step 4: Force invited users without password to /update-password ---
+   */
+  if (user) {
+    const passwordIsSet = user.user_metadata?.password_set
+
     if (user.app_metadata.provider === 'email' && !passwordIsSet) {
       if (pathname !== '/update-password') {
-        // If they haven't set their password, they MUST be on the update-password page.
-        return NextResponse.redirect(new URL('/update-password', req.url));
+        return NextResponse.redirect(new URL('/update-password', req.url))
       }
     } else if (passwordIsSet && pathname === '/update-password') {
-      // If they HAVE set their password, they should NOT be on the update-password page.
-      return NextResponse.redirect(new URL('/', req.url));
+      return NextResponse.redirect(new URL('/', req.url))
     }
   }
-
 
   return response
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons/*).*)',
   ],
 }

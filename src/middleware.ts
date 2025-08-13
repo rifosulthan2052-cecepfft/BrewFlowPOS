@@ -69,34 +69,37 @@ export async function middleware(req: NextRequest) {
   // The access_token is in the URL hash, which is not available on the server.
   // The client-side Supabase script needs to run to establish the session.
   // We can check for the presence of the `type` search param which Supabase adds
-  // for email link authentication.
+  // for email link authentication. If it's present, let the client handle it.
   if (searchParams.has('type')) {
     return response;
   }
 
+  // If the user is not logged in and not on the login page, redirect them.
+  if (!user && pathname !== '/login') {
+    return NextResponse.redirect(new URL('/login', req.url))
+  }
+  
+  // If the user is logged in and tries to access the login page, redirect them to the root.
   if (user && pathname === '/login') {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  // Allow access to auth callback without a user
+  // Allow access to auth callback without a user session (it's creating it)
   if (pathname === '/auth/callback') {
     return response;
   }
   
-  if (!user && pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', req.url))
-  }
-
   if (user) {
     const passwordIsSet = user.user_metadata?.password_set ?? false;
 
-    // If user needs to set a password and is not on the correct page, redirect them.
+    // This logic handles users who signed up via email invitation.
     if (user.app_metadata.provider === 'email' && !passwordIsSet) {
       if (pathname !== '/update-password') {
+        // If they haven't set their password, they MUST be on the update-password page.
         return NextResponse.redirect(new URL('/update-password', req.url));
       }
     } else if (passwordIsSet && pathname === '/update-password') {
-      // If user has set a password but is still on the update page, redirect them away.
+      // If they HAVE set their password, they should NOT be on the update-password page.
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
@@ -114,6 +117,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons/*).*)',
   ],
 }

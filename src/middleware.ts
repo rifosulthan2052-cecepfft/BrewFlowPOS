@@ -63,7 +63,16 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = req.nextUrl
+  const { pathname, searchParams } = req.nextUrl
+  
+  // If the user is coming from an auth link, the session is not yet established.
+  // The access_token is in the URL hash, which is not available on the server.
+  // The client-side Supabase script needs to run to establish the session.
+  // We can check for the presence of the `type` search param which Supabase adds
+  // for email link authentication.
+  if (searchParams.has('type')) {
+    return response;
+  }
 
   if (user && pathname === '/login') {
     return NextResponse.redirect(new URL('/', req.url))
@@ -103,7 +112,6 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - auth/callback (Supabase auth callback)
      * - favicon.ico (favicon file)
      */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',

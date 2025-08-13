@@ -1,14 +1,21 @@
-// src/app/layout.tsx
+
 'use client';
 
 import { useState } from 'react';
+import type { Metadata } from 'next';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from "@/components/ui/toaster"
 import { AppProvider } from '@/components/layout/AppProvider';
 import { AuthProvider } from '@/hooks/use-auth';
 import { createBrowserClient } from '@supabase/ssr';
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import type { Database } from '@/types/supabase';
+
+
+// export const metadata: Metadata = {
+//   title: 'BrewFlow',
+//   description: 'Coffee Shop POS by Firebase Studio',
+// };
 
 export default function RootLayout({
   children,
@@ -27,7 +34,7 @@ export default function RootLayout({
       }
     )
   );
-
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -41,10 +48,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <SessionContextProvider supabaseClient={supabaseClient}>
           <AuthProvider>
-            <AppProvider>
-              {children}
-              <Toaster />
-            </AppProvider>
+              <AppProvider>
+                {children}
+                <Toaster />
+              </AppProvider>
           </AuthProvider>
         </SessionContextProvider>
       </body>

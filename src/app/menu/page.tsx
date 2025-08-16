@@ -208,7 +208,7 @@ export default function MenuPage() {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>Name</TableHead>
-                                                <TableHead>Category</TableHead>
+                                                <TableHead className="hidden md:table-cell">Category</TableHead>
                                                 <TableHead className="text-right">Price</TableHead>
                                                 <TableHead className="w-[50px]"></TableHead>
                                             </TableRow>
@@ -216,8 +216,11 @@ export default function MenuPage() {
                                         <TableBody>
                                             {menuItems.map((item) => (
                                                 <TableRow key={item.id}>
-                                                    <TableCell className="font-medium">{item.name}</TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="font-medium">
+                                                        <div className="truncate font-medium">{item.name}</div>
+                                                        <div className="md:hidden text-xs text-muted-foreground">{item.category}</div>
+                                                    </TableCell>
+                                                    <TableCell className="hidden md:table-cell">
                                                         {item.category ? <Badge variant="secondary">{item.category}</Badge> : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right font-mono">{formatCurrency(item.price, currency)}</TableCell>
@@ -360,7 +363,3 @@ export default function MenuPage() {
         </AppLayout>
     )
 }
-
-    
-
-    

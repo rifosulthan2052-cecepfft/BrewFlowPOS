@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useMemo, useRef, forwardRef } from 'react';
@@ -16,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { PlusCircle, Printer, QrCode, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Printer, QrCode, MoreVertical, Edit, Trash2, List, Grid } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { CoffeeIcon } from '@/components/icons';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,8 +33,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 const memberFormSchema = z.object({
@@ -89,24 +87,50 @@ const MemberCard = forwardRef<HTMLDivElement, { member: Member }>(({ member }, r
 });
 MemberCard.displayName = 'MemberCard';
 
-function MemberListSkeleton() {
+function MemberListSkeleton({ viewMode }: { viewMode: 'card' | 'list' }) {
+    if (viewMode === 'card') {
+        return (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                 {Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={index}>
+                        <CardHeader>
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                        </CardContent>
+                        <CardFooter>
+                            <Skeleton className="h-10 w-full" />
+                        </CardFooter>
+                    </Card>
+                 ))}
+            </div>
+        )
+    }
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-             {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={index}>
-                    <CardHeader>
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
-                    </CardContent>
-                    <CardFooter>
-                        <Skeleton className="h-10 w-full" />
-                    </CardFooter>
-                </Card>
-             ))}
+        <div className="border rounded-md">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                        <TableHead><Skeleton className="h-5 w-32" /></TableHead>
+                        <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                        <TableHead><Skeleton className="h-5 w-10" /></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <TableRow key={index}>
+                            <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
         </div>
     )
 }
@@ -114,6 +138,7 @@ function MemberListSkeleton() {
 
 export default function MembershipPage() {
     const { members, addMember, updateMember, removeCustomerMember, isLoading } = useApp();
+    const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<Member | null>(null);
     const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
@@ -202,10 +227,18 @@ export default function MembershipPage() {
             <AppLayout.Content>
                 <div className="p-4 md:p-6">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                         <CardHeader className="flex flex-row items-start justify-between gap-4">
                             <div>
                                 <CardTitle>Membership</CardTitle>
                                 <CardDescription>Manage your customer members.</CardDescription>
+                                <div className="flex items-center gap-2 mt-4">
+                                    <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')}>
+                                        <List className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant={viewMode === 'card' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('card')}>
+                                        <Grid className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                             <Button onClick={() => handleOpenForm()}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -214,13 +247,13 @@ export default function MembershipPage() {
                         </CardHeader>
                         <CardContent>
                             {isLoading ? (
-                                <MemberListSkeleton />
+                                <MemberListSkeleton viewMode={viewMode} />
                             ) : members.length === 0 ? (
                                 <div className="text-center text-muted-foreground py-16">
                                     <p>No members yet.</p>
                                     <p className="text-sm">Click "Add Member" to get started.</p>
                                 </div>
-                            ) : (
+                            ) : viewMode === 'card' ? (
                                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                     {members.map(member => (
                                         <Card key={member.id}>
@@ -236,6 +269,10 @@ export default function MembershipPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleViewCard(member)}>
+                                                            <QrCode className="mr-2 h-4 w-4" />
+                                                            View Card
+                                                        </DropdownMenuItem>
                                                         <DropdownMenuItem onClick={() => handleOpenForm(member)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Edit
@@ -248,17 +285,64 @@ export default function MembershipPage() {
                                                 </DropdownMenu>
                                             </CardHeader>
                                             <CardContent>
-                                                <p className="text-sm text-muted-foreground">{member.email}</p>
+                                                <p className="text-sm text-muted-foreground truncate">{member.email}</p>
                                                 <p className="text-sm text-muted-foreground">{member.phone}</p>
                                             </CardContent>
                                             <CardFooter>
-                                                <Button variant="outline" className="w-full" onClick={() => handleViewCard(member)}>
-                                                    <QrCode className="mr-2 h-4 w-4" />
-                                                    View Card
-                                                </Button>
+                                                <p className="text-xs text-muted-foreground">Joined: {new Date(member.created_at).toLocaleDateString()}</p>
                                             </CardFooter>
                                         </Card>
                                     ))}
+                                </div>
+                            ) : (
+                                <div className="border rounded-md">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead className="hidden md:table-cell">Email</TableHead>
+                                                <TableHead className="hidden md:table-cell">Phone</TableHead>
+                                                <TableHead className="hidden sm:table-cell">Joined</TableHead>
+                                                <TableHead className="w-[50px]"></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {members.map((member) => (
+                                                <TableRow key={member.id}>
+                                                    <TableCell className="font-medium">
+                                                        <div className="font-medium">{member.name}</div>
+                                                        <div className="text-xs text-muted-foreground md:hidden">{member.email}</div>
+                                                    </TableCell>
+                                                    <TableCell className="hidden md:table-cell truncate">{member.email}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">{member.phone}</TableCell>
+                                                    <TableCell className="hidden sm:table-cell">{new Date(member.created_at).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon">
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuItem onClick={() => handleViewCard(member)}>
+                                                                    <QrCode className="mr-2 h-4 w-4" />
+                                                                    View Card
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => handleOpenForm(member)}>
+                                                                    <Edit className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => setMemberToDelete(member)} className="text-destructive">
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
                                 </div>
                             )}
                         </CardContent>

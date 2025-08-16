@@ -1,4 +1,3 @@
-
 'use client'
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -11,7 +10,13 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, Wallet, List, Grid, AlertCircle, Printer, PlayCircle } from 'lucide-react';
+import { CreditCard, Wallet, List, Grid, AlertCircle, Printer, PlayCircle, MoreVertical, FileText, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +49,15 @@ function SummaryCard({ title, value, icon, className, isCompact = false }: { tit
     )
 }
 
-function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, onSelect: (order: CompletedOrder) => void }) {
+function OrderHistoryCompactCard({ 
+    order, 
+    onViewReceipt,
+    onDelete 
+}: { 
+    order: CompletedOrder, 
+    onViewReceipt: (order: CompletedOrder) => void,
+    onDelete: (order: CompletedOrder) => void,
+}) {
     const { currency } = useApp();
     return (
         <Card>
@@ -59,7 +72,23 @@ function OrderHistoryCompactCard({ order, onSelect }: { order: CompletedOrder, o
                         {order.payment_method}
                     </Badge>
                     <p className="flex-1 text-right font-mono font-bold text-primary">{formatCurrency(order.total, currency)}</p>
-                    <Button variant="outline" size="sm" onClick={() => onSelect(order)}>View Receipt</Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onViewReceipt(order)}>
+                                <FileText className="mr-2 h-4 w-4" />
+                                View Receipt
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDelete(order)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </CardContent>
         </Card>
@@ -220,11 +249,12 @@ DailySummaryPrintout.displayName = 'DailySummaryPrintout';
 
 
 export default function DailySummaryPage() {
-    const { completedOrders, currency, endDay, startNewDay, storeStatus, isLoading } = useApp();
+    const { completedOrders, currency, endDay, startNewDay, storeStatus, isLoading, removeCompletedOrder } = useApp();
     const { toast } = useToast();
     const componentToPrintRef = useRef<HTMLDivElement>(null);
     const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
+    const [orderToDelete, setOrderToDelete] = useState<CompletedOrder | null>(null);
 
     const summary = useMemo(() => completedOrders.reduce((acc, order) => {
         acc.totalRevenue += order.total;
@@ -283,9 +313,16 @@ export default function DailySummaryPage() {
         content: () => componentToPrintRef.current,
     });
     
-    const handleSelectOrder = (order: CompletedOrder) => {
+    const handleViewReceipt = (order: CompletedOrder) => {
         setSelectedOrder(order);
     };
+
+    const handleConfirmDelete = async () => {
+        if(orderToDelete) {
+            await removeCompletedOrder(orderToDelete.id);
+            setOrderToDelete(null);
+        }
+    }
 
     const handleCloseDialog = () => {
         setSelectedOrder(null);
@@ -384,7 +421,12 @@ export default function DailySummaryPage() {
                                     ) : (
                                         <div className="grid grid-cols-1 gap-2">
                                             {completedOrders.map(order => 
-                                                <OrderHistoryCompactCard key={order.id} order={order} onSelect={handleSelectOrder} />
+                                                <OrderHistoryCompactCard 
+                                                    key={order.id} 
+                                                    order={order} 
+                                                    onViewReceipt={handleViewReceipt} 
+                                                    onDelete={setOrderToDelete}
+                                                />
                                             )}
                                         </div>
                                     )}
@@ -434,6 +476,23 @@ export default function DailySummaryPage() {
                         )}
                     </DialogContent>
                 </Dialog>
+                
+                 <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete the transaction for "{orderToDelete?.customer_name}". This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive/90">
+                                Yes, Delete Transaction
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
             </AppLayout.Content>
         </AppLayout>

@@ -1,6 +1,3 @@
-
-
-
 'use client'
 
 import { useState, useMemo } from 'react';
@@ -102,10 +99,29 @@ export default function MenuPage() {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<MenuItem | null>(null);
     
-    const categories = useMemo(() => {
-        const uniqueCategories = new Set(menuItems.map(item => item.category).filter(Boolean));
-        return Array.from(uniqueCategories).map(cat => ({ value: cat!, label: cat! }));
+    const [allCategories, setAllCategories] = useState<{ value: string; label: string }[]>([]);
+
+    useMemo(() => {
+        const uniqueCategories = new Set(menuItems.map(item => item.category).filter(Boolean) as string[]);
+        setAllCategories(Array.from(uniqueCategories).map(cat => ({ value: cat, label: cat })));
     }, [menuItems]);
+
+    const handleCategoryChange = (value: string) => {
+        form.setValue('category', value, { shouldValidate: true });
+        
+        const isNew = !allCategories.some(cat => cat.value.toLowerCase() === value.toLowerCase());
+        
+        if (isNew && value) {
+            const newCategory = { value, label: value };
+            setAllCategories(prev => {
+                // Avoid adding duplicates if user types fast
+                if (prev.some(p => p.value.toLowerCase() === newCategory.value.toLowerCase())) {
+                    return prev;
+                }
+                return [...prev, newCategory];
+            });
+        }
+    };
 
     const form = useForm<MenuItemFormValues>({
         resolver: zodResolver(menuItemSchema),
@@ -298,9 +314,9 @@ export default function MenuPage() {
                                             <FormLabel>Category</FormLabel>
                                             <FormControl>
                                                <Combobox
-                                                    options={categories}
+                                                    options={allCategories}
                                                     value={field.value ?? ''}
-                                                    onChange={field.onChange}
+                                                    onChange={handleCategoryChange}
                                                     placeholder="Select or create a category..."
                                                 />
                                             </FormControl>

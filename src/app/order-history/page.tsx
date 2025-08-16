@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useMemo } from 'react';
@@ -148,7 +147,7 @@ type Period = 'today' | 'yesterday' | 'week' | 'month' | '90days';
 export default function OrderHistoryPage() {
     const { allCompletedOrders, isLoading } = useApp();
     const [selectedOrder, setSelectedOrder] = useState<CompletedOrder | null>(null);
-    const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
+    const [viewMode, setViewMode] = useState<'card' | 'compact'>('compact');
     const [period, setPeriod] = useState<Period>('today');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -329,5 +328,4 @@ export default function OrderHistoryPage() {
         </AppLayout>
     )
 }
-
     

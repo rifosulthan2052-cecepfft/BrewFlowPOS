@@ -1,4 +1,3 @@
-
 'use client'
 
 import Link from "next/link";
@@ -41,7 +40,7 @@ export default function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user?.user_metadata?.avatar_url || "https://placehold.co/100x100"} alt="User Avatar" />
+              <AvatarImage src={receiptSettings.logoUrl || undefined} alt="Store Logo" />
               <AvatarFallback>
                 {user?.email?.charAt(0).toUpperCase() || <UserCircle className="h-8 w-8" />}
               </AvatarFallback>

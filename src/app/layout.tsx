@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +13,7 @@ import type { Database } from '@/types/supabase';
 
 // export const metadata: Metadata = {
 //   title: 'BrewFlow',
-//   description: 'Coffee Shop POS by Firebase Studio',
+//   description: 'Coffee Shop POS by Sakato',
 // };
 
 export default function RootLayout({
@@ -39,7 +38,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#6F4E37" />
+        <meta name="theme-color" content="#000000" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -57,6 +57,7 @@ type AppContextType = {
   completedOrders: CompletedOrder[];
   allCompletedOrders: CompletedOrder[];
   lastCompletedOrder: CompletedOrder | null;
+  removeCompletedOrder: (orderId: string) => Promise<void>;
 
   storeStatus: StoreStatus | null;
 
@@ -483,6 +484,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const removeCompletedOrder = async (orderId: string) => {
+    const { error } = await supabase.from('completed_orders').delete().eq('id', orderId);
+    if (error) {
+        toast({ variant: 'destructive', title: 'Error deleting order', description: error.message });
+    } else {
+        setCompletedOrders(prev => prev.filter(o => o.id !== orderId));
+        setAllCompletedOrders(prev => prev.filter(o => o.id !== orderId));
+        toast({ title: 'Order deleted', description: 'The transaction has been removed.' });
+    }
+  };
+
   const saveAsOpenBill = async () => {
     if (!shop) return;
     const billPayload: Omit<OpenBill, 'id' | 'created_at'> = {
@@ -709,6 +721,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     completedOrders,
     allCompletedOrders,
     lastCompletedOrder,
+    removeCompletedOrder,
     storeStatus,
     setOrderItems,
     setFees,
@@ -736,7 +749,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     total,
     uploadImage,
     removeImage,
-  }), [isLoading, shop, shopMembers, isShopOwner, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, allCompletedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage, inviteMember, removeShopMember, updateMember, removeCustomerMember]);
+  }), [isLoading, shop, shopMembers, isShopOwner, currency, taxRate, receiptSettings, menuItems, members, orderItems, fees, customer_name, member_id, orderStatus, openBills, editingBillId, completedOrders, allCompletedOrders, lastCompletedOrder, storeStatus, subtotal, total_fees, tax, total, activeOrderExists, unsavedOrder, user, authLoading, fetchData, updateStoreSettings, addMenuItem, updateMenuItem, removeMenuItem, addMember, getMemberById, getMemberByLookup, addItemToOrder, updateItemQuantity, removeItemFromOrder, addFeeToOrder, resetOrder, saveAsOpenBill, loadOrderFromBill, removeOpenBill, setEditingBillId, setUnsavedOrder, addOrderToHistory, endDay, startNewDay, uploadImage, removeImage, inviteMember, removeShopMember, updateMember, removeCustomerMember, removeCompletedOrder]);
 
   return (
     <AppContext.Provider value={value}>

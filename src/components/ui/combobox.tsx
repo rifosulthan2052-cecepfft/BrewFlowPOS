@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,22 @@ export function Combobox({
   className
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState("")
+
+  const handleSelect = (currentValue: string) => {
+    const newValue = currentValue === value ? "" : currentValue
+    onChange(newValue)
+    setInputValue("")
+    setOpen(false)
+  }
+
+  const filteredOptions = options.filter(option => 
+    option.label.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
+  const showCreateOption = inputValue && !filteredOptions.some(
+    option => option.label.toLowerCase() === inputValue.toLowerCase()
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,23 +72,22 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command
-          filter={(searchValue, itemValue) => {
-            return itemValue.toLowerCase().includes(searchValue.toLowerCase())
-          }}
-        >
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command>
+          <CommandInput 
+            placeholder={searchPlaceholder}
+            value={inputValue}
+            onValueChange={setInputValue}
+          />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>
+                {!showCreateOption && emptyMessage}
+            </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                  }}
+                  value={option.label}
+                  onSelect={handleSelect}
                 >
                   <Check
                     className={cn(
@@ -83,6 +98,16 @@ export function Combobox({
                   {option.label}
                 </CommandItem>
               ))}
+               {showCreateOption && (
+                <CommandItem
+                  value={inputValue}
+                  onSelect={() => handleSelect(inputValue)}
+                  className="flex items-center"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create "{inputValue}"
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>

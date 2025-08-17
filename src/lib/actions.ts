@@ -25,9 +25,11 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
             }
         );
 
+        const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}?type=invite`;
+
         // Invite the user by email.
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+            redirectTo: redirectTo,
         });
 
         if (inviteError) {
@@ -67,7 +69,7 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
                 
                 // Resend invitation so they can log in
                 const { error: resendError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-                    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+                    redirectTo: redirectTo,
                 });
 
                 if(resendError) throw new Error(`Failed to resend invitation: ${resendError.message}`);

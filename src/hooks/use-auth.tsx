@@ -19,19 +19,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const supabaseClient = useSupabaseClient();
   const user = useUser();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const userContext = useUser();
+  const isUserLoading = userContext ? userContext.isLoading : true;
+
 
   useEffect(() => {
-    setLoading(true); // Start loading whenever the auth state might change
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
-      // The router.refresh() is key to re-running the middleware
-      // and getting the correct user state on the server.
+      console.log(`Supabase auth event: ${event}`);
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         router.refresh();
       }
-      setLoading(false);
     });
 
     return () => {
@@ -41,19 +40,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();
-    // No need to push, onAuthStateChange will handle it.
   };
 
   const value = {
     user,
     supabaseClient,
-    loading,
+    loading: isUserLoading, // Pass the loading state down
     signOut,
   };
   
-  if (loading) {
-    // You could return a global loading spinner here
-    return null;
+  if (isUserLoading) {
+    return null; // Render nothing while the session is being determined
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true); // Start loading whenever the auth state might change
     const {
       data: { subscription },
     } = supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -33,16 +34,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    // Also set loading to false on initial load if user is already available
-    if(user) {
-        setLoading(false);
-    }
-
-
     return () => {
       subscription.unsubscribe();
     };
-  }, [user, supabaseClient.auth, router]);
+  }, [supabaseClient.auth, router]);
 
   const signOut = async () => {
     await supabaseClient.auth.signOut();

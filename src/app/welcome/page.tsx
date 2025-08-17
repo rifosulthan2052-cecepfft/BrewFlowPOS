@@ -27,7 +27,7 @@ const welcomeFormSchema = z.object({
 type FormValues = z.infer<typeof welcomeFormSchema>;
 
 export default function WelcomePage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const supabase = useSupabaseClient();
   const user = useUser();
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function WelcomePage() {
   });
 
   const handleOnboardingSubmit = async (values: FormValues) => {
-    setIsLoading(true);
+    setIsSubmitting(true);
     const { error } = await supabase.auth.updateUser({ 
       password: values.password,
       data: { 
@@ -56,7 +56,7 @@ export default function WelcomePage() {
       toast({
         variant: 'destructive',
         title: 'Setup Failed',
-        description: error.message,
+        description: error.message || "An unknown error occurred.",
       });
     } else {
       toast({
@@ -66,7 +66,7 @@ export default function WelcomePage() {
       // The middleware will handle the redirect after router.refresh()
       router.refresh();
     }
-    setIsLoading(false);
+    setIsSubmitting(false);
   };
 
   return (
@@ -97,7 +97,7 @@ export default function WelcomePage() {
                         <Input
                           placeholder="e.g., Jane Doe"
                           required
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -115,7 +115,7 @@ export default function WelcomePage() {
                         <Input
                           type="password"
                           required
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -133,7 +133,7 @@ export default function WelcomePage() {
                         <Input
                           type="password"
                           required
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -141,8 +141,8 @@ export default function WelcomePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading || !user}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" className="w-full" disabled={isSubmitting || !user}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save and Continue
                 </Button>
               </form>

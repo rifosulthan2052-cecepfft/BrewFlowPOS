@@ -79,11 +79,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
   
-  // If the user is logged in and tries to access the login page, redirect them to the root.
-  if (user && pathname === '/login') {
-    return NextResponse.redirect(new URL('/', req.url))
-  }
-  
   if (user) {
     const passwordIsSet = user.user_metadata?.password_set;
 
@@ -96,6 +91,11 @@ export async function middleware(req: NextRequest) {
     } else if (passwordIsSet && pathname === '/welcome') {
       // If they HAVE set their password, they should NOT be on the welcome page.
       return NextResponse.redirect(new URL('/', req.url));
+    }
+    
+    // If the user is logged in and tries to access the login page, redirect them to the root.
+    if (pathname === '/login') {
+        return NextResponse.redirect(new URL('/', req.url))
     }
   }
 

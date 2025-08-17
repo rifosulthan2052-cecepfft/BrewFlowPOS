@@ -25,7 +25,7 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
             }
         );
 
-        const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}?type=invite`;
+        const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/welcome`;
 
         // Invite the user by email.
         const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {

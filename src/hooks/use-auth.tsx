@@ -19,9 +19,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const supabaseClient = useSupabaseClient();
   const user = useUser();
   const router = useRouter();
-  const userContext = useUser();
-  const isUserLoading = userContext ? userContext.isLoading : true;
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    // The user object's loading state is managed internally by useUser.
+    // When the user object is no longer undefined, we know the initial check is complete.
+    if (user !== undefined) {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     const {
@@ -45,12 +51,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     user,
     supabaseClient,
-    loading: isUserLoading, // Pass the loading state down
+    loading,
     signOut,
   };
   
-  if (isUserLoading) {
-    return null; // Render nothing while the session is being determined
+  if (loading) {
+    return null; // Render nothing while determining session state
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

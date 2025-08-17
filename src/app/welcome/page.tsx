@@ -13,7 +13,7 @@ import { CoffeeIcon } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 
 const welcomeFormSchema = z.object({
   fullName: z.string().min(1, 'Please enter your full name.'),
@@ -29,6 +29,7 @@ type FormValues = z.infer<typeof welcomeFormSchema>;
 export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const supabase = useSupabaseClient();
+  const user = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -140,7 +141,7 @@ export default function WelcomePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading || !user}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save and Continue
                 </Button>

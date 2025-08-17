@@ -65,24 +65,16 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl
   
-  // This is a temporary fix to allow the client to handle auth redirects
-  // without the middleware interfering. A more robust solution would be
-  // to check for a specific query param or header.
-  if (!user && req.headers.get('referer')?.includes('#access_token')) {
-    return response;
-  }
-  
   // If the user is coming from an email link, the session is established on the client.
   // The client will then refresh the page, and the middleware will run again.
   // We need to allow the client to handle the initial redirect.
   // The 'type' query param is present on email magic links.
-   if (req.nextUrl.searchParams.has('type')) {
+   if (req.nextUrl.searchParams.get('type')) {
     return response;
   }
 
-
   // If the user is not logged in and not on a public page, redirect them to login.
-  const publicPaths = ['/login', '/auth/callback', '/welcome', '/update-password'];
+  const publicPaths = ['/login', '/auth/callback', '/welcome'];
   if (!user && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
@@ -119,7 +111,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - manifest.json (PWA manifest)
+     * - icons/ (PWA icons)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons/*).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|manifest.json|icons/).*)',
   ],
 }

@@ -82,7 +82,7 @@ export async function middleware(req: NextRequest) {
 
 
   // If the user is not logged in and not on a public page, redirect them to login.
-  const publicPaths = ['/login', '/auth/callback', '/welcome', '/update-password'];
+  const publicPaths = ['/login', '/auth/callback', '/welcome'];
   if (!user && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url))
   }

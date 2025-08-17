@@ -82,7 +82,7 @@ export async function middleware(req: NextRequest) {
 
 
   // If the user is not logged in and not on a public page, redirect them to login.
-  const publicPaths = ['/login', '/auth/callback', '/welcome'];
+  const publicPaths = ['/login', '/auth/callback', '/welcome', '/update-password'];
   if (!user && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
@@ -96,7 +96,7 @@ export async function middleware(req: NextRequest) {
     const passwordIsSet = user.user_metadata?.password_set;
 
     // This logic handles users who signed up via email invitation.
-    if (user.app_metadata.provider === 'email' && !passwordIsSet) {
+    if (user.app_metadata.provider === 'email' && passwordIsSet === false) {
       if (pathname !== '/welcome') {
         // If they haven't set their password, they MUST be on the welcome page.
         return NextResponse.redirect(new URL('/welcome', req.url));

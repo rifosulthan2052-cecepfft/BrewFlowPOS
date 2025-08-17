@@ -26,30 +26,84 @@ export async function inviteUser(input: { email: string; shop_id: string }) {
         );
 
         // Invite the user by email.
-        // Supabase will use the Site URL from your project's auth settings
-        // to construct the magic link.
-        const { data, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`, // 🚀 send directly to Set Password page
-            data: { password_set: false }, // Mark password as not set
+        const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
         });
 
         if (inviteError) {
+            // Handle case where user already exists
+            if (inviteError.message.includes('User already registered')) {
+                 const { data: { users }, error: getUserError } = await supabaseAdmin.auth.admin.listUsers({ email });
+                 if(getUserError || users.length === 0) {
+                    throw new Error("User already exists, but could not retrieve user details.");
+                 }
+                 const user = users[0];
+
+                 // Check if user is already a member of ANY shop
+                 const { data: existingMembership, error: memberCheckError } = await supabaseAdmin
+                    .from('shop_members')
+                    .select('shop_id')
+                    .eq('user_id', user.id)
+                    .limit(1);
+                
+                 if (memberCheckError) throw new Error(`Failed to check existing memberships: ${memberCheckError.message}`);
+
+                 if (existingMembership && existingMembership.length > 0) {
+                     if(existingMembership[0].shop_id === shop_id) {
+                        throw new Error('This user is already a member of your shop.');
+                     } else {
+                        throw new Error('This user is already a member of another shop.');
+                     }
+                 }
+                
+                // If user exists but is not in any shop, add them to this one.
+                const { error: insertError } = await supabaseAdmin
+                    .from('shop_members')
+                    .insert({ shop_id: shop_id, user_id: user.id });
+
+                if (insertError) {
+                    throw new Error(`Failed to add existing user to shop: ${insertError.message}`);
+                }
+                
+                // Resend invitation so they can log in
+                const { error: resendError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+                    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+                });
+
+                if(resendError) throw new Error(`Failed to resend invitation: ${resendError.message}`);
+
+                return { success: true, message: 'Existing user added to your shop and invitation resent.' };
+            }
             throw new Error(`Failed to invite user: ${inviteError.message}`);
         }
         
-        if (!data.user) {
+        if (!inviteData.user) {
             throw new Error("Invitation sent, but no user object was returned.");
         }
+
+        const invitedUser = inviteData.user;
+
+        // Explicitly set user_metadata after creation
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+            invitedUser.id,
+            { user_metadata: { password_set: false } }
+        );
+
+        if (updateError) {
+             // Clean up by deleting the invited user if metadata update fails
+            await supabaseAdmin.auth.admin.deleteUser(invitedUser.id);
+            throw new Error(`Failed to set user metadata: ${updateError.message}`);
+        }
+
 
         // Add the invited user to the shop_members table
         const { error: insertError } = await supabaseAdmin
             .from('shop_members')
-            .insert({ shop_id: shop_id, user_id: data.user.id });
+            .insert({ shop_id: shop_id, user_id: invitedUser.id });
 
         if (insertError) {
-            // Optional: If this fails, you might want to delete the invited user
-            // to allow for a clean retry.
-            await supabaseAdmin.auth.admin.deleteUser(data.user.id);
+            // Clean up by deleting the invited user if insert fails
+            await supabaseAdmin.auth.admin.deleteUser(invitedUser.id);
             throw new Error(`Failed to add user to shop: ${insertError.message}`);
         }
 
